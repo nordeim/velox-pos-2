@@ -101,6 +101,27 @@ test.describe.serial("terminal checkout", () => {
     await expect(charge).toContainText("CHARGE $3.94");
   });
 
+  test("adding a product shows the cart's Added banner, then it auto-collapses", async ({
+    page,
+  }) => {
+    await page.goto("/POS");
+
+    // The collapsed banner exists in the DOM (opacity-0 / max-h-0) per the
+    // reference's cart DOM, but is invisible before the first add.
+    const banner = page.getByTestId("added-banner");
+    await expect(banner).toBeAttached();
+    await expect(banner).not.toBeVisible();
+
+    // Adding a product expands it: "ADDED" + the product name.
+    await page.getByRole("button", { name: "Add Checkout Juice to cart" }).click();
+    await expect(banner).toBeVisible();
+    await expect(banner).toContainText("Added");
+    await expect(banner).toContainText("Checkout Juice");
+
+    // It auto-collapses (the reference's transition-all duration-300 chip).
+    await expect(banner).not.toBeVisible({ timeout: 10_000 });
+  });
+
   test("cash checkout computes change and assigns the ticket", async ({ page }) => {
     await page.goto("/POS");
     await page.getByRole("button", { name: "Add Checkout Juice to cart" }).click();

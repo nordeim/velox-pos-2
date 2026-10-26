@@ -8,7 +8,7 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { Minus, Monitor, Plus, ScanLine, ShoppingCart, Trash2 } from "lucide-react";
+import { CircleCheck, Minus, Monitor, Plus, ScanLine, ShoppingCart, Trash2 } from "lucide-react";
 
 import {
   Dialog,
@@ -284,6 +284,18 @@ export function TerminalView() {
   const [chargeOpen, setChargeOpen] = React.useState(false);
   const [receipt, setReceipt] = React.useState<Sale | null>(null);
 
+  // The cart's "Added" banner (the reference's cart DOM): expands with the
+  // last-added product's name, auto-collapses after a short hold. Timer
+  // state lives in the handler (React 19: no setState-in-effect), the ref
+  // only needs unmount cleanup.
+  const [addedName, setAddedName] = React.useState("");
+  const addedTimer = React.useRef<number | null>(null);
+  React.useEffect(() => {
+    return () => {
+      if (addedTimer.current !== null) window.clearTimeout(addedTimer.current);
+    };
+  }, []);
+
   const activeShift = shifts.find((sh) => sh.status === "active");
   const currency = settings?.currency ?? "USD";
   const totals = cartTotals(cart, currency);
@@ -307,6 +319,9 @@ export function TerminalView() {
       unit: p.unit,
       image: p.image,
     });
+    setAddedName(p.name);
+    if (addedTimer.current !== null) window.clearTimeout(addedTimer.current);
+    addedTimer.current = window.setTimeout(() => setAddedName(""), 2500);
   };
 
   return (
@@ -420,6 +435,26 @@ export function TerminalView() {
         data-testid="cart-panel"
         className="flex w-full shrink-0 flex-col border-t border-edge bg-panel p-4 min-h-0 md:w-[380px] md:border-l md:border-t-0"
       >
+        {/* The Added banner (the reference's cart DOM verbatim): a collapsed
+            max-h-0/opacity-0 strip that expands on add — emerald gradient chip,
+            circle-check, "ADDED" + the product name — then auto-collapses. */}
+        <div
+          data-testid="added-banner"
+          aria-hidden={!addedName}
+          className={`transition-all duration-300 overflow-hidden ${
+            addedName ? "max-h-24 opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          <div className="mb-3 flex items-center gap-3 rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-600/80 to-teal-600/70 px-4 py-3">
+            <CircleCheck className="h-6 w-6 shrink-0 text-emerald-300" aria-hidden="true" />
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-300/70">
+                Added
+              </p>
+              <p className="truncate text-lg font-black leading-tight text-white">{addedName}</p>
+            </div>
+          </div>
+        </div>
         <h2 className="text-xs font-bold uppercase tracking-wide text-white/80">Cart</h2>
         {cart.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">

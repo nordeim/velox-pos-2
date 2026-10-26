@@ -293,7 +293,8 @@ export function LoginSurface() {
                 Forgot password?
               </button>
               <p className="text-slate-500">
-                Need an account?{" "}
+                {/* The reference makes the WHOLE phrase one slate-500 button
+                    (text-sm font-medium, hover slate-700) — Session-4 parity. */}
                 <button
                   type="button"
                   onClick={() => {
@@ -301,9 +302,9 @@ export function LoginSurface() {
                     setError(null);
                     setNotice(null);
                   }}
-                  className="vpx-focus font-semibold text-slate-800 underline-offset-2 hover:underline"
+                  className="vpx-focus text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
                 >
-                  Sign up
+                  Need an account? Sign up
                 </button>
               </p>
             </>

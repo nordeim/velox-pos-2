@@ -19,6 +19,32 @@ test("the login card renders the reference copy", async ({ page }) => {
   await expect(page.getByText("Need an account?")).toBeVisible();
 });
 
+// ---------------------------------------------------------------------------
+// Session-4 pins: the login canvas gradient (the reference computes a
+// to-bottom-right slate-50 → slate-100 gradient, not a flat fill) and the
+// single-phrase signup button (the reference makes the WHOLE phrase
+// "Need an account? Sign up" one slate-500 button).
+// ---------------------------------------------------------------------------
+
+test("the login canvas is the reference's slate gradient (not a flat fill)", async ({ page }) => {
+  await page.goto("/login");
+  const canvas = page.locator(".login-canvas");
+  await expect(canvas).toBeVisible();
+  const image = await canvas.evaluate((el) => getComputedStyle(el).backgroundImage);
+  expect(image).toContain("linear-gradient");
+  expect(image).toContain("248, 250, 252");
+  expect(image).toContain("241, 245, 249");
+});
+
+test("the signup affordance is the reference's single-phrase slate-500 button", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  const signup = page.getByRole("button", { name: "Need an account? Sign up" });
+  await expect(signup).toBeVisible();
+  await expect(signup).toHaveCSS("color", "rgb(100, 116, 139)");
+});
+
 test("wrong credentials surface the API's error and keep the form", async ({ page }) => {
   await page.goto("/login");
   await expect(page.getByTestId("login-submit")).toBeEnabled();

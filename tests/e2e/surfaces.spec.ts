@@ -15,8 +15,8 @@ test("Reports renders the reference copy, period pills, and empty states", async
     "aria-pressed",
     "true",
   );
-  await expect(page.getByText("Total revenue")).toBeVisible();
-  await expect(page.getByText("Avg. ticket")).toBeVisible();
+  await expect(page.getByText("Total Revenue", { exact: true })).toBeVisible();
+  await expect(page.getByText("Avg. Ticket", { exact: true })).toBeVisible();
   await expect(page.getByTestId("area-chart")).toBeVisible();
   await expect(page.getByText("No data for this period").first()).toBeVisible();
 });
@@ -110,4 +110,116 @@ test("the cart side panel activates at md (reference tablet geometry)", async ({
   await expect(cart).toBeVisible();
   await expect(cart).toHaveCSS("width", "380px");
   await expect(cart).toHaveCSS("border-left-width", "1px");
+});
+
+// ---------------------------------------------------------------------------
+// Session-4 pins: heading typography + copy casing + the fiscal card, all
+// measured live on the reference (2026-10-26 — the reference RENAMED its
+// fiscal labels since Session-101). The reference renders its headings in
+// slate-700/800 on dark glass (near-invisible — its own defect); we pin the
+// SIZES (24px H1 / 16px sections / 14px Reports) while keeping the clone's
+// readable colors (the a11y-superset doctrine).
+// ---------------------------------------------------------------------------
+
+test("page H1s compute the reference's 24px (not text-3xl)", async ({ page }) => {
+  for (const route of ["/Dashboard", "/Inventory", "/Reports", "/StoreSettings"]) {
+    await page.goto(route);
+    const h1 = page.getByRole("heading", { level: 1 });
+    await expect(h1).toBeVisible();
+    await expect(h1).toHaveCSS("font-size", "24px");
+  }
+});
+
+test("section headings compute the reference's 16px (Dashboard/Cashiers/Settings)", async ({
+  page,
+}) => {
+  await page.goto("/Dashboard");
+  const dash = page.getByRole("heading", { name: "Sales — Last 7 days" });
+  await expect(dash).toBeVisible();
+  await expect(dash).toHaveCSS("font-size", "16px");
+  await expect(page.getByRole("heading", { name: "Products by Category" })).toHaveCSS(
+    "font-size",
+    "16px",
+  );
+
+  await page.goto("/Cashiers");
+  await expect(page.getByRole("heading", { name: "Turnos Recientes" })).toHaveCSS(
+    "font-size",
+    "16px",
+  );
+
+  await page.goto("/StoreSettings");
+  await expect(page.getByRole("heading", { name: "Business Information" })).toHaveCSS(
+    "font-size",
+    "16px",
+  );
+  await expect(page.getByRole("heading", { name: "Fiscal / Tax Data" })).toHaveCSS(
+    "font-size",
+    "16px",
+  );
+});
+
+test("Reports headings compute the reference's 14px uppercase white/60", async ({ page }) => {
+  await page.goto("/Reports");
+  const daily = page.getByRole("heading", { name: "Daily Sales" });
+  await expect(daily).toBeVisible();
+  await expect(daily).toHaveCSS("font-size", "14px");
+  await expect(daily).toHaveCSS("text-transform", "uppercase");
+  // v4 serializes white/60 as oklab(...) with "/ 0.6)" — the reference's
+  // rgba(255,255,255,0.6) is the same color; pin the ALPHA (the /60).
+  const color = await daily.evaluate((el) => getComputedStyle(el).color);
+  expect(color).toMatch(/(?:\/\s*0\.6\)|,\s*0\.6\))/);
+});
+
+test("Reports stat copy is the reference's Title Case DOM text", async ({ page }) => {
+  await page.goto("/Reports");
+  await expect(page.getByText("Total Revenue", { exact: true })).toBeVisible();
+  await expect(page.getByText("Avg. Ticket", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Revenue by Payment Method", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Breakdown by Method", exact: true }),
+  ).toBeVisible();
+});
+
+test("Dashboard stat labels are the reference's Title Case DOM text", async ({ page }) => {
+  await page.goto("/Dashboard");
+  await expect(page.getByText("Today's Sales", { exact: true })).toBeVisible();
+  await expect(page.getByText("Low Stock", { exact: true })).toBeVisible();
+});
+
+test("the fiscal card carries the reference's (renamed) labels", async ({ page }) => {
+  await page.goto("/StoreSettings");
+  // Scoped: the reference ALSO has a "Tax ID / EIN" in Business Information
+  // (measured twice on the live site) — pin the FISCAL card's copy only.
+  const fiscal = page.getByRole("region", { name: "Fiscal / Tax Data" });
+  await expect(fiscal.getByLabel("Tax ID / EIN")).toBeVisible();
+  await expect(fiscal.getByLabel("Tax Regime")).toBeVisible();
+  await expect(fiscal.getByLabel("Fiscal Address")).toBeVisible();
+  await expect(fiscal.getByLabel("CFDI Use (default)")).toBeVisible();
+});
+
+test("the fiscal toggle defaults OFF=hidden with the reference's copy and help text", async ({
+  page,
+}) => {
+  await page.goto("/StoreSettings");
+  const fiscal = page.getByRole("region", { name: "Fiscal / Tax Data" });
+
+  // Default: fiscal hidden on the receipt — the switch is UNCHECKED and the
+  // label reads "Hidden on receipt" (the reference's toggle-left default).
+  const fiscalSwitch = fiscal.getByRole("switch");
+  await expect(fiscalSwitch).not.toBeChecked();
+  await expect(fiscal.getByText("Hidden on receipt")).toBeVisible();
+
+  // The reference's help paragraph under the toggle.
+  await expect(
+    fiscal.getByText(
+      "If you configure these fields and enable the option, they will appear in the header of each printed or emailed receipt.",
+    ),
+  ).toBeVisible();
+
+  // Flipping the switch shows the reference's ON-state copy.
+  await fiscalSwitch.click();
+  await expect(fiscal.getByText("Visible on receipt")).toBeVisible();
 });

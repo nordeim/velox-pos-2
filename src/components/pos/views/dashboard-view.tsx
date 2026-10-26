@@ -49,7 +49,7 @@ export function DashboardView() {
 
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Today's sales"
+          label="Today's Sales"
           value={formatMoney(today.revenue, currency)}
           tone="green"
           icon={<DollarSign className="h-5 w-5" aria-hidden="true" />}
@@ -67,7 +67,7 @@ export function DashboardView() {
           icon={<Package className="h-5 w-5" aria-hidden="true" />}
         />
         <StatCard
-          label="Low stock"
+          label="Low Stock"
           value={String(low)}
           tone="orange"
           icon={<AlertTriangle className="h-5 w-5" aria-hidden="true" />}
@@ -76,7 +76,7 @@ export function DashboardView() {
 
       <div className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
         <section className="glass-card rounded-2xl p-5" aria-labelledby="dash-sales-week">
-          <h2 id="dash-sales-week" className="text-lg font-bold text-white/70">
+          <h2 id="dash-sales-week" className="text-base font-bold text-white/70">
             Sales — Last 7 days
           </h2>
           <div className="mt-3">
@@ -85,7 +85,7 @@ export function DashboardView() {
         </section>
 
         <section className="glass-card rounded-2xl p-5" aria-labelledby="dash-categories">
-          <h2 id="dash-categories" className="text-lg font-bold text-white/70">
+          <h2 id="dash-categories" className="text-base font-bold text-white/70">
             Products by Category
           </h2>
           <CategoryBreakdown />

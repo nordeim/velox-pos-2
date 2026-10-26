@@ -210,7 +210,9 @@
 
 /* The login page's light canvas (light gray, like the reference shell). */
 .login-canvas {
-  background: #f1f2f6;
+  /* The reference's login main computes a to-bottom-right slate gradient
+     (from #f8fafc to #f1f5f9) — Session-4 replaced the flat #f1f2f6 fill. */
+  background: linear-gradient(to right bottom, #f8fafc, #f1f5f9);
 }
 
 /* ---- focus + scrollbar conventions ---- */

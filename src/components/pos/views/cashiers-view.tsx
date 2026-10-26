@@ -210,7 +210,7 @@ export function CashiersView() {
       )}
 
       <section className="glass-card mt-6 rounded-2xl p-5" aria-labelledby="turnos-title">
-        <h2 id="turnos-title" className="text-lg font-bold text-white/60">
+        <h2 id="turnos-title" className="text-base font-bold text-white/60">
           Turnos Recientes
         </h2>
         <div className="vpx-scroll mt-3 overflow-x-auto">

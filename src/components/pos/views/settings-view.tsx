@@ -33,24 +33,31 @@ function SectionCard({
   title,
   children,
   tone = "violet",
+  headerAction,
 }: {
   icon: React.ReactNode;
   title: string;
   children: React.ReactNode;
   tone?: "violet" | "green";
+  /** Optional control mounted in the card header row (the reference's fiscal
+      card carries its "…on receipt" toggle there, right of the title). */
+  headerAction?: React.ReactNode;
 }) {
   return (
     <section className="glass-card rounded-2xl p-5" aria-label={title}>
-      <h2
-        className={`flex items-center gap-2.5 text-lg font-bold ${
-          tone === "green" ? "text-emerald-400/80" : "text-violet-300/80"
-        }`}
-      >
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5">
-          {icon}
-        </span>
-        {title}
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2
+          className={`flex items-center gap-2.5 text-base font-bold ${
+            tone === "green" ? "text-emerald-400/80" : "text-violet-300/80"
+          }`}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5">
+            {icon}
+          </span>
+          {title}
+        </h2>
+        {headerAction}
+      </div>
       <div className="mt-4">{children}</div>
     </section>
   );
@@ -72,7 +79,7 @@ export function StoreSettingsView() {
     primaryColor: "#6366f1",
     secondaryColor: "#8b5cf6",
     receiptFooter: "Thank you for your purchase!",
-    hideFiscalOnReceipt: false,
+    hideFiscalOnReceipt: true,
     fiscalRuc: "",
     fiscalBusinessType: "",
     fiscalAddress: "",
@@ -322,19 +329,33 @@ export function StoreSettingsView() {
           </div>
         </SectionCard>
 
-        <SectionCard icon={<Landmark className="h-5 w-5 text-violet-400" aria-hidden="true" />} title="Fiscal / Tax Data">
-          <div className="grid gap-4">
+        <SectionCard
+          icon={<Landmark className="h-5 w-5 text-violet-400" aria-hidden="true" />}
+          title="Fiscal / Tax Data"
+          headerAction={
+            // The reference mounts the toggle in the card header row, right of
+            // the title. Polarity per the reference: switch ON = fiscal data
+            // VISIBLE on the receipt (default OFF = hidden). The internal
+            // column stays hideFiscalOnReceipt, so the wiring inverts here.
             <label className="flex w-fit items-center gap-3 text-sm text-white/70">
               <Switch
-                checked={form.hideFiscalOnReceipt}
-                onCheckedChange={(v) => set({ hideFiscalOnReceipt: v })}
+                checked={!form.hideFiscalOnReceipt}
+                onCheckedChange={(v) => set({ hideFiscalOnReceipt: !v })}
+                aria-label="Show fiscal data on receipt"
               />
-              {form.hideFiscalOnReceipt ? "Hidden on receipt" : "Shown on receipt"}
+              {form.hideFiscalOnReceipt ? "Hidden on receipt" : "Visible on receipt"}
             </label>
+          }
+        >
+          <div className="grid gap-4">
+            <p className="text-sm text-white/50">
+              If you configure these fields and enable the option, they will appear in the header
+              of each printed or emailed receipt.
+            </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="set-ruc" className="text-white/70">
-                  RUC / NIT
+                  Tax ID / EIN
                 </Label>
                 <Input
                   id="set-ruc"
@@ -346,7 +367,7 @@ export function StoreSettingsView() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="set-biztype" className="text-white/70">
-                  Business type
+                  Tax Regime
                 </Label>
                 <Input
                   id="set-biztype"
@@ -358,7 +379,7 @@ export function StoreSettingsView() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="set-fiscal-address" className="text-white/70">
-                  Fiscal address
+                  Fiscal Address
                 </Label>
                 <Input
                   id="set-fiscal-address"
@@ -370,7 +391,7 @@ export function StoreSettingsView() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="set-expense" className="text-white/70">
-                  Expense account
+                  CFDI Use (default)
                 </Label>
                 <Input
                   id="set-expense"

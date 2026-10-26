@@ -58,7 +58,7 @@ export function ReportsView() {
 
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard
-          label="Total revenue"
+          label="Total Revenue"
           value={formatMoney(summary.revenue, currency)}
           tone="violet"
           icon={<TrendingUp className="h-5 w-5" aria-hidden="true" />}
@@ -70,7 +70,7 @@ export function ReportsView() {
           icon={<CalendarDays className="h-5 w-5" aria-hidden="true" />}
         />
         <StatCard
-          label="Avg. ticket"
+          label="Avg. Ticket"
           value={formatMoney(summary.avgTicket, currency)}
           tone="violet"
           icon={<CreditCard className="h-5 w-5" aria-hidden="true" />}
@@ -78,24 +78,24 @@ export function ReportsView() {
       </div>
 
       <section className="glass-card mt-5 rounded-2xl p-5" aria-labelledby="reports-daily">
-        <h2 id="reports-daily" className="text-base font-bold uppercase tracking-wider text-white/70">
-          Daily sales
+        <h2 id="reports-daily" className="text-sm font-bold uppercase tracking-wider text-white/60">
+          Daily Sales
         </h2>
         <div className="mt-3">
-          <AreaChart data={series} ariaLabel={`Daily sales for the last ${days} days`} />
+          <AreaChart data={series} ariaLabel={`Daily Sales for the last ${days} days`} />
         </div>
       </section>
 
       <div className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <section className="glass-card rounded-2xl p-5" aria-labelledby="reports-method">
-          <h2 id="reports-method" className="text-base font-bold uppercase tracking-wider text-white/70">
-            Revenue by payment method
+          <h2 id="reports-method" className="text-sm font-bold uppercase tracking-wider text-white/60">
+            Revenue by Payment Method
           </h2>
           <MethodTable methods={methods} currency={currency} showShare />
         </section>
         <section className="glass-card rounded-2xl p-5" aria-labelledby="reports-breakdown">
-          <h2 id="reports-breakdown" className="text-base font-bold uppercase tracking-wider text-white/70">
-            Breakdown by method
+          <h2 id="reports-breakdown" className="text-sm font-bold uppercase tracking-wider text-white/60">
+            Breakdown by Method
           </h2>
           <MethodTable methods={methods} currency={currency} />
         </section>

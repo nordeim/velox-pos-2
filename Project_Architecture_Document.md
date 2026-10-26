@@ -27,7 +27,7 @@ guardrail is enforced by tooling that runs in this checkout.
 
 **Scale & baselines (verified 2026-10-26, Session-3 re-certification):** 7 Prisma models · 22 API
 route files · 8 gated views
-+ login/reset/404 · 117 unit tests (12 files) · 45 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 117 unit tests (12 files) · 55 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -125,6 +125,27 @@ sRGB stops.
 control over the measured visual (grid dashes, tick labels, stroke), and the data transforms
 (bucketing, shares) are unit-pinned pure functions — chart libraries would add bundle weight for
 two plots and blur the parity contract.
+
+### ADR-009 — The Session-4 parity pins (heading scale, fiscal rename + inverted toggle, Added banner)
+**Decision:** (1) Heading sizes align to the reference's computed styles: page H1s `text-2xl`
+(24px), section headings `text-base` (16px), Reports section headings `text-sm` (14px)
+uppercase — while KEEPING the clone's readable white/violet colors (the reference renders its
+headings in near-invisible slate-700/800 on dark glass; pixel-verified as its own defect — the
+same a11y-superset posture as the mobile drawer). (2) The fiscal card follows the reference's
+CURRENT labels (it renamed them live after Session-101: RUC/NIT → "Tax ID / EIN", business
+type → "Tax Regime", expense account → "CFDI Use (default)") and its toggle contract: mounted
+in the SectionCard header row, default = fiscal hidden on receipts (`hideFiscalOnReceipt
+@default(true)`), the UI switch wired INVERTED (`checked={!hideFiscalOnReceipt}` — ON =
+"Visible on receipt"), plus the reference's help paragraph. (3) The cart gains the reference's
+"Added" auto-collapsing banner (emerald chip, product name, `transition-all duration-300`,
+~2.5s hold; timer state in the click handler — no setState-in-effect). (4) The login canvas
+matches the reference's slate gradient and its single-phrase "Need an account? Sign up"
+slate-500 button.
+**Rationale:** every item is a computed-style/drift measurement against the live reference
+(the full ledger is `docs/remediation-plan-session-4.md`); the reference DRIFTS between
+sessions, so its live computed styles — not the Session-101 snapshot — are the parity contract.
+Each behavioral item is e2e-pinned (10 new pins: heading sizes ×3, copy casing ×2, fiscal
+labels, fiscal toggle default + copy, Added banner, login gradient, signup button).
 
 ### ADR-008 — The Session-3 parity pins (tw-animate, hover unwrap, drawer focus superset)
 **Decision:** `globals.css` imports `tw-animate-css` (restoring the Radix `data-[state]`
@@ -243,7 +264,7 @@ lint → typecheck → unit → build → (smoke) → e2e
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 12 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 45/45):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 55/55):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
@@ -321,3 +342,30 @@ lint → typecheck → unit → build → (smoke) → e2e
   restore, md-growth auto-close). No prior pin weakened; no guardrail loosened.
 - Baselines at lock: lint 0 errors (1 documented warning) · typecheck clean · unit 117/117 ·
   e2e 45/45 · standalone build green.
+
+## Revision Block — v1.2 (2026-10-26, Session-4)
+
+- **The reference-drift parity pass** (the full findings ledger lives in
+  `docs/remediation-plan-session-4.md`): the live reference had RENAMED its fiscal field labels
+  since the Session-101 measurement (RUC/NIT → "Tax ID / EIN", business type → "Tax Regime",
+  expense account → "CFDI Use (default)" — placeholders unchanged), and a computed-style sweep
+  surfaced a heading-scale delta the earlier specs never pinned (reference H1 24px / sections
+  16px / Reports sections 14px vs the clone's 30/18/16px). ADR-009 records the decisions.
+- **Fiscal contract** (breaking for new rows): `hideFiscalOnReceipt @default(true)` — fiscal
+  data is hidden on receipts by default, matching the reference's toggle-off default; the UI
+  switch is wired inverted (ON = "Visible on receipt") and mounted in the SectionCard header
+  row with the reference's help paragraph. Existing rows keep their stored value
+  (re-provision or UPDATE to adopt the new default).
+- **Cart "Added" banner**: the reference's auto-collapsing confirmation chip (emerald gradient,
+  circle-check, "ADDED" + product name) now ships in the clone's cart panel.
+- **Login canvas**: the reference's `to right bottom #f8fafc → #f1f5f9` gradient replaces the
+  flat `#f1f2f6` fill; the signup affordance is the reference's single-phrase slate-500 button.
+- **Copy casing**: the DOM text aligns to the reference's Title Case ("Total Revenue",
+  "Avg. Ticket", "Daily Sales", "Revenue by Payment Method", "Breakdown by Method",
+  "Today's Sales", "Low Stock") — copy-verbatim discipline, pinned with `exact: true`.
+- Test baselines: unit **117/117** (unchanged — no pure seam was touched) · e2e **55/55**
+  (+10 Session-4 pins: H1 size, section sizes, Reports sizes, Reports Title Case, Dashboard
+  Title Case, fiscal labels, fiscal toggle default/copy/help, Added banner, login gradient,
+  signup button). No prior pin weakened; no guardrail loosened.
+- Baselines at lock: lint 0 errors (1 documented warning) · typecheck clean · unit 117/117 ·
+  e2e 55/55 · standalone build green.

@@ -90,8 +90,10 @@ model StoreSettings {
   primaryColor   String  @default("#6366f1")
   secondaryColor String  @default("#8b5cf6")
   receiptFooter  String  @default("Thank you for your purchase!")
-  // Fiscal / tax data (the reference's "Fiscal / Tax Data" card)
-  hideFiscalOnReceipt Boolean @default(false)
+  // Fiscal / tax data (the reference's "Fiscal / Tax Data" card) — the
+  // reference defaults fiscal data to HIDDEN on receipts (toggle OFF), so the
+  // column default is true (hide), flipped in Session-4 for parity.
+  hideFiscalOnReceipt Boolean @default(true)
   fiscalRuc           String  @default("")
   fiscalBusinessType  String  @default("")
   fiscalAddress       String  @default("")

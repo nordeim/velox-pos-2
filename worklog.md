@@ -152,3 +152,74 @@ production standalone build (the family rule: never the dev badge).
 including the previously-drifting brand row/nav/cart breakpoints, touch-correct hovers, animated
 dialogs/drawer, and the full drawer a11y contract (focus trap, restore, md-growth close) — every
 behavior e2e-pinned. Standing debt: NONE identified. Baselines: unit **117/117**, e2e **45/45**.
+
+---
+
+## Session-4 — the reference-drift parity pass (velox-pos-2)
+
+**Received state**: `f2583b3` (Session-3's tree + two doc-only commits: the session log and the
+coding-agent prompt). **Directive**: the standing audit→remediate→push cycle — re-verify the
+gate on a fresh clone, re-measure the live reference, fix what drifted, keep TDD and the docs
+in lockstep, push via the SSH wrapper.
+
+**Environment (fresh-clone bootstrap):** `bun install` (485 pkgs) → `.env` from
+`.env.example` + generated AUTH_SECRET → `db:push` + `db:seed` + `--demo` (15 products /
+5 categories / 1 register / 33 sales) → `bunx playwright install chromium` (the fresh sandbox
+lacked browser build 1243 — the same first-run step Session-3 hit). **Gate on the received
+tree: lint 0 errors (1 documented warning) · tsc clean · unit 117/117 · build green · e2e
+45/45** — the documented baselines hold on a pristine clone.
+
+**Audit (the full ledger is `docs/remediation-plan-session-4.md`):** the reference re-measured
+live end-to-end (agent-browser, computed styles, view-by-view text diff — with explicit
+navigation per site after discovering the CLI's named sessions share one tab). The reference's
+OWN mobile defect re-confirmed (220px z-50 overlay, no hamburger @390×844). Session-3's fixes
+re-verified exact (brand row 73px/border-b, nav px-8, cart 380px @800px, drawer contract,
+`animation-name: enter`). **Nine new findings — the headline: the reference site itself
+DRIFTED since Session-101** (it renamed its fiscal field labels live: RUC/NIT → "Tax ID /
+EIN", business type → "Tax Regime", expense account → "CFDI Use (default)"; its fiscal toggle
+flips "Hidden on receipt" ⇄ "Visible on receipt" with a hidden default and a help paragraph
+the clone lacked). Plus a heading-scale delta never previously pinned (reference H1 24px /
+sections 16px / Reports sections 14px vs the clone's 30/18/16px — and the reference's own
+headings render in near-invisible slate-700/800 on dark glass, pixel-verified: 880 slate-800
+text pixels on the #080a14 canvas); the missing cart "Added" auto-collapsing banner; DOM copy
+casing (Title Case) on Reports/Dashboard stats; the login canvas gradient; and the
+single-phrase signup button.
+
+**TDD execution (red before green — 10 new e2e pins written first, verified failing, then
+fixed):** H1 24px across 4 views; section headings 16px; Reports headings 14px + white/60;
+Reports + Dashboard Title Case (`exact: true` — Playwright's substring match is
+case-insensitive, the first RED run proved it); the four fiscal labels; the fiscal toggle
+default (unchecked = hidden) + label pair + help paragraph; the cart Added banner
+(visible-with-name → auto-collapsed); the login gradient; the signup single button.
+
+**Implemented:** `shared.tsx` H1 `text-3xl`→`text-2xl`; dashboard/cashiers/settings headings
+`text-lg`→`text-base`; reports headings `text-base`→`text-sm` + `text-white/60` + Title Case;
+the fiscal card relabeled + `SectionCard` gains a `headerAction` slot (toggle in the header
+row, wired `checked={!hideFiscalOnReceipt}` with the label pair "Hidden on receipt" ⇄
+"Visible on receipt") + the help paragraph; `prisma/schema.prisma`
+`hideFiscalOnReceipt @default(true)` (+ db:push + the demo row updated); the cart's "Added"
+banner in `terminal-view.tsx` (the reference's DOM verbatim: `max-h-0 opacity-0` ⇄
+`max-h-24 opacity-100`, emerald gradient chip, circle-check, timer state in the click handler
+— no setState-in-effect); `.login-canvas` → the reference's `to right bottom #f8fafc →
+#f1f5f9` gradient; the single-phrase "Need an account? Sign up" slate-500 button.
+
+**Re-certification (all on the final tree):** lint ✓ (0 errors, 1 documented warning) · tsc ✓
+· unit **117/117** · build ✓ · e2e **55/55** (all 45 prior pins green, none weakened — the two
+Session-101 casing pins updated to the reference's measured Title Case strings, not deleted).
+Live agent-browser re-verification: H1 24px / sections 16px / Reports 14px + Title Case
+everywhere; the fiscal card (labels, unchecked default, "Hidden on receipt", help text,
+header-row toggle); the Added banner live cycle (collapsed → "Added / Phone Stand" →
+auto-collapsed after ~2.5s); the login gradient `linear-gradient(to right bottom, rgb(248,
+250, 252), rgb(241, 245, 249))` byte-exact.
+
+**Docs lockstep:** README badge + counts (e2e 45→55); AGENTS.md — the "reference DRIFTS, live
+computed styles are the contract" law + the Session-4 pin contracts (heading scale, fiscal
+toggle polarity, Added banner); CLAUDE.md — the same laws + the reference-drift sharp edge;
+PAD v1.2 revision block + ADR-009; this remediation plan's checkboxes ticked; five fresh
+screenshots (14–18) in `docs/screenshots/` captured from the production standalone build.
+
+**Stage summary.** The clone now tracks the reference's CURRENT live surface (the fiscal
+rename + toggle contract, the heading scale, the Added banner, the login canvas) while keeping
+the readable-color a11y superset where the reference's own styling defeats it. Standing debt:
+NONE identified. Baselines: unit **117/117**, e2e **55/55**. The reference-drift lesson is
+codified in AGENTS/CLAUDE: the measured spec is a snapshot; the live site is the contract.

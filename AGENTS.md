@@ -50,11 +50,35 @@ bite hardest here:
 - **NO `tailwind.config.js`** — CSS-first `@theme` only. Reintroducing it is the documented
   "#1 cause of the flat look".
 - **Exact gradients are CSS classes** (`.brand-chip`, `.glass-button-*`) — utility gradients
-  interpolate in oklab and drift from the measured 135° stops.
+  interpolate in oklab and drift from the measured 135° stops. (Exception: the cart's "Added"
+  banner uses the reference's OWN utility classes verbatim — `from-emerald-600/80
+  to-teal-600/70` — reproducing its implementation, not a brand surface.)
 - **Nav lists are `flex flex-col gap-*`** — never `space-y-*` with `mt-*`/`mb-*` children (v4's
   `:where()` rewrite flips specificity).
 - Shadcn tokens are raw HSL triplets in `:root` routed through `hsl(var(--x))` inside `@theme`;
   `.theme-light` re-points them for the login card only. The app shell is permanently dark.
+- **The reference DRIFTS — re-measure before trusting the spec docs.** Session-4 caught the live
+  reference having renamed its fiscal field labels since Session-101's measurement (RUC/NIT →
+  "Tax ID / EIN", etc.). The measured spec in `docs/veloxpos-implementation-plan.md` §0 is a
+  snapshot, not a contract; computed styles on the live site are the contract.
+
+## Heading sizes + the fiscal toggle contract (Session-4 pins)
+
+- **Page H1s are `text-2xl` (24px), section headings `text-base` (16px), Reports section
+  headings `text-sm` (14px) uppercase** — measured on the reference; e2e-pinned. The reference
+  renders its headings in slate-700/800 on dark glass (near-invisible — its own defect); the
+  clone keeps readable white/violet colors (the a11y-superset doctrine, same posture as the
+  mobile drawer).
+- **The fiscal card**: labels "Tax ID / EIN" / "Tax Regime" / "Fiscal Address" / "CFDI Use
+  (default)" (the reference's CURRENT labels), the toggle lives in the SectionCard header row,
+  default = fiscal HIDDEN on receipts. The Prisma column is `hideFiscalOnReceipt @default(true)`
+  but the UI switch is wired INVERTED (`checked={!hideFiscalOnReceipt}` — switch ON = visible,
+  matching the reference's toggle direction); its label pair is "Hidden on receipt" ⇄
+  "Visible on receipt" (not "Shown"). E2E-pinned in `tests/e2e/surfaces.spec.ts`.
+- **The cart "Added" banner** (`tests/e2e/terminal.spec.ts`): a collapsed `max-h-0 opacity-0`
+  strip in the cart panel that expands on add (emerald chip, circle-check, "ADDED" + product
+  name, `transition-all duration-300`) and auto-collapses after ~2.5s. The timer state lives in
+  the click handler (no setState-in-effect); the ref only carries unmount cleanup.
 
 ## The mobile drawer contract (e2e-pinned — do not regress)
 

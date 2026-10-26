@@ -67,6 +67,15 @@ is the only gate.
 - **The drawer focus contract** (app-shell): focus → close button on open, Tab wraps inside the
   drawer, Escape restores the hamburger's focus, viewport growth past `md` auto-closes — all
   e2e-pinned in `tests/e2e/mobile-navigation.spec.ts`.
+- **Heading sizes are parity-pinned**: H1 `text-2xl` (24px), sections `text-base` (16px), Reports
+  sections `text-sm` (14px) — the reference's computed sizes (its own headings render in
+  near-invisible slate on dark; we keep readable colors — the superset posture).
+- **The fiscal toggle is wired INVERTED on purpose**: the column is `hideFiscalOnReceipt`
+  (`@default(true)` — hidden, per the reference's default) but the switch renders
+  `checked={!hideFiscalOnReceipt}` so switch ON = "Visible on receipt" (the reference's toggle
+  direction). Label pair: "Hidden on receipt" ⇄ "Visible on receipt" — never "Shown".
+- **The cart "Added" banner** auto-collapses via a timer set in the click handler (no
+  setState-in-effect); the e2e pin asserts visible → collapsed, not the duration.
 - **Key-based modal resets** (`key={editing?.id ?? "new"}`) — no setState-in-effect dialog resets
   (React 19 lint rule `react-hooks/set-state-in-effect`).
 - **Toasts via `useToast()`** → `toast.success/error/info(message)` — never `alert()`.
@@ -101,6 +110,9 @@ is the only gate.
 
 - The e2e suite needs `bun run build` first; it boots `.next/standalone` on :3100 with
   `COOKIE_SECURE=false` and an **absolute** `DATABASE_URL` (see `playwright.config.ts`).
+- The reference site DRIFTS between sessions (Session-4 caught its fiscal labels being
+  renamed live). `docs/veloxpos-implementation-plan.md` §0 is a SNAPSHOT — re-measure the live
+  site with agent-browser before acting on a parity question.
 - The login form is inert until hydration (the submit button ships `disabled`) — tests wait for
   `toBeEnabled()` before filling; the pre-hydration native GET would leak the password into the URL.
 - `/Settings` 404s **by design** (reference parity — the sidebar href is `/StoreSettings`).

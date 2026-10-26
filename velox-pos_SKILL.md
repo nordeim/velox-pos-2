@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.0.0
+version: 2.1.0
 last_updated: 2026-10-26
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-3 lock: unit **117/117** (12 files) · e2e **45/45**
-(30 desktop + 13 mobile + 1 setup + 1 geometry) · lint 0 errors (1 documented
+Baselines at Session-4 lock: unit **117/117** (12 files) · e2e **55/55**
+(41 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -68,7 +68,7 @@ bun run lint                   # eslint flat config — 0 errors, 1 documented w
 bun run typecheck              # tsc --noEmit — strict
 bun run test                   # vitest — tests/unit/** (117)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               # playwright (45) — NEEDS the build first (:3100)
+bun run test:e2e               # playwright (55) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bunx vitest run tests/unit/cart.test.ts          # one unit file
@@ -160,6 +160,24 @@ is a loss machine.
   collapse chevron at the bottom (220px ⇄ 68px, persisted in the store).
 - Cart rail: `w-full md:w-[380px]` + `border-l` from `md` (the reference's own
   tablet breakpoint), stacked with `border-t` below.
+- Heading scale (Session-4, e2e-pinned): page H1s `text-2xl` (24px), section
+  headings `text-base` (16px), Reports section headings `text-sm` (14px)
+  uppercase — the reference's computed sizes. The reference's own headings
+  render in near-invisible slate-700/800 on dark glass (its defect — pixel-
+  verified); the clone keeps readable white/violet (superset posture).
+- Fiscal card (Session-4): labels "Tax ID / EIN" / "Tax Regime" / "Fiscal
+  Address" / "CFDI Use (default)" (the reference's CURRENT labels — it renamed
+  them live after Session-101); the toggle mounts in the card header row,
+  default = hidden (`hideFiscalOnReceipt @default(true)`), switch wired
+  INVERTED (`checked={!hide}` — ON = "Visible on receipt").
+- The cart "Added" banner: collapsed `max-h-0 opacity-0` strip that expands on
+  add (emerald chip, circle-check, "ADDED" + product name) and auto-collapses
+  (~2.5s; timer in the click handler — no setState-in-effect).
+- Login canvas: `to right bottom #f8fafc → #f1f5f9` gradient (`.login-canvas`),
+  single-phrase slate-500 "Need an account? Sign up" button.
+- **The reference DRIFTS between sessions** — live computed styles are the
+  contract, the Session-101 spec §0 is a snapshot. Re-measure before any
+  parity decision.
 - Print: `@media print` reveals only `.receipt-print`.
 
 ## 7. The Tailwind v4 trap catalog (all pinned — see `globals.css` header)
@@ -270,7 +288,7 @@ SUPERSET instead:
 
 1. **Unit (Vitest, 117/117, 12 files)** — the pure seams only. New `src/lib`
    seam ⇒ new `tests/unit` file (red → green). UI components get no unit tests.
-2. **E2E (Playwright, 45/45)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 55/55)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -390,7 +408,7 @@ verify → shred).
   reference measured live (F1–F21 in the plan doc); 117 unit + 39 e2e; the five
   field-tested e2e failures (Edge-runtime instrumentation, pre-hydration GET,
   Secure cookies on http, the relative-URL inode desync, the stale-port squatter).
-- **Session-3** (this version): the audit-driven parity pass — `tw-animate-css`
+- **Session-3**: the audit-driven parity pass — `tw-animate-css`
   wired (the dead animation family), the hover un-wrap, the drawer focus
   superset + md-growth auto-close, the cart `md:` breakpoint, the brand-row
   border frame, five dead deps removed, docs lockstep. Ledger:
@@ -398,3 +416,11 @@ verify → shred).
   `veloxpos_SKILL.md` (stale: `vx_session` cookie, `server/pos.ts`, the
   "/Settings superset" claim) was replaced by this code-accurate skill — the
   code wins; where any doc disagrees, fix the doc in the same commit.
+- **Session-4** (this version): the reference-drift parity pass — the live
+  reference had renamed its fiscal labels (Session-101's RUC/NIT spec was a
+  snapshot); heading scale pinned at the reference's computed 24/16/14px with
+  readable colors kept; the fiscal toggle contract (header row, inverted
+  wiring, hidden default); the cart "Added" banner; the login gradient +
+  single-phrase signup button; Title Case copy pins (`exact: true` —
+  Playwright's substring match is case-INsensitive). 10 new e2e pins,
+  45→55. Ledger: `docs/remediation-plan-session-4.md`.
