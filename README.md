@@ -1,143 +1,242 @@
 # VeloxPOS (Point Of Sale)
 
-![Next.js](https://img.shields.io/badge/Next.js-16.4-000000) ![React](https://img.shields.io/badge/React-19-61DAFB) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4) ![Prisma](https://img.shields.io/badge/Prisma-6.19-2D3748) ![Tests](https://img.shields.io/badge/tests-109%20green-22c55e)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![React](https://img.shields.io/badge/React-19-61dafb)
+![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6)
+![Tests](https://img.shields.io/badge/unit%20tests-117%20%2F%20117-brightgreen)
+![E2E](https://img.shields.io/badge/e2e-39%20%2F%2039-brightgreen)
+![License](https://img.shields.io/badge/license-Proprietary-lightgrey)
 
-**VeloxPOS — a fast, self-hosted point of sale.** A production-ready clone
-(functional superset) of the [`veloxposen.base44.app`](https://veloxposen.base44.app/)
-POS app, rebuilt as a single Next.js application you fully own: your database,
-your data, your deployment.
+**A production-ready, enterprise-grade Point of Sale web application — a functional superset of
+`veloxposen.base44.app` with measured visual parity, built on Next.js 16 + React 19 + Prisma/SQLite.**
+
+---
 
 ## Overview
 
-The reference is a dark-themed point-of-sale workspace — terminal, inventory,
-registers, cashiers, and reports — that lives behind a hosted platform login
-with no source access. VeloxPOS rebuilds every surface as an open codebase.
-Visual parity was measured from the live reference (computed styles and
-pixel-level screenshots, not eyeballing — see
-`docs/veloxpos-implementation-plan.md` §0 for the evidence table). Where the
-reference is broken or unfinished, VeloxPOS ships working features: the
-reference's product/register create-flows never complete and its Settings
-link renders a 404 — every one of those surfaces works here.
+VeloxPOS runs the whole counter workflow: cash registers with shift management, a barcode-first
+selling terminal with a live cart, inventory with low-stock tracking, cashier accounts, and sales
+analytics with period filtering. Every surface is server-gated, Zod-validated, and covered by a
+local verification gate (lint → typecheck → unit → build → e2e) — the local gate is the only gate.
 
-| | | |
-|---|---|---|
-| ![Terminal](docs/screenshots/terminal-cart.png) | ![Dashboard](docs/screenshots/dashboard.png) | ![Reports](docs/screenshots/reports.png) |
-| ![Mobile drawer](docs/screenshots/mobile-drawer.png) | ![Receipt](docs/screenshots/receipt.png) | ![Collapsed rail](docs/screenshots/sidebar-collapsed.png) |
+The application replicates the reference POS (`veloxposen.base44.app`) view-for-view — the same
+routes, the same dark glass design system, the same mixed English/Spanish copy — and extends it
+where the reference's demo account is write-restricted: full CRUD everywhere, shift close with
+cash-count variance, cash checkout with change, printable receipts, CSV import/export, and a
+working mobile navigation drawer (the reference keeps a broken 220px overlay on phones).
 
-All captures above live in [`docs/screenshots/`](docs/screenshots/) — desktop
-views, the dialogs, the receipt, the 404 surface, the collapsed rail, and the
-mobile set (390×844) including the working navigation drawer.
+## Screenshots
+
+| | |
+|---|---|
+| ![Login](docs/screenshots/01-login-desktop.png) | ![Terminal](docs/screenshots/04-terminal-active-cart.png) |
+| Login — the reference's light card | Terminal — catalog, cart, and CHARGE |
+| ![Dashboard](docs/screenshots/03-dashboard.png) | ![Mobile drawer](docs/screenshots/08-mobile-drawer.png) |
+| Dashboard — stat cards + charts | Mobile navigation drawer (390×844) |
 
 ## Key Features
 
-| Feature | What it does |
-|---|---------|
-| 🛒 Terminal | Barcode/scan input + product grid, cart with qty controls and discounts, cash/card/transfer checkout with change math, printable receipt, shift-gated selling ("No active shift" state mirrors the reference) |
-| 📊 Dashboard | Long-date header, the four reference stat cards (TODAY'S SALES / TRANSACTIONS / PRODUCTS / LOW STOCK), the "Sales — Last 7 days" violet area chart, "Products by Category", plus a low-stock alert strip |
-| 📦 Inventory | Reference-measured table (PRODUCT/CODE/PRICE/STOCK/CATEGORY/STATUS/ACTIONS), search by name or code, category filter, full create/edit/delete through the measured New Product dialog (Name, Barcode, Category, Selling price, Cost, Current stock, Min. stock, Tax rate 16%, Unit, Active switch) |
-| 🧾 Sales | "Historial de Ventas" with the reference's Spanish copy, search by ticket/customer/cashier, receipt detail dialog, refunds that restore stock |
-| 🖥️ Registers | Cash-register cards with live shift status, the measured New Register dialog, open-shift float capture, close-shift cash counting with expected-vs-counted comparison |
-| 👥 Cashiers | "Cajeros" user administration (admin-only), roles, activate/deactivate, "Turnos Recientes" table |
-| 📈 Reports | Period chips (7/14/30/90 days), TOTAL REVENUE / TRANSACTIONS / AVG. TICKET cards, DAILY SALES chart, REVENUE BY PAYMENT METHOD donut + BREAKDOWN BY METHOD, CSV export |
-| ⚙️ Settings | The reference's Settings link 404s — this page exists: store profile (name/address/currency/tax/receipt footer), the Categories manager, account profile + password change |
-| 🔐 Auth | The reference's hosted login layout ("Welcome to VeloxPOS (Point Of Sale)", the four social buttons, email+password) backed by a real self-hosted flow: scrypt+HMAC cookie sessions, rate limiting, email verification, forgot/reset |
-| 📱 Mobile navigation | The reference has NO working mobile nav (its desktop layout crushes at 390px) — the clone ships a full drawer: hamburger app bar, focus-trapped `role=dialog`, Esc/backdrop close, scroll lock, drawer→view navigation |
-| ♿ Accessibility | Skip link, violet focus-visible rings on every interactive element, `aria-current` nav, `prefers-reduced-motion` drawer, polite live-region toasts, WCAG-minded contrast on the surfaces the reference left unreadable |
-| 🛡️ Resilience | Offline banner (ambient, renders nothing while online), transport failures toast human messages, Zod validation at every API boundary, one-transaction checkout (stock decrement + ticket + items commit or roll back together) |
-| 🐳 Docker | Multi-stage `Dockerfile` + compose with a SQLite volume — one command from clone to container |
+| Feature | Description |
+|---|---|
+| 🖥️ Terminal | Shift-gated selling surface: barcode/name search, category chips, product grid, live cart with quantity controls, cash/card checkout with change computation, printable receipt |
+| 📊 Dashboard | Today's sales, transactions, product count, low-stock alerts; a 7-day sales line chart and a products-by-category breakdown — all computed by pure, unit-tested seams |
+| 📦 Inventory | Product CRUD with barcode, category, unit, tax rate, min-stock thresholds; live search; CSV export + import; stock status chips (In stock / Low / Out) |
+| 💵 Registers | Cash-register management; open/close shift lifecycle with opening float, expected-cash computation, and counted-cash variance (Over/Short/Exact) |
+| 🧾 Sales | Spanish-copy sales ledger (Historial de Ventas) with ticket search by ticket/customer/cashier and a per-sale receipt viewer |
+| 👥 Cashiers | Cashier account management (role-scoped users) with the Spanish Turnos Recientes shift ledger |
+| 📈 Reports | 7/14/30/90-day period pills; total revenue, transactions, average ticket; daily-sales area chart; revenue by payment method |
+| ⚙️ Store Settings | Business information, branding colors, receipt footer, fiscal/tax data with receipt-visibility control, card payment provider, product categories |
+| 🔐 Auth | Email/password sign-in (scrypt + HMAC httpOnly cookies), registration, email verification, password reset, rate-limited public endpoints |
+| 📱 Mobile drawer | The documented a11y superset: labeled hamburger, slide-in drawer (role=dialog), backdrop/Escape/route-change close, zero horizontal overflow at 390px |
 
-## Architecture
+## Quick Start
 
-| Layer | Technology | Version | Purpose |
-|-------|-----------|---------|---------|
-| Framework | Next.js (App Router) | 16.4 | One page + 8 path rewrites (SPA parity with the reference) |
-| UI runtime | React | 19 | Client view switching inside a single app shell |
-| Language | TypeScript | 5 (strict) | End-to-end types, no `any` |
-| Styling | Tailwind CSS | 4 (CSS-first `@theme`) | Measured dark tokens (`docs/veloxpos-implementation-plan.md` §0) |
-| Components | Radix UI (shadcn-style) | current | Accessible primitives |
-| Database | SQLite via Prisma ORM | 6.19 | Zero-config, single file at repo-root `db/` |
-| State | Zustand | 5 | App store + toast store; URL is the routing truth |
-| Validation | Zod | 4 | Every API boundary |
-| Unit tests | Vitest | 5 | Pure seams (money, cart, reports, router, schemas, db-path, auth) |
-| E2E tests | Playwright | 1.63 | Production standalone build + isolated `db/e2e.db` |
-| Runtime | Bun | ≥ 1.3 | `bun run dev`, scripts, seed |
-
-```mermaid
-flowchart TB
-    B["Browser — app shell (sidebar/drawer + view router)"] --> G["Next.js 16 route handlers /api/*"]
-    G --> V["Zod validation"]
-    V --> P[("Prisma 6 + SQLite<br/>db/custom.db")]
-    G --> S["HMAC cookie sessions<br/>scrypt + rate limit"]
-    G --> T["Transactional checkout<br/>(stock + sale + items)"]
-```
-
-## Quick start
+**Prerequisites:** [Bun](https://bun.sh) ≥ 1.1, Node.js ≥ 20 (for Playwright), Chromium for e2e.
 
 ```bash
-git clone https://github.com/nordeim/velox-pos.git
-cd velox-pos
+# 1. Install dependencies
 bun install
 
-cp .env.example .env          # DATABASE_URL="file:../db/custom.db" → <repo>/db/custom.db
+# 2. Configure the environment (see the table below)
+cp .env.example .env        # then set AUTH_SECRET (openssl rand -hex 32)
 
-bun run db:push               # create the schema
-bun run db:seed               # demo account: demo@veloxpos.app / Demo1234! (empty store, parity states)
-bun run dev                   # http://localhost:3000
+# 3. Provision the database — db/custom.db at the repo root
+bun run db:push
+bun run db:seed
+
+# 4. Start the dev server
+bun run dev                 # → http://localhost:3000
 ```
 
-Optional sample catalog (8 products, a register, a closed shift with sales):
+**Verify setup:**
 
 ```bash
-bun run db:seed:sample
+curl http://localhost:3000/api/health
+# {"status":"ok","db":"up","app":"veloxpos"}
 ```
+
+Sign in with the seeded owner account: `sepnetflix2023@outlook.com` / `$Abcd1234`.
+Optionally populate a showcase dataset: `bun run db:seed -- --demo` (categories, 15 products, a
+register, a closed shift, and a week of sales).
+
+## Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | ✅ | `file:../db/custom.db` (the documented dev default — resolves against `prisma/schema.prisma` for the CLI **and** the runtime via `src/lib/db-path.ts`). Use an **absolute** `file:` URL for production/standalone deploys. |
+| `AUTH_SECRET` | ✅ (prod, fatal at boot) | HMAC session-signing secret. Generate with `openssl rand -hex 32`. Production refuses to boot without a real secret; dev falls back to an insecure constant with a warning. |
+| `NEXT_PUBLIC_SITE_URL` | — | Canonical origin for metadata/sitemap/robots (`http://localhost:3000` in dev). |
+| `COOKIE_SECURE` | — | Set `false` only for plain-HTTP production deployments (the e2e standalone server uses it; browsers drop Secure cookies over non-HTTPS origins). |
 
 ## Scripts
 
 | Command | What it does |
 |---|---|
-| `bun run dev` | Dev server on :3000 |
-| `bun run build` | Production standalone build (static assets copied into `.next/standalone`) |
-| `bun start` | Serve the production build |
-| `bun run lint` / `typecheck` | ESLint / `tsc --noEmit` |
-| `bun run test` | Vitest unit layer |
-| `bun run test:e2e` | Playwright against the standalone build + `db/e2e.db` (runs `bun run build` first) |
-| `bun run db:push` / `db:seed` / `db:seed:sample` | Schema push / demo seed / sample catalog |
+| `bun run dev` | Dev server on :3000 (output teed to `dev.log`) |
+| `bun run build` | Standalone production build (`next build` + static/public copy) |
+| `bun run lint` | ESLint (flat config) |
+| `bun run typecheck` | `tsc --noEmit` (strict) |
+| `bun run test` | Vitest unit suite — the pure domain seams (117 tests / 12 files) |
+| `bun run test:e2e` | Playwright suite against the production standalone build (39 tests; desktop 1440×900 + mobile 390×844 projects) |
+| `bun run db:push` | `prisma db push` against `db/custom.db` |
+| `bun run db:seed` | Idempotent owner + default store settings (`-- --demo` adds showcase data) |
 
-## The verification gate
+## Architecture
 
-There is no hosted CI on this repo — the local gate is the only gate, and it
-must be green before every push (see `AGENTS.md`):
+| Layer | Technology | Purpose |
+|---|---|---|
+| Framework | Next.js 16 (App Router, standalone output) | Server-gated routes at the reference's real paths |
+| UI runtime | React 19 | Client views; ONE Zustand store (`usePosStore`) |
+| Styling | Tailwind CSS v4 (CSS-first, no config file) | Pinned palette + the measured `glass-*` classes |
+| Primitives | Radix UI (shadcn-style components in `src/components/ui`) | Dialogs, selects, toasts, switches |
+| ORM | Prisma 6 / SQLite (`db/custom.db`) | 7 models, all ownership-scoped |
+| Auth | scrypt + HMAC httpOnly cookie (`sf_session`) | Boot-guarded secret, rate-limited public endpoints |
+| Validation | Zod 4 at every API boundary | Nothing reaches Prisma unvalidated |
+| Charts | Hand-rolled SVG (`src/components/pos/shared.tsx`) | Zero chart dependencies; dotted-grid parity |
 
-```bash
-bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
+```
+Browser ──► /POS /Dashboard /Inventory /Sales /Registers /Cashiers /Reports /StoreSettings
+              │ (server-gated layout: session or redirect to /login)
+              ▼
+        Client views (usePosStore) ──► /api/* (Zod → delegates → Prisma)
+                                          │
+              ┌───────────────────────────┼──────────────────────────┐
+              ▼                           ▼                          ▼
+        /api/auth/* (scrypt+HMAC)   /api/products|categories|   /api/shifts|sales (workflows:
+        rate-limited, cookie ttl    registers|cashiers (CRUD     open/close shift, checkout
+                                    factories + ownership)       with server-side totals)
 ```
 
-Current status: **65 unit tests + 44 e2e tests, all green.**
+**Directory map (key files):**
 
-## The DATABASE_URL contract
+```
+📂 src
+ ├ 📂 app
+ │  ├ 📂 (app)/          — the 8 server-gated routes (POS, Dashboard, …, StoreSettings)
+ │  ├ 📂 api/            — auth, products, categories, registers, shifts, sales, cashiers, store-settings, health
+ │  ├ 📄 layout.tsx      — root layout (dark canvas + Toaster)
+ │  ├ 📄 not-found.tsx   — the reference's Spanish 404
+ │  └ 🎨 globals.css     — Tailwind v4 @theme pins + tokens.css import
+ ├ 📂 components
+ │  ├ 📂 pos/            — AppShell (sidebar + mobile drawer), views, login/reset surfaces
+ │  └ 📂 ui/             — shadcn-style primitives
+ ├ 📂 lib
+ │  ├ 💰 money.ts        — cents-safe money math (the ONLY place amounts are computed)
+ │  ├ 🛒 cart.ts         — cart reducer + totals + the charge gate
+ │  ├ 🧾 shift.ts        — shift state machine (expected cash, variance)
+ │  ├ 📈 reports.ts      — period bucketing + aggregations
+ │  ├ 📦 inventory-status.ts — stock derivation + the CSV round-trip
+ │  ├ 🗺️ router.ts       — the route↔nav map (unit-pinned)
+ │  ├ ✅ validation.ts   — every Zod contract
+ │  ├ 🗄️ db.ts/db-path.ts — the documented DATABASE_URL resolution contract
+ │  └ 🌐 store.ts        — the ONE Zustand store
+ └ 📂 lib/server         — http.ts (error mapper + CRUD factories), auth.ts (cookies), entities.ts
+📂 prisma                — schema.prisma (7 models) + seed.ts
+📂 tests
+ ├ 📂 unit/              — 12 vitest files over the pure seams
+ └ 📂 e2e/               — Playwright specs (desktop + mobile projects)
+```
 
-`.env` carries `DATABASE_URL="file:../db/custom.db"`. A relative `file:` URL
-resolves against the directory that owns `prisma/schema.prisma` — so the
-single SQLite file always lands at `<repo>/db/custom.db` for the Prisma CLI,
-`next dev`, `next build`, and the standalone server alike, regardless of the
-process working directory. The rule lives in `src/lib/db-path.ts` and is
-pinned by `tests/db-path.test.ts`. The `db/` folder is gitignored (recreate
-with `db:push` + `db:seed`).
+## API Reference
+
+All endpoints return domain JSON; errors use `{ error: string }` with the documented status mapping
+(Zod → 400, P2002 → 409, P2025 → 404, unauthed → 401). Authenticated endpoints require the
+`sf_session` cookie.
+
+| Endpoint | Methods | Auth | Description |
+|---|---|---|---|
+| `/api/auth/login` | POST | public (rate-limited) | Credential exchange; sets the session cookie |
+| `/api/auth/register` | POST | public (rate-limited) | Owner account creation |
+| `/api/auth/forgot-password` · `/reset-password` | POST | public (rate-limited) | One-shot 48-hex reset tokens |
+| `/api/auth/me` · `/logout` | GET · POST | ✅ | Session introspection / logout |
+| `/api/products` · `/api/products/[id]` | GET · POST · PATCH · DELETE ⚠️ | ✅ | Inventory CRUD |
+| `/api/categories` · `/[id]` | GET · POST · PATCH · DELETE ⚠️ | ✅ | Category CRUD |
+| `/api/registers` · `/[id]` | GET · POST · PATCH · DELETE ⚠️ | ✅ | Register CRUD (delete refused with shift history) |
+| `/api/shifts` | GET · POST | ✅ | Shift ledger + open-shift workflow (one active per register) |
+| `/api/shifts/[id]` | PATCH | ✅ | Close shift: counted cash in → expected/variance computed server-side |
+| `/api/sales` | GET · POST | ✅ | Ledger + checkout (server-authoritative totals, stock decrement, ticket allocation) |
+| `/api/sales/[id]` | GET · PATCH | ✅ | Receipt payload / refund flip |
+| `/api/cashiers` · `/[id]` | GET · POST · PATCH · DELETE ⚠️ | ✅ (owner) | Cashier account management |
+| `/api/store-settings` | GET · PATCH | ✅ | Lazy-materialized store settings |
+| `/api/health` | GET | public | `{status, db, app}` liveness |
+
+## Testing
+
+```bash
+bun run test            # unit: 117 tests / 12 files — the pure seams (money, cart, shift,
+                        # reports, inventory-status, currency, router, validation, auth,
+                        # db-path, env-check, site)
+bun run test:e2e        # e2e: 39 tests — needs `bun run build` first (boots the standalone
+                        # build on :3100 with its own scratch db, db/e2e.db)
+```
+
+The e2e suite runs two projects: **desktop** (1440×900) and **mobile** (390×844, the
+`mobile-navigation.spec.ts` drawer suite). Auth is established once per run (`auth.setup.ts`,
+storageState reuse) to respect the 10/IP/15-minute rate limit. The scratch db is provisioned by the
+webServer command itself (kill-port → provision → boot) and never replaced while the server lives.
+
+## Design System
+
+The measured reference tokens (extracted live via computed styles — see
+`docs/veloxpos-implementation-plan.md` §0):
+
+| Token | Value | Usage |
+|---|---|---|
+| Canvas | `#080a14` | App background |
+| Panel | `#0d0f1a` | Sidebar + cart panel |
+| Panel raised | `rgba(16,18,32,0.9)` | `.glass-card` surfaces |
+| Edge | `#1e2235` | Borders |
+| Active nav | `rgba(124,58,237,0.2)` + `#c4b5fd` | The violet pill |
+| Charge gradient | `135° #059669 → #10b981` | `.glass-button-success` |
+| Brand gradient | `to bottom right #8b5cf6 → #4f46e5` | The logo chip |
+
+Typography: the system stack (`ui-sans-serif, system-ui`) — no webfonts. The `glass-*` family is
+plain CSS in `src/app/tokens.css` (never `@layer utilities` — the documented Tailwind v4 cascade
+trap). The login route scopes `.theme-light` for its light card.
 
 ## Deployment
 
-See `docs/DEPLOYMENT.md` — standalone Node, Docker, or any Node host. The
-short version: set a real `AUTH_SECRET` (`openssl rand -hex 32`), run
-`bun run build`, then `bun start` (or `docker compose --profile init up`).
+The production artifact is the standalone build (see `docs/DEPLOYMENT.md` for the full runbook):
 
-## Documentation map
+```bash
+bun run build
+DATABASE_URL="file:/absolute/path/db/custom.db" AUTH_SECRET=$(openssl rand -hex 32) \
+  PORT=3000 bun .next/standalone/server.js
+```
 
-| Document | Contents |
-|---|---|
-| `AGENTS.md` | Engineering conventions for coding agents (the mandatory read) |
-| `CLAUDE.md` | The same contract, Claude-flavored, plus the doc chain |
-| `Project_Architecture_Document.md` | Layers, data model, seams, ADRs |
-| `docs/veloxpos-implementation-plan.md` | The measured reference evidence + build decisions |
-| `docs/Tailwind-V4-Validation-Report.md` | The v3→v4 trap catalog this repo codes against |
-| `docs/how-to-git-push-using-ssh-wrapper_SKILL.md` | Pushing `main` via the SSH wrapper |
-| `worklog.md` | The running session journal |
+Use an **absolute** `DATABASE_URL` in production (the dev-relative form is anchored per-bundle —
+see the contract in `src/lib/db-path.ts`). `AUTH_SECRET` is enforced at boot in production
+(`src/instrumentation.ts` exits loudly when missing/weak).
+
+## Documentation
+
+- `docs/veloxpos-implementation-plan.md` — the measured reference spec + the build plan
+- `Project_Architecture_Document.md` — the full engineering reference (ADRs, data model, invariants)
+- `AGENTS.md` / `CLAUDE.md` — agent conventions (commands, traps, seams)
+- `docs/Tailwind-V4-Validation-Report.md` — the ten documented v3→v4 traps this codebase pins
+- `docs/how-to-git-push-using-ssh-wrapper_SKILL.md` — the SSH push runbook (`docs/ssh_git_wrapper_v3.py`)
+
+## License
+
+Proprietary — internal engineering reference. All rights reserved.

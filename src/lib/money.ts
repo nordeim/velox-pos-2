@@ -1,43 +1,81 @@
 // ---------------------------------------------------------------------------
-// Money seam — integer-cents math and formatting. All monetary math in the
-// app flows through here; floats never touch storage (schema *Cents columns).
+// Money math. Every amount in the app flows through here — dollars at the
+// edges (schema, display), integer cents in the middle (never float math).
+// Pure — unit-pinned by tests/unit/money.test.ts.
 // ---------------------------------------------------------------------------
 
-/** Parse a decimal string/number into integer cents, banker-safe for the
- *  two-decimal POS domain (rounds half away from zero on the 3rd decimal). */
-export function toCents(input: number | string): number {
-  const value = typeof input === "string" ? Number.parseFloat(input) : input;
-  if (!Number.isFinite(value)) return 0;
-  const sign = value < 0 ? -1 : 1;
-  const abs = Math.round(Math.abs(value) * 1000);
-  // round half away from zero at the sub-cent position
-  const cents = Math.floor(abs / 10) + (abs % 10 >= 5 ? 1 : 0);
-  return sign * cents;
+/** Round half-up to a 2-decimal dollar amount. */
+export function round2(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
-/** cents -> "$12.34" (USD by default; never negative-zero). */
-export function formatMoney(cents: number, currency = "USD"): string {
-  const safe = Number.isFinite(cents) ? Math.round(cents) : 0;
-  const symbol = currency === "USD" ? "$" : `${currency} `;
-  return `${symbol}${(safe / 100).toFixed(2)}`;
+/** Dollars → integer cents (half-up on the 3rd decimal). */
+export function toCents(dollars: number): number {
+  return Math.round((dollars + Number.EPSILON) * 100);
 }
 
-/** cents -> plain "12.34" (form inputs). */
-export function centsToDecimalString(cents: number): string {
-  const safe = Number.isFinite(cents) ? Math.round(cents) : 0;
-  return (safe / 100).toFixed(2);
+/** Integer cents → 2-decimal dollars. */
+export function fromCents(cents: number): number {
+  return round2(cents / 100);
 }
 
-/** Line total for a cart/product line: price * qty (tax applied at the
- *  cart level so mixed-rate tickets round predictably). */
-export function lineTotalCents(priceCents: number, qty: number): number {
-  const safeQty = Math.max(0, Math.trunc(qty));
-  return Math.max(0, Math.trunc(priceCents)) * safeQty;
+/** A single cart/sale line total: price × qty, in cents. */
+export function lineTotalCents(price: number, qty: number): number {
+  return toCents(price) * Math.max(0, Math.round(qty));
 }
 
-/** Per-line tax at the given percent, half-up on the sub-cent. */
-export function taxOnCents(amountCents: number, taxRatePercent: number): number {
-  const rate = Number.isFinite(taxRatePercent) ? taxRatePercent : 0;
-  if (rate <= 0) return 0;
-  return Math.round((amountCents * rate) / 100);
+/** Tax for a line: line total × rate% (rate in percent, e.g. 16). */
+export function lineTaxCents(price: number, qty: number, taxRate: number): number {
+  return Math.round((lineTotalCents(price, qty) * Math.max(0, taxRate)) / 100);
+}
+
+export type SaleTotals = {
+  subtotal: number;
+  taxTotal: number;
+  total: number;
+};
+
+/** Totals for a set of lines (dollars in, dollars out — rounded to 2dp). */
+export function computeTotals(
+  lines: Array<{ price: number; qty: number; taxRate: number }>,
+): SaleTotals {
+  const subtotal = lines.reduce((sum, l) => sum + lineTotalCents(l.price, l.qty), 0);
+  const taxTotal = lines.reduce((sum, l) => sum + lineTaxCents(l.price, l.qty, l.taxRate), 0);
+  return {
+    subtotal: fromCents(subtotal),
+    taxTotal: fromCents(taxTotal),
+    total: fromCents(subtotal + taxTotal),
+  };
+}
+
+const CURRENCY_LOCALE: Record<string, string> = {
+  USD: "en-US",
+  EUR: "de-DE",
+  GBP: "en-GB",
+  MXN: "es-MX",
+  CAD: "en-CA",
+  AUD: "en-AU",
+  PEN: "es-PE",
+  COP: "es-CO",
+};
+
+/** Format a dollar amount with the store's currency ($0.00 by default). */
+export function formatMoney(amount: number, currency = "USD"): string {
+  const safe = Number.isFinite(amount) ? amount : 0;
+  const locale = CURRENCY_LOCALE[currency] ?? "en-US";
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(safe);
+  } catch {
+    return `$${round2(safe).toFixed(2)}`;
+  }
+}
+
+/** The bare symbol for compact chips (CHARGE $0.00, stat cards). */
+export function currencySymbol(currency = "USD"): string {
+  return formatMoney(0, currency).replace(/[\d.,\s]/g, "");
 }

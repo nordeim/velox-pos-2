@@ -89,20 +89,3 @@ export async function apiSend<T = unknown>(
   const res = await doFetch(path, init);
   return parse<T>(res);
 }
-
-/** Convenience aliases — the views' vocabulary (POST/PATCH/DELETE). */
-export function apiPost<T>(path: string, body?: unknown, options?: SendOptions): Promise<T> {
-  return apiSend<T>("POST", path, body, options);
-}
-
-export function apiPatch<T>(path: string, body?: unknown, options?: SendOptions): Promise<T> {
-  return apiSend<T>("PATCH", path, body, options);
-}
-
-export function apiPut<T>(path: string, body?: unknown, options?: SendOptions): Promise<T> {
-  return apiSend<T>("PUT", path, body, options);
-}
-
-export function apiDelete<T = unknown>(path: string, options?: SendOptions): Promise<T> {
-  return apiSend<T>("DELETE", path, undefined, options);
-}

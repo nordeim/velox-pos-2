@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// /api/products/[id] — PATCH update + DELETE remove (ownership-checked).
+// /api/products/[id] — PATCH update + DELETE remove (ownership-guarded).
 // ---------------------------------------------------------------------------
 
 import { makeItemRoutes } from "@/lib/server/http";

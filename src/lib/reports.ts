@@ -1,163 +1,134 @@
 // ---------------------------------------------------------------------------
-// Reports seam — pure aggregations over the sale rows the API returns.
-// The API fetches; this file shapes (daily series, method breakdown, period
-// stats, low-stock rule) — unit-tested without a database.
+// Reports domain: period bucketing + aggregations behind /Reports.
+// Pure — unit-pinned by tests/unit/reports.test.ts.
 // ---------------------------------------------------------------------------
 
-import { formatMoney } from "./money";
+import { round2 } from "./money";
 
-export type SaleRow = {
-  id: string;
-  ticketNo: string;
-  method: string;
+export type SaleLike = {
+  total: number;
+  paymentMethod: string;
   status: string;
-  totalCents: number;
-  /** ISO string (client rows) or a Prisma Date (server rows) — dayKey
-   *  normalizes both. */
-  createdAt: string | Date;
+  createdAt: Date | string;
 };
 
-export type ProductRow = {
-  id: string;
-  name: string;
-  stock: number;
-  minStock: number;
-  active: boolean;
-  categoryId: string | null;
+export const PERIODS = [7, 14, 30, 90] as const;
+export type PeriodDays = (typeof PERIODS)[number];
+
+/** Start-of-day (local) `days` back from `now` — the window's left edge. */
+export function periodStart(days: number, now = new Date()): Date {
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - (days - 1));
+  return d;
+}
+
+export function inPeriod(sale: SaleLike, days: number, now = new Date()): boolean {
+  if (sale.status !== "completed") return false;
+  const created = new Date(sale.createdAt);
+  return created >= periodStart(days, now) && created <= now;
+}
+
+export type PeriodSummary = {
+  revenue: number;
+  transactions: number;
+  avgTicket: number;
 };
 
-export type DayBucket = { label: string; date: string; revenueCents: number; transactions: number };
-
-export const REPORT_PERIODS = [7, 14, 30, 90] as const;
-export type ReportPeriod = (typeof REPORT_PERIODS)[number];
-
-export function isReportPeriod(value: unknown): value is ReportPeriod {
-  return (
-    value === 7 || value === 14 || value === 30 || value === 90 ||
-    (typeof value === "string" && ["7", "14", "30", "90"].includes(value))
-  );
+export function summarize(sales: SaleLike[], days: number, now = new Date()): PeriodSummary {
+  const rows = sales.filter((s) => inPeriod(s, days, now));
+  const revenue = round2(rows.reduce((sum, s) => sum + s.total, 0));
+  return {
+    revenue,
+    transactions: rows.length,
+    avgTicket: rows.length > 0 ? round2(revenue / rows.length) : 0,
+  };
 }
 
-/** Local-date key YYYY-MM-DD (the day bucketing rule — local time, not UTC,
- *  so a 7pm sale always lands on the cashier's own "today"). */
-export function dayKey(iso: string | Date): string {
-  const d = typeof iso === "string" ? new Date(iso) : iso;
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
+/** One bucket per day in the window (inclusive), in chronological order. */
+export type DailyBucket = { date: string; label: string; revenue: number; count: number };
 
-/** Build the contiguous day series ending today (oldest → newest), bucketing
- *  completed sales by local day. */
-export function buildDailySeries(
-  sales: SaleRow[],
+export function dailySeries(
+  sales: SaleLike[],
   days: number,
-  now: Date = new Date(),
-): DayBucket[] {
-  const safeDays = Math.min(365, Math.max(1, Math.trunc(days)));
-  const byDay = new Map<string, { revenueCents: number; transactions: number }>();
-  for (const sale of sales) {
-    if (sale.status !== "completed") continue;
-    const key = dayKey(sale.createdAt);
-    const bucket = byDay.get(key) ?? { revenueCents: 0, transactions: 0 };
-    bucket.revenueCents += Math.max(0, sale.totalCents);
-    bucket.transactions += 1;
-    byDay.set(key, bucket);
-  }
-  const series: DayBucket[] = [];
-  for (let i = safeDays - 1; i >= 0; i -= 1) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const key = dayKey(d);
-    const bucket = byDay.get(key) ?? { revenueCents: 0, transactions: 0 };
-    series.push({
-      label: d.toLocaleDateString("en-US", { day: "numeric", month: "short" }),
+  now = new Date(),
+): DailyBucket[] {
+  const start = periodStart(days, now);
+  const buckets = new Map<string, DailyBucket>();
+  for (let i = 0; i < days; i += 1) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+      d.getDate(),
+    ).padStart(2, "0")}`;
+    buckets.set(key, {
       date: key,
-      revenueCents: bucket.revenueCents,
-      transactions: bucket.transactions,
+      label: `${d.getDate()} ${d.toLocaleString("en-US", { month: "short" })}`,
+      revenue: 0,
+      count: 0,
     });
   }
-  return series;
-}
-
-export type MethodBucket = { method: string; revenueCents: number; transactions: number };
-
-export function buildMethodBreakdown(sales: SaleRow[]): MethodBucket[] {
-  const byMethod = new Map<string, MethodBucket>();
   for (const sale of sales) {
     if (sale.status !== "completed") continue;
-    const method = sale.method;
-    const bucket = byMethod.get(method) ?? { method, revenueCents: 0, transactions: 0 };
-    bucket.revenueCents += Math.max(0, sale.totalCents);
-    bucket.transactions += 1;
-    byMethod.set(method, bucket);
+    const d = new Date(sale.createdAt);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+      d.getDate(),
+    ).padStart(2, "0")}`;
+    const bucket = buckets.get(key);
+    if (bucket) {
+      bucket.revenue = round2(bucket.revenue + sale.total);
+      bucket.count += 1;
+    }
   }
-  return [...byMethod.values()].sort((a, b) => b.revenueCents - a.revenueCents);
+  return Array.from(buckets.values());
 }
 
-export type PeriodStats = {
-  revenueCents: number;
-  transactions: number;
-  avgTicketCents: number;
-};
+export type MethodSlice = { method: string; revenue: number; count: number; share: number };
 
-export function buildPeriodStats(sales: SaleRow[]): PeriodStats {
-  let revenueCents = 0;
-  let transactions = 0;
-  for (const sale of sales) {
-    if (sale.status !== "completed") continue;
-    revenueCents += Math.max(0, sale.totalCents);
-    transactions += 1;
+/** Revenue by payment method, sorted descending, share 0..1. */
+export function byMethod(sales: SaleLike[], days: number, now = new Date()): MethodSlice[] {
+  const rows = sales.filter((s) => inPeriod(s, days, now));
+  const totals = new Map<string, { revenue: number; count: number }>();
+  for (const sale of rows) {
+    const method = sale.paymentMethod === "card" ? "card" : "cash";
+    const entry = totals.get(method) ?? { revenue: 0, count: 0 };
+    entry.revenue = round2(entry.revenue + sale.total);
+    entry.count += 1;
+    totals.set(method, entry);
   }
-  const avgTicketCents = transactions > 0 ? Math.round(revenueCents / transactions) : 0;
-  return { revenueCents, transactions, avgTicketCents };
+  const grand = rows.reduce((sum, s) => sum + s.total, 0);
+  return Array.from(totals.entries())
+    .map(([method, v]) => ({
+      method,
+      revenue: v.revenue,
+      count: v.count,
+      share: grand > 0 ? v.revenue / grand : 0,
+    }))
+    .sort((a, b) => b.revenue - a.revenue);
 }
 
-/** Dashboard's "today" slice (local day). */
-export function buildTodayStats(sales: SaleRow[]): { revenueCents: number; transactions: number } {
-  const key = dayKey(new Date());
-  let revenueCents = 0;
-  let transactions = 0;
-  for (const sale of sales) {
-    if (sale.status !== "completed") continue;
-    if (dayKey(sale.createdAt) !== key) continue;
-    revenueCents += Math.max(0, sale.totalCents);
-    transactions += 1;
-  }
-  return { revenueCents, transactions };
-}
+export type CategorySlice = { name: string; count: number; share: number };
 
-/** The LOW STOCK rule: an active product at or below its own minimum. */
-export function isLowStock(product: Pick<ProductRow, "stock" | "minStock" | "active">): boolean {
-  return product.active && product.stock <= product.minStock;
-}
-
-/** Products grouped by category for the dashboard panel (active only). */
-export function buildCategoryCounts(
-  products: ProductRow[],
+/** Products-per-category distribution for the Dashboard donut/card. */
+export function categorySlices(
   categories: Array<{ id: string; name: string }>,
-): Array<{ name: string; count: number }> {
-  const byId = new Map(categories.map((c) => [c.id, c.name]));
+  products: Array<{ categoryId: string | null }>,
+): CategorySlice[] {
+  const total = products.length;
+  if (total === 0) return [];
   const counts = new Map<string, number>();
-  for (const product of products) {
-    if (!product.active) continue;
-    const name = product.categoryId ? (byId.get(product.categoryId) ?? "Uncategorized") : "Uncategorized";
-    counts.set(name, (counts.get(name) ?? 0) + 1);
+  for (const p of products) {
+    const key = p.categoryId ?? "uncategorized";
+    counts.set(key, (counts.get(key) ?? 0) + 1);
   }
-  return [...counts.entries()]
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count);
+  const named = categories.map((c) => ({
+    name: c.name,
+    count: counts.get(c.id) ?? 0,
+    share: (counts.get(c.id) ?? 0) / total,
+  }));
+  const uncategorized = counts.get("uncategorized") ?? 0;
+  if (uncategorized > 0) {
+    named.push({ name: "Uncategorized", count: uncategorized, share: uncategorized / total });
+  }
+  return named.filter((s) => s.count > 0).sort((a, b) => b.count - a.count);
 }
-
-/** The Reports CSV export (superset): one row per day. */
-export function dailySeriesToCsv(series: DayBucket[], currency = "USD"): string {
-  const head = "date,revenue,transactions";
-  const rows = series.map(
-    (b) => `${b.date},${(b.revenueCents / 100).toFixed(2)},${b.transactions}`,
-  );
-  return [head, ...rows].join("\r\n") + `\r\n# currency=${currency}\r\n`;
-}
-
-/** Money formatting passthrough so views import one module. */
-export const formatReportMoney = formatMoney;

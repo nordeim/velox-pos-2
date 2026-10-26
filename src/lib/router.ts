@@ -1,9 +1,9 @@
 // ---------------------------------------------------------------------------
-// The single view ↔ path map (unit-tested). The 8 reference views mirror the
-// veloxposen.base44.app sidebar (Terminal, Dashboard, Inventory, Sales,
-// Registers, Cashiers, Reports, Settings) — PascalCase paths rewritten onto
-// `/` by next.config.ts; the SPA store syncs view state with the pathname.
-// Pure — unit-pinned by tests/router.test.ts.
+// The route ↔ nav map for VeloxPOS (the reference's own real paths —
+// /POS, /Dashboard, /Inventory, /Sales, /Registers, /Cashiers, /Reports,
+// /StoreSettings — measured live; Settings' sidebar href is the entity-named
+// /StoreSettings and /Settings itself 404s on the reference, replicated).
+// Pure — unit-pinned by tests/unit/router.test.ts.
 // ---------------------------------------------------------------------------
 
 export type ViewId =
@@ -29,38 +29,33 @@ export const VIEWS: ViewId[] = [
 
 export type NavItem = { id: ViewId; label: string; path: string };
 
-/** All 8 reference views in sidebar order (reference-measured). */
+/** The 8 sidebar items in the reference's order (Terminal first). */
 export const NAV_ITEMS: NavItem[] = [
-  { id: "terminal", label: "Terminal", path: "/Terminal" },
+  { id: "terminal", label: "Terminal", path: "/POS" },
   { id: "dashboard", label: "Dashboard", path: "/Dashboard" },
   { id: "inventory", label: "Inventory", path: "/Inventory" },
   { id: "sales", label: "Sales", path: "/Sales" },
   { id: "registers", label: "Registers", path: "/Registers" },
   { id: "cashiers", label: "Cashiers", path: "/Cashiers" },
   { id: "reports", label: "Reports", path: "/Reports" },
-  { id: "settings", label: "Settings", path: "/Settings" },
+  { id: "settings", label: "Settings", path: "/StoreSettings" },
 ];
 
-/** Canonical PascalCase path for a view (unknown ids fall back to /Terminal). */
+/** The canonical path for a view (unknown ids fall back to /POS). */
 export function pathForView(view: ViewId): string {
-  return NAV_ITEMS.find((item) => item.id === view)?.path ?? "/Terminal";
+  return NAV_ITEMS.find((item) => item.id === view)?.path ?? "/POS";
 }
 
 /** Map a pathname to its view id — first segment wins, case-insensitive,
- *  trailing slashes tolerated; root/unknown → terminal. */
-export function viewFromPath(pathname: string): ViewId {
+ *  trailing slashes tolerated; /POS and / → terminal; unknown → null (404). */
+export function viewFromPath(pathname: string): ViewId | null {
   const segment = pathname.split("/").filter(Boolean)[0]?.toLowerCase();
   if (!segment) return "terminal";
   const hit = NAV_ITEMS.find((item) => item.path.toLowerCase() === `/${segment}`);
-  return hit?.id ?? "terminal";
+  return hit?.id ?? null;
 }
 
-/** The Dashboard header's long date ("Monday, October 26, 2026"). */
-export function dashboardDateLabel(now: Date = new Date()): string {
-  return now.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+/** Whether the pathname is one of the app's real routes (the shell gate). */
+export function isAppPath(pathname: string): boolean {
+  return viewFromPath(pathname) !== null;
 }

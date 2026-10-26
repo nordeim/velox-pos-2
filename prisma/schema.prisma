@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// VeloxPOS — Prisma schema (the veloxposen.base44.app clone)
+// VeloxPOS — Prisma schema (7 models)
 //
 // DATABASE PATH CONTRACT (pinned by tests/db-path.test.ts — read .env.example):
 //   DATABASE_URL="file:../db/custom.db" must resolve to <repo>/db/custom.db
@@ -8,9 +8,9 @@
 //   (shell-provided → schema-anchored); never rely on repo-root .env
 //   auto-loading with the raw CLI.
 //
-// Money: integer cents everywhere (*Cents columns). Floating-point money is
-// the documented anti-pattern — the reference itself displayed a
-// 1.7999999523162842 cost artifact; the clone never does.
+// Ownership: every user-owned model carries `userId` with onDelete: Cascade.
+// Money: stored as REAL dollars (the reference displays $0.00); all math runs
+// through src/lib/money.ts in integer cents and rounds only at the edge.
 // ---------------------------------------------------------------------------
 
 generator client {
@@ -27,59 +27,118 @@ model User {
   email         String   @unique
   passwordHash  String
   fullName      String   @default("")
-  role          String   @default("cashier") // admin | cashier
-  phone         String   @default("")
+  role          String   @default("owner") // owner | cashier
   active        Boolean  @default(true)
-  emailVerified Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  // Preferences (kept from the scaffolding's auth stack — the settings
+  // surfaces read them through /api/auth/me)
+  themeMode            String  @default("dark")
+  accentColor          String  @default("violet")
+  avatarEmoji          String  @default("")
+  notificationsEnabled Boolean @default(true)
+  emailVerified        Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  shifts      Shift[]
-  sales       Sale[]
-  categories  Category[]
-  products    Product[]
-  registers   Register[]
-  storeSetting StoreSetting?
-  verificationTokens VerificationToken[]
+  products         Product[]
+  categories       Category[]
+  registers        Register[]
+  cashierShifts    CashierShift[]
+  sales            Sale[]
+  storeSettings    StoreSettings?
+  // (the named back-relations live on the fields below)
+  verificationTokens  VerificationToken[]
   passwordResetTokens PasswordResetToken[]
+  cashierShiftsAsCashier CashierShift[] @relation("ShiftCashier")
+  salesAsCashier         Sale[]         @relation("SaleCashier")
+
+  @@index([email])
+}
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  code      String // 6-digit OTP
+  expiresAt DateTime // 15-minute window
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, code])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique // 48-hex one-shot
+  expiresAt DateTime // 30-minute window
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model StoreSettings {
+  id             String  @id @default(cuid())
+  userId         String  @unique
+  storeName      String  @default("My Store")
+  logoDataUrl    String?
+  address        String  @default("")
+  phone          String  @default("")
+  email          String  @default("")
+  taxId          String  @default("")
+  currency       String  @default("USD")
+  primaryColor   String  @default("#6366f1")
+  secondaryColor String  @default("#8b5cf6")
+  receiptFooter  String  @default("Thank you for your purchase!")
+  // Fiscal / tax data (the reference's "Fiscal / Tax Data" card)
+  hideFiscalOnReceipt Boolean @default(false)
+  fiscalRuc           String  @default("")
+  fiscalBusinessType  String  @default("")
+  fiscalAddress       String  @default("")
+  fiscalExpenseAccount String @default("")
+  // "None" | "Stripe" | "SumUp" | "Square" — free-text-safe default
+  cardProvider   String  @default("none")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Category {
   id        String   @id @default(cuid())
   userId    String
   name      String
-  color     String   @default("#7c3aed")
+  color     String   @default("#8b5cf6")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  products Product[]
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products  Product[]
 
   @@unique([userId, name])
+  @@index([userId])
 }
 
 model Product {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   userId     String
   name       String
-  barcode    String
+  barcode    String    @default("")
   categoryId String?
-  priceCents Int      @default(0)
-  costCents  Int      @default(0)
-  stock      Int      @default(0)
-  minStock   Int      @default(5)
-  taxRate    Int      @default(16) // percent
-  unit       String   @default("Piece")
-  imageUrl   String   @default("")
-  active     Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  price      Float     @default(0) // selling price, dollars
+  cost       Float? // unit cost, dollars
+  stock      Float     @default(0)
+  minStock   Float     @default(5)
+  taxRate    Float     @default(16) // percent
+  unit       String    @default("Piece") // Piece | Box | Kg | Liter | Pack
+  image      String? // data URL (client-downscaled)
+  active     Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
-  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  saleItems SaleItem[]
-
-  @@unique([userId, barcode])
+  @@index([userId])
+  @@index([categoryId])
+  @@index([barcode])
 }
 
 model Register {
@@ -87,109 +146,65 @@ model Register {
   userId    String
   name      String
   location  String   @default("")
+  status    String   @default("closed") // closed | open
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shifts    CashierShift[]
+  sales     Sale[]
 
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  shifts Shift[]
-  sales  Sale[]
-
-  @@unique([userId, name])
+  @@index([userId])
 }
 
-model Shift {
-  id                String    @id @default(cuid())
-  userId            String
-  registerId        String
-  openedAt          DateTime  @default(now())
-  closedAt          DateTime?
-  openingFloatCents Int       @default(0)
-  expectedCashCents Int       @default(0) // float + cash sales, written at close
-  closingCashCents  Int?
-  status            String    @default("open") // open | closed
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+model CashierShift {
+  id           String    @id @default(cuid())
+  userId       String
+  registerId   String
+  cashierId    String
+  openedAt     DateTime  @default(now())
+  closedAt     DateTime?
+  openingFloat Float     @default(0)
+  countedCash  Float?
+  expectedCash Float?
+  variance     Float?
+  status       String    @default("active") // active | closed
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  register     Register  @relation(fields: [registerId], references: [id], onDelete: Cascade)
+  cashier      User      @relation("ShiftCashier", fields: [cashierId], references: [id], onDelete: Cascade)
+  sales        Sale[]
 
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  register Register  @relation(fields: [registerId], references: [id], onDelete: Cascade)
-  sales    Sale[]
+  @@index([userId])
+  @@index([registerId, status])
+  @@index([cashierId])
 }
 
 model Sale {
-  id            String    @id @default(cuid())
+  id            String        @id @default(cuid())
   userId        String
+  ticket        String // T-000001 — sequential per store
+  items         String        @default("[]") // JSON [{productId,name,price,qty,taxRate}]
+  subtotal      Float         @default(0)
+  taxTotal      Float         @default(0)
+  discountTotal Float         @default(0)
+  total         Float         @default(0)
+  paymentMethod String        @default("cash") // cash | card
+  amountPaid    Float?
+  changeDue     Float?
+  customer      String        @default("")
+  status        String        @default("completed") // completed | refunded
+  cashierId     String
   registerId    String
-  shiftId       String
-  ticketNo      String
-  method        String    @default("cash") // cash | card | transfer | other
-  status        String    @default("completed") // completed | refunded
-  subtotalCents Int       @default(0)
-  taxCents      Int       @default(0)
-  discountCents Int       @default(0)
-  totalCents    Int       @default(0)
-  paidCents     Int       @default(0)
-  changeCents   Int       @default(0)
-  customerName  String    @default("")
-  note          String    @default("")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  shiftId       String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cashier       User          @relation("SaleCashier", fields: [cashierId], references: [id], onDelete: Cascade)
+  register      Register      @relation(fields: [registerId], references: [id], onDelete: Cascade)
+  shift         CashierShift? @relation(fields: [shiftId], references: [id], onDelete: SetNull)
 
-  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  register Register   @relation(fields: [registerId], references: [id], onDelete: Cascade)
-  shift    Shift      @relation(fields: [shiftId], references: [id], onDelete: Cascade)
-  items    SaleItem[]
-
-  @@unique([userId, ticketNo])
-}
-
-model SaleItem {
-  id            String @id @default(cuid())
-  saleId        String
-  productId     String?
-  name          String
-  priceCents    Int
-  qty           Int    @default(1)
-  taxRate       Int    @default(16)
-  lineTotalCents Int   @default(0)
-
-  sale      Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
-}
-
-model StoreSetting {
-  id             String   @id @default(cuid())
-  userId         String   @unique
-  storeName      String   @default("VeloxPOS Store")
-  address        String   @default("")
-  phone          String   @default("")
-  currency       String   @default("USD")
-  receiptFooter  String   @default("Thank you for your purchase!")
-  defaultTaxRate Int      @default(16)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-// ---- auth-flow tokens (no SMTP: codes/links surface to the actor — ADR-013)
-
-model VerificationToken {
-  id        String   @id @default(cuid())
-  userId    String
-  code      String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model PasswordResetToken {
-  id        String    @id @default(cuid())
-  userId    String
-  token     String    @unique
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime  @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([shiftId])
+  @@index([createdAt])
 }

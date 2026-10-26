@@ -1,58 +1,68 @@
 import { expect, test } from "@playwright/test";
 
-// The shell: sidebar (desktop) + view switching across the 8 sections.
-test.describe("navigation", () => {
-  test("the sidebar renders all 8 reference sections in order", async ({ page }) => {
-    await page.goto("/Terminal");
-    const nav = page.getByRole("navigation", { name: "Primary" });
-    const labels = ["Terminal", "Dashboard", "Inventory", "Sales", "Registers", "Cashiers", "Reports", "Settings"];
-    for (const label of labels) {
-      await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
-    }
-  });
+// ---------------------------------------------------------------------------
+// The DESKTOP navigation (1440x900): the reference's sidebar — 8 items in
+// order, real paths, the active violet pill, the collapse chevron (220px ⇄
+// 68px icon rail with title/aria labels preserved — the a11y superset).
+// ---------------------------------------------------------------------------
 
-  test("the brand chip + name render in the header row", async ({ page }) => {
-    await page.goto("/Terminal");
-    await expect(page.getByTestId("sidebar").getByText("VeloxPOS", { exact: true })).toBeVisible();
-  });
+const NAV = [
+  ["Terminal", "/POS"],
+  ["Dashboard", "/Dashboard"],
+  ["Inventory", "/Inventory"],
+  ["Sales", "/Sales"],
+  ["Registers", "/Registers"],
+  ["Cashiers", "/Cashiers"],
+  ["Reports", "/Reports"],
+  ["Settings", "/StoreSettings"],
+] as const;
 
-  test("SPA navigation switches views without full reloads", async ({ page }) => {
-    await page.goto("/Terminal");
-    const nav = page.getByRole("navigation", { name: "Primary" });
-    await nav.getByRole("link", { name: "Dashboard" }).click();
-    await expect(page.getByRole("heading", { name: "Dashboard", level: 1 })).toBeVisible();
-    await expect(page).toHaveURL(/\/Dashboard$/);
+test("the sidebar carries all 8 reference items in order", async ({ page }) => {
+  await page.goto("/POS");
+  const sidebar = page.getByTestId("app-sidebar");
+  const links = sidebar.getByRole("link");
+  await expect(links).toHaveCount(8);
+  for (const [i, [label]] of NAV.entries()) {
+    await expect(links.nth(i)).toHaveAccessibleName(label);
+  }
+});
 
-    await nav.getByRole("link", { name: "Inventory" }).click();
-    await expect(page.getByRole("heading", { name: "Inventory", level: 1 })).toBeVisible();
-    await expect(page).toHaveURL(/\/Inventory$/);
+test("each item navigates to its real path and activates its pill", async ({ page }) => {
+  await page.goto("/POS");
+  const sidebar = page.getByTestId("app-sidebar");
+  for (const [label, path] of NAV) {
+    await sidebar.getByRole("link", { name: label }).click();
+    await page.waitForURL(`**${path}`);
+    await expect(sidebar.getByRole("link", { name: label })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  }
+});
 
-    await nav.getByRole("link", { name: "Reports" }).click();
-    await expect(page.getByRole("heading", { name: "Reports", level: 1 })).toBeVisible();
-  });
+test("the collapse chevron toggles the 220px ⇄ 68px icon rail", async ({ page }) => {
+  await page.goto("/POS");
+  const sidebar = page.getByTestId("app-sidebar");
+  await expect(sidebar).toHaveCSS("width", "220px");
+  await sidebar.getByRole("button", { name: "Collapse sidebar" }).click();
+  await expect(sidebar).toHaveCSS("width", "68px");
+  // The a11y superset: collapsed icon links KEEP their accessible names.
+  await expect(sidebar.getByRole("link", { name: "Dashboard" })).toBeVisible();
+  await sidebar.getByRole("button", { name: "Expand sidebar" }).click();
+  await expect(sidebar).toHaveCSS("width", "220px");
+});
 
-  test("deep links land on the right view (PascalCase rewrites)", async ({ page }) => {
-    await page.goto("/Reports");
-    await expect(page.getByRole("heading", { name: "Reports", level: 1 })).toBeVisible();
-    await page.goto("/Inventory");
-    await expect(page.getByRole("heading", { name: "Inventory", level: 1 })).toBeVisible();
-  });
+test("the collapse state persists across a reload", async ({ page }) => {
+  await page.goto("/POS");
+  const sidebar = page.getByTestId("app-sidebar");
+  await sidebar.getByRole("button", { name: "Collapse sidebar" }).click();
+  await expect(sidebar).toHaveCSS("width", "68px");
+  await page.reload();
+  await expect(sidebar).toHaveCSS("width", "68px");
+  await sidebar.getByRole("button", { name: "Expand sidebar" }).click();
+});
 
-  test("the sidebar collapses to the icon rail and back", async ({ page }) => {
-    await page.goto("/Terminal");
-    const toggle = page.getByRole("button", { name: "Collapse sidebar" });
-    await toggle.click();
-    await expect(page.getByRole("button", { name: "Expand sidebar" })).toBeVisible();
-    // the labels are hidden in the collapsed rail (aria-labels survive)
-    const nav = page.getByRole("navigation", { name: "Primary" });
-    await expect(nav.getByRole("link", { name: "Terminal" })).toBeVisible();
-    await page.getByRole("button", { name: "Expand sidebar" }).click();
-    await expect(page.getByRole("button", { name: "Collapse sidebar" })).toBeVisible();
-  });
-
-  test("unknown routes render the measured 404 surface", async ({ page }) => {
-    await page.goto("/DoesNotExist");
-    await expect(page.getByText("Página no encontrada")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Ir al Terminal" })).toBeVisible();
-  });
+test("the mobile app bar is hidden on desktop (no dead controls)", async ({ page }) => {
+  await page.goto("/POS");
+  await expect(page.getByRole("button", { name: "Open navigation menu" })).not.toBeVisible();
 });

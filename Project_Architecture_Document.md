@@ -1,270 +1,287 @@
-# Project Architecture Document — VeloxPOS
+# VeloxPOS — Master Project Architecture Document (PAD) v1.0
 
-**Version:** 1.0.0 · **Date:** 2026-10-26 · **Status:** the pivot release
-(the Omni-Study1 codebase repurposed as the VeloxPOS clone; scaffolding
-reused, domain rebuilt)
-
----
-
-## Table of Contents
-
-1. [System Overview & Decisions](#1-system-overview--decisions)
-2. [High-Level System Topology](#2-high-level-system-topology)
-3. [Application Architecture](#3-application-architecture)
-4. [Data Architecture](#4-data-architecture)
-5. [Design System Reference](#5-design-system-reference)
-6. [Security Architecture](#6-security-architecture)
-7. [Testing Strategy](#7-testing-strategy)
-8. [Build & Deployment](#8-build--deployment)
-9. [Developer Handbook](#9-developer-handbook)
-10. [Known Issues & Outstanding Tasks](#10-known-issues--outstanding-tasks)
+**Classification:** Internal Engineering Reference
+**Status:** DEFINITIVE, PRODUCTION BLUEPRINT
+**Companion documents:** `README.md` (tour) · `AGENTS.md` (agent invariants) · `CLAUDE.md` (Claude conventions) · `docs/veloxpos-implementation-plan.md` (the measured reference spec)
+**Last Updated:** 2026-10-26
+**Audience:** Senior engineers, tech leads, DevOps, onboarding engineers, and AI coding agents
+**Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
 
-## 1. System Overview & Decisions
+## 1. Executive Summary
 
-VeloxPOS is a single Next.js application that clones the hosted
-`veloxposen.base44.app` point-of-sale workspace as an open, self-hosted
-superset. One page renders the whole authenticated app; eight PascalCase
-paths (`/Terminal`, `/Dashboard`, `/Inventory`, `/Sales`, `/Registers`,
-`/Cashiers`, `/Reports`, `/Settings`) are rewrites onto it, mirroring the
-reference's URL structure while the view state rides a Zustand store synced
-with `location.pathname` (popstate wired — deep links and back/forward
-work).
+VeloxPOS is a production-grade Point of Sale web application delivering the complete counter
+workflow — cash registers with shift management, a barcode-first selling terminal, inventory with
+low-stock tracking, cashier accounts, and period-filtered sales analytics. It is a functional
+**superset** of the reference deployment at `veloxposen.base44.app` (a base44-hosted app whose
+demo account is read-only) with **measured visual parity**: routes, tokens, copy, and empty states
+were extracted from the live reference via browser automation (computed styles, not screenshots)
+and re-implemented on an owned stack.
 
-### The decision ledger (ADR summary)
+The engineering thesis: a small set of **pure, unit-pinned domain seams** (money, cart, shift,
+reports, validation) underneath **server-gated thin routes**, a **single Zustand store**, and a
+**factory-based API layer** with ownership scoping by construction. The local gate
+(lint → typecheck → unit → build → e2e) is the only gate — there is no hosted CI — so every
+guardrail is enforced by tooling that runs in this checkout.
 
-| ADR | Decision | Rationale |
-|---|---|---|
-| ADR-001 | Reuse the cloned repo's infra (auth, db seam, HTTP seam, UI kit, configs); rebuild the domain | The prompt names the repo as scaffolding; the proven seams carry test and security history |
-| ADR-002 | SPA-with-rewrites (one page) instead of 8 routes | Byte-parity with the reference's URL structure; the shell's auth gate renders once; measured reference behavior |
-| ADR-003 | Integer-cents money (`*Cents` Int columns, Zod `moneyInput` boundary) | Float money is the documented anti-pattern — the reference itself displayed a 1.7999999523162842 artifact |
-| ADR-004 | One transaction per checkout (stock `updateMany` guard + ticket + items) | A physical drawer cannot sell stock that is not there; partial tickets are worse than failed tickets |
-| ADR-005 | Shift-gated selling (one open shift per register) | Matches the reference's "No active shift" gate; gives Reports a shift boundary and Cashiers its "Turnos Recientes" |
-| ADR-006 | Ownership-scoped CRUD delegates (`makeCollectionRoutes`/`makeItemRoutes`) | Every query carries `where: { userId }` by construction; routes stay 3-line shells |
-| ADR-007 | Working CRUD where the reference is broken (F10) + a real Settings page where it 404s (F11) | "Production-ready functional superset" is the contract; replicating a broken button ships a defect |
-| ADR-008 | Working mobile drawer (the reference crushes its desktop layout at 390px — F13) | Explicit user requirement; built on the repo Tailwind v4 skill's mobile-nav contract |
-| ADR-009 | Reference-verbatim copy (Spanish Sales/Cashiers, English elsewhere) | Visual parity is the goal; an i18n layer is a superset later, not a parity substitute |
-| ADR-010 | Dark-only theme (no theme store) | The reference has no theme toggle; the measured design IS dark |
-| ADR-011 | Self-hosted auth without SMTP: verification codes and reset links surface to the actor | No email provider in scope; the routes' responses ARE the delivery (inherited from the scaffolding's ADR-013) |
-| ADR-012 | Social buttons render for parity, activation toasts "not configured" | No fake UI; honest failure over pretend success |
-| ADR-013 | Empty demo seed (parity states) + `db:seed:sample` for a populated store | Screenshot parity against the reference's zero states AND demo-ability |
+**Scale & baselines (verified 2026-10-26):** 7 Prisma models · 22 API route files · 8 gated views
++ login/reset/404 · 117 unit tests (12 files) · 39 e2e tests (2 browser projects) · standalone
+production build.
 
-## 2. High-Level System Topology
+## 2. Tech Stack (version-pinned)
+
+| Layer | Technology | Version | Rationale |
+|---|---|---|---|
+| Framework | Next.js (App Router, `output: "standalone"`) | ^16.4.2 | Server Components gate sessions; standalone traces a minimal deployable server |
+| UI runtime | React | ^19 | The platform's current runtime; no `forwardRef` era patterns |
+| Language | TypeScript (strict) | ^5 | `tsc --noEmit` is the fast gate; the build enforces (`ignoreBuildErrors: false`) |
+| Styling | Tailwind CSS (CSS-first) | ^4 | No config file — tokens in `@theme`; the ten v3→v4 traps are pinned in code |
+| Primitives | Radix UI (shadcn-style, `src/components/ui`) | latest | Accessible dialogs/selects/toasts — never hand-rolled |
+| State | Zustand | ^5.0.15 | ONE store (`usePosStore`); selectors with `useShallow` semantics |
+| ORM | Prisma / SQLite | ^6.19.3 | 7 models; ownership scoping by construction; `db-path.ts` anchors the file |
+| Validation | Zod | ^4.6.5 | Strip mode at every API boundary |
+| Auth | scrypt + HMAC (hand-rolled, `node:crypto`) | — | Minimalist by design (ADR-002); no auth library |
+| Charts | Hand-rolled SVG components | — | Zero dependencies; pixel-controlled parity (ADR-006) |
+| Unit tests | Vitest | ^5 | Pure-seam coverage (`tests/unit/**`) |
+| E2E | Playwright | ^1.63 | Production-standalone journeys; desktop + mobile projects |
+| Runtime | Bun | ≥1.1 | Dev, scripts, and test execution throughout |
+
+## 3. System Topology
 
 ```mermaid
 flowchart TB
-    subgraph Browser
-        SH["App shell (page.tsx)<br/>auth gate → Sidebar / MobileChrome → view switcher"]
-        ST["Zustand stores<br/>(view + sidebar + drawer, toasts)"]
-        API["lib/api.ts<br/>(typed fetch, offline toast)"]
-        SH --> ST --> API
+    subgraph Client["Browser (dark canvas #080a14)"]
+        V["8 gated views + login/reset/404"]
+        S["usePosStore (ONE Zustand store)"]
+        V <--> S
     end
-    subgraph "Next.js 16 server (standalone-capable)"
-        RH["Route handlers /api/*<br/>(3-line shells)"]
-        HTTP["server/http.ts<br/>error contract + wrappers"]
-        POS["server/pos.ts<br/>transactional flows"]
-        ENT["server/entities.ts<br/>owned delegates"]
-        AUTH["server/auth.ts<br/>sessions (vx_session)"]
-        RH --> HTTP --> ENT
-        HTTP --> POS
-        HTTP --> AUTH
+    subgraph Server["Next.js 16 standalone server"]
+        L["(app)/layout — server gate\ngetCurrentUser() or redirect /login"]
+        R["Route handlers\n/api/* — Zod strip mode"]
+        W["Workflow routes\n/api/shifts, /api/sales"]
+        F["CRUD factories\nmakeCollectionRoutes / makeItemRoutes"]
+        L --> V
+        S -->|api.ts seam| R
+        R --> F
+        R --> W
     end
-    DB[("Prisma 6 + SQLite<br/><repo>/db/custom.db")]
-    ENT --> DB
-    POS --> DB
-    AUTH --> DB
+    subgraph Data["Prisma 6 / SQLite"]
+        DB[("db/custom.db\n7 models, user-scoped")]
+    end
+    F --> DB
+    W --> DB
 ```
 
-Single-process, single-file database. No workers, no queues, no external
-services — the AI/telemetry layers of the previous tenant were removed with
-the study domain (they were study-app supersets, not reference features).
+Request flow for the hottest path (checkout): cart (client, pure seam) → `POST /api/sales`
+(Zod validates → products re-read and re-priced server-side → totals recomputed in integer cents →
+stock decremented + sale written + ticket allocated in one transaction → shift pinned) → receipt
+dialog renders the persisted row. Client totals are display-only by construction.
 
-## 3. Application Architecture
+## 4. Architecture Decision Records (condensed)
 
-### 3.1 The shell (`src/app/page.tsx`)
+### ADR-001 — Real routes instead of a view-switcher SPA
+**Decision:** The 8 views live at their reference paths (`/POS`, `/Dashboard`, …) as genuine
+routes under `src/app/(app)/`. **Rationale:** the reference itself navigates real paths (measured:
+the sidebar links carry hrefs; deep links like `/Registers` resolve directly); real routes make
+the server gate enforceable per navigation and the URLs shareable. The previous scaffolding
+generation used one page + rewrites — abandoned because the reference contract outranks it.
 
-- Boot: `hydrate()` syncs the view from the URL → `GET /api/auth/me`
-  (401 → full reload to `/login`) → render. The splash covers the gate.
-- `data-app-hydrated` on `<html>` is the e2e's shell-rendered gate.
-- Chrome: `Sidebar` (`lg+`, 220px / 68px collapsed), `MobileChrome`
-  (`<lg` app bar + drawer), `ConnectivityBanner` (offline pill), skip link.
-- The active view mounts from `VIEW_COMPONENTS` — each view owns its data
-  loading (async IIFE, `cancelled` flag, setState after await boundaries —
-  the `react-hooks/set-state-in-effect` gate).
+### ADR-002 — Hand-rolled auth (scrypt + HMAC cookie)
+**Decision:** Minimalist auth on `node:crypto` — scrypt password hashes (`scrypt$salt$key`),
+HMAC-signed stateless session tokens in an httpOnly cookie (`sf_session`, 7-day TTL, SameSite
+Lax). **Rationale:** the surface (owner + cashiers, email/password) does not justify a library;
+the boot guard (`instrumentation.ts` exits production without a real `AUTH_SECRET`) and the
+rate limiter (10 attempts/IP/15 min on public endpoints) cover the risk. `COOKIE_SECURE=false`
+is the single documented escape hatch for plain-HTTP production-style servers.
 
-### 3.2 The views (`src/components/views/`)
+### ADR-003 — Server-authoritative checkout
+**Decision:** `POST /api/sales` re-prices every line from stored product data, verifies stock,
+allocates the sequential ticket, pins the register's active shift, and decrements stock in one
+transaction. **Rationale:** a POS that trusts client totals is a loss machine; the reference's
+demo cannot express this constraint at all (its writes 403), so the superset defines the honest
+implementation.
 
-| View | Data | Notes |
-|---|---|---|
-| `terminal-view` | products + shifts, then sales on checkout | Shift-gated stage; cart state machine (`lib/cart.ts`); checkout dialog (method/customer/cash+change); printable receipt |
-| `dashboard-view` | `/api/dashboard/summary` (one fetch) | 4 stat cards, 7-day area chart, category bars, low-stock strip |
-| `inventory-view` | products + categories | Measured table + dialog; search/category filter; delete confirm |
-| `sales-view` | `/api/sales` | Spanish copy; detail dialog; refund (restores stock) |
-| `registers-view` | registers + shifts | Cards with live status; open/close shift dialogs; recent shifts |
-| `cashiers-view` | `/api/cashiers` + shifts (admin-only) | User cards + "Turnos Recientes" table; create/deactivate/delete |
-| `reports-view` | `/api/reports/summary?days=` | Period chips; daily chart; method donut + breakdown; CSV export |
-| `settings-view` | settings + categories + me | Three tabs: Store profile / Categories manager / Account + password |
+### ADR-004 — The mobile drawer a11y superset
+**Decision:** Below `md`, navigation is a labeled hamburger → slide-in `role="dialog"` drawer
+(glass-dark, backdrop, Escape, route-change unmount, scroll lock). **Rationale:** the reference
+keeps a 220px sidebar overlaying phone content with no dismissal — a genuine defect (measured at
+390×844: no hamburger, content clipped behind the cart panel). The clone keeps desktop parity
+pixel-faithful and replaces the broken mobile experience with the documented accessible pattern;
+the contract is pinned by `tests/e2e/mobile-navigation.spec.ts` (10 tests).
 
-### 3.3 The pure seams (unit-tested, no I/O)
+### ADR-005 — Plain-CSS custom classes (the Tailwind v4 cascade rule)
+**Decision:** The measured `glass-*` system, `brand-chip`, and focus utilities are plain CSS in
+`src/app/tokens.css`; gradients exist only as classes. **Rationale:** in Tailwind v4, custom
+classes inside `@layer utilities` emit after generated utilities and silently lose the cascade to
+arbitrary utilities on the same element — the documented drawer-styling killer. Utility gradients
+were additionally ruled out because v4 interpolates in oklab and drifts from the measured 135°
+sRGB stops.
 
-- `lib/money.ts` — cents math, formatting, per-line tax (half-up).
-- `lib/cart.ts` — the cart state machine + totals + change + tender
-  suggestion + barcode parsing.
-- `lib/reports.ts` — daily series (local-day bucketing), method breakdown,
-  period stats, low-stock rule, category counts, CSV.
-- `lib/router.ts` — the 8-view ↔ path map + the dashboard date label.
-- `lib/validation.ts` — every payload contract (Zod, strip mode).
-- `lib/db-path.ts` — the `file:../db/custom.db` → `<repo>/db/custom.db`
-  resolution contract.
-- `lib/auth.ts` — scrypt hashing, HMAC session tokens, rate limiter.
+### ADR-006 — Hand-rolled SVG charts
+**Decision:** The dashboard line chart and reports area chart are small React SVG components
+(dotted grid, violet stroke) fed by pure seams. **Rationale:** zero new dependencies, exact
+control over the measured visual (grid dashes, tick labels, stroke), and the data transforms
+(bucketing, shares) are unit-pinned pure functions — chart libraries would add bundle weight for
+two plots and blur the parity contract.
 
-### 3.4 Mobile navigation (`components/layout/mobile-chrome.tsx`)
+### ADR-007 — The db-path resolution contract
+**Decision:** `src/lib/db-path.ts` resolves relative `file:` DATABASE_URLs against the first
+anchor owning `prisma/schema.prisma` (standalone-dir detector → module anchor → CWD), exactly
+like the Prisma CLI. **Rationale:** the standalone server chdirs into `.next/standalone`, so a
+naive CWD rule would point production at the build output. Absolute `file:` URLs pass through —
+and are the documented production form, because per-bundle anchors under standalone are a
+field-tested desynchronization source (e2e evidence in §9).
 
-The reference has no working mobile nav (F13). The clone's drawer: a real
-`<button>` trigger (`aria-expanded`/`aria-controls`), `role=dialog` +
-`aria-modal`, focus moves in on open and returns to the trigger on close,
-Tab cycles inside (trap), Escape and backdrop-tap close, body scroll locks,
-and the drawer closes when the viewport crosses into `lg`. Tailwind v4
-traps honored: `flex flex-col gap-1` nav (never `space-y-*` with margin
-children), `backdrop-blur-xs`, CSS-class gradients. Pinned by
-`tests/e2e/mobile-navigation.spec.ts` at 390×844 + 768×1024 + 1280×800.
+## 5. Layer Model
 
-## 4. Data Architecture
-
-Prisma + SQLite, schema at `prisma/schema.prisma`, file at `<repo>/db/custom.db`
-(gitignored; `db:push` + `db:seed` recreate).
-
-| Model | Purpose | Key fields |
-|---|---|---|
-| `User` | auth + role | email (unique), passwordHash, role (`admin`/`cashier`), phone, active, emailVerified |
-| `Category` | product grouping | userId+name unique, color |
-| `Product` | catalog | userId+barcode unique, categoryId (SetNull), priceCents, costCents, stock, minStock, taxRate, unit, active |
-| `Register` | cash drawer | userId+name unique, location |
-| `Shift` | register session | registerId, openedAt/closedAt, openingFloatCents, expectedCashCents, closingCashCents, status |
-| `Sale` | ticket header | userId+ticketNo unique, registerId, shiftId, method, status, subtotal/tax/discount/total/paid/change (cents), customerName |
-| `SaleItem` | ticket lines | saleId, productId (SetNull), name/priceCents/qty/taxRate/lineTotalCents (snapshots — survive product deletion) |
-| `StoreSetting` | singleton per user | storeName, address, phone, currency, receiptFooter, defaultTaxRate |
-| `VerificationToken` / `PasswordResetToken` | email flows | code/token (reset token unique), expiry, one-shot |
-
-Delete semantics: user-owned rows cascade with the user (a cashier's shifts
-and sales cascade); optional references SetNull. Money columns are Int
-cents throughout (ADR-003). Ticket numbers allocate as
-`#T{count+1, 6-digit padded}` inside the checkout transaction.
-
-## 5. Design System Reference
-
-All values measured live from the reference (plan §0); tokens live in
-`src/app/globals.css` (`@theme` literals + `:root` RGB triplets + semantic
-classes).
-
-| Token | Value | Where |
-|---|---|---|
-| Canvas | `#080a14` | body |
-| Surface (sidebar) | `#0d0f1a`, border `#1e2235` | `aside` |
-| Card | `rgba(16,18,32,0.9)`, border `white/7%`, radius 16px | `.vx-card` |
-| Primary gradient | 135° `#7c3aed → #6366f1`, glow `rgba(124,58,237,.4) 0 4px 20px` | `.vx-gradient` + `.vx-glow` |
-| Charge gradient | 135° `#059669 → #10b981` (disabled: opacity .5) | `.vx-charge-gradient` |
-| Active nav | bg `rgba(124,58,237,.2)`, text `#c4b5fd`, radius 12px, 14px/500, h-42 | `.vx-nav-active` |
-| Chart accent | violet-400 `#a78bfa`, 2px; dashed grid `white/25` | `components/pos/charts.tsx` |
-| Page title | 24px/700, `rgb(30 41 59)` (slate-700 — reference parity quirk) | `.vx-page-title` |
-| Table headers | 11px uppercase tracking-wide `white/40` | `.vx-table-header` |
-| Inputs | bg `#141830`, border `#1e2235`, violet focus ring | `.vx-input` / `.vx-focusable` |
-
-Typography: system sans (the reference's own stack); the brand wordmark is
-18px/800. Icons: lucide-react (Terminal=ShoppingCart, Dashboard=ChartColumn,
-Inventory=Package, Sales=History, Registers=Monitor, Cashiers=Users,
-Reports=FileText, Settings=Settings, brand=Zap).
-
-## 6. Security Architecture
-
-- **Passwords**: scrypt with per-hash salt (`lib/auth.ts`); hashes never
-  leave the server (no select includes them; `publicUser`/`publicCashier`
-  shape every response).
-- **Sessions**: HMAC-signed tokens in an httpOnly, sameSite=lax cookie
-  (`vx_session`), 7-day TTL, `secure` rides the request protocol. The boot
-  guard (`instrumentation.ts` + `lib/env-check.ts`) refuses production boot
-  without a real `AUTH_SECRET`.
-- **Rate limits**: login/register/forgot/change-* 10–20 per 15 min per IP
-  (in-memory limiter; documented single-instance scope). Successful login
-  resets the counter.
-- **Input**: every body passes Zod (`parseWith`); unknown keys stripped.
-- **Ownership**: every delegate query carries `userId`; item routes
-  re-verify ownership before mutating (404 on foreign ids).
-- **Money integrity**: checkout is one transaction; stock decrements are
-  conditional (`updateMany … stock >= qty`, count mismatch → rollback); the
-  cash-tender check rejects underpayment for cash sales.
-- **Admin surface**: `/api/cashiers*` requires `role === "admin"`
-  (`assertAdmin`); self-deactivation/self-deletion blocked (lockout guard).
-- **No secrets in the tree**: `.env` gitignored; pushes carry the key via
-  the SSH wrapper (key materialized outside the repo, shredded after).
-
-## 7. Testing Strategy
-
-Two layers, no overlap (vitest matches `tests/**/*.test.ts`; playwright
-takes `tests/e2e/*.spec.ts`):
-
-- **Unit (Vitest, 65 checks)** — the pure seams: money, cart, reports,
-  router, validation schemas, db-path, auth. No DB, no React, deterministic
-  (local-day bucketing tested against fixed dates).
-- **E2E (Playwright, 44 checks)** — the production standalone server on
-  :3100 with an isolated `db/e2e.db` (global-setup pushes + seeds). The
-  "setup" project signs the demo user in once → storageState (the auth
-  limiter makes per-test logins impossible). Specs:
-  `auth` (logged-out surface, inline errors, sign-in),
-  `navigation` (sidebar, SPA switching, deep links, collapse, 404),
-  `mobile-navigation` (the drawer contract at three viewports),
-  `terminal` (gate + full cash sale + barcode guard),
-  `inventory` (CRUD through the dialog),
-  `registers` (create → open shift → Terminal unlock → close → delete),
-  `data-views` (dashboard/sales+refund/cashiers),
-  `settings` (tabs, persistence, category round-trip).
-
-Specs are self-cleaning (unique `${Date.now()}` names, afterAll cleanup) and
-the terminal spec normalizes the shift state before asserting the gate.
-
-## 8. Build & Deployment
-
-- `bun run build` → `next build` (standalone output) + copies
-  `.next/static` and `public/` into `.next/standalone` →
-  `.next/standalone/server.js` runs anywhere with `bun` (or Node ≥ 20 via
-  the traced server).
-- Docker: multi-stage `Dockerfile` (prod-deps → build → bun runtime) +
-  `docker-compose.yml` (SQLite volume, `AUTH_SECRET` required, `init`
-  profile for push+seed, healthcheck on `/api/health`). `docs/DEPLOYMENT.md`
-  is the full runbook.
-- Boot guard: production refuses to start without a real `AUTH_SECRET`
-  (`openssl rand -hex 32`).
-- Push: `docs/ssh_git_wrapper_v3.py` (main-only, post-push verification,
-  paramiko shim for OpenSSH-less sandboxes).
-
-## 9. Developer Handbook
-
-See `AGENTS.md` (commands, traps, seams) and `CLAUDE.md` (boot sequence,
-debugging playbook). The short version for a fresh checkout:
-
-```bash
-bun install
-cp .env.example .env        # DATABASE_URL="file:../db/custom.db"
-bun run db:push && bun run db:seed
-bun run dev                 # demo@veloxpos.app / Demo1234!
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ Views (client) — src/components/pos/views/*.tsx                  │
+│   render-only; state from usePosStore; toasts on failures        │
+├──────────────────────────────────────────────────────────────────┤
+│ Client seams — src/lib/{api,store,router,cart,money,...}.ts      │
+│   api.ts (fetch + envelope + offline classification)             │
+│   pure domain math — unit-pinned, framework-free                 │
+├──────────────────────────────────────────────────────────────────┤
+│ HTTP boundary — src/app/api/**/route.ts                          │
+│   3-line shells over factories; Zod at the door; error mapper    │
+├──────────────────────────────────────────────────────────────────┤
+│ Domain services — src/lib/server/{entities,auth}.ts              │
+│   delegates (ownership-scoped) · workflows (shifts, checkout)    │
+├──────────────────────────────────────────────────────────────────┤
+│ Persistence — Prisma client (src/lib/db.ts) → SQLite file        │
+│   7 models; user-owned rows; cascade deletes; JSON columns only  │
+│   for sale items (read-model blobs)                              │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-## 10. Known Issues & Outstanding Tasks
+Dependency rule: arrows point downward only. `src/lib` pure seams never import React or Prisma;
+`src/lib/server/**` may import both; views import client seams, never the server layer.
 
-- **Reference drift**: the reference is a live app; re-measure before any
-  parity dispute (the findings ledger in
-  `docs/veloxpos-implementation-plan.md` §0 is the baseline, dated
-  2026-10-26).
-- **Dark-on-dark page titles** (slate-700 on #080a14, ~1.4:1) are reference
-  parity. If contrast standards ever outrank parity, flip `.vx-page-title`
-  to a lighter token — one line, all views.
-- **Barcode field**: accepts scanner input (Enter submits) but there is no
-  camera-scan mode; a getUserMedia barcode scanner would be the natural
-  superset.
-- **Rate limiter is in-memory** — multi-instance deployments need a shared
-  store (documented scope: single-instance self-hosting).
-- **No hosted CI** — the local gate is the only gate; keep it green.
-- **The reference's write flows may be transiently broken** (hosted quota?)
-  — if they come back online, re-verify the populated reference states
-  against the clone's dialogs.
+## 6. Directory Structure (annotated)
+
+```
+📂 velox-pos
+ ├ 📂 src/app
+ │  ├ 📂 (app)/            — POS · Dashboard · Inventory · Sales · Registers · Cashiers ·
+ │  │                        Reports · StoreSettings (each: server page → client view) + layout.tsx gate
+ │  ├ 📂 api/auth/         — login · register · logout · me · forgot/reset/change-password ·
+ │  │                        change-email · verify-email · resend-verification · delete-account
+ │  ├ 📂 api/{products,categories,registers,cashiers}/[id] — CRUD shells over the factories
+ │  ├ 📂 api/{shifts,sales}/[id] — workflows (open/close shift; checkout/receipt/refund)
+ │  ├ 📂 api/{store-settings,health} — settings singleton · liveness
+ │  ├ 📄 login/page.tsx    — the light reference card (public)
+ │  ├ 📄 reset-password/page.tsx — token consumption (public)
+ │  ├ 📄 not-found.tsx     — Spanish 404 ("Página no encontrada / Ir al Terminal")
+ │  └ 🎨 globals.css + tokens.css — @theme pins; glass system; login light scope
+ ├ 📂 src/components/pos   — app-shell (sidebar+drawer) · nav-items · shared (PageHeader,
+ │                           StatCard, SVG charts) · pages.tsx · login/reset surfaces ·
+ │                           use-pos-bootstrap.ts · views/ (8 view files)
+ ├ 📂 src/components/ui    — shadcn-style Radix primitives (dialog, select, toast, …)
+ ├ 📂 src/lib              — pure seams (money, cart, shift, reports, inventory-status,
+ │                           currency, router, validation, auth, date, site, env-check,
+ │                           db-path, db, store, api, utils) + server/ (http, auth, entities)
+ ├ 📂 prisma               — schema.prisma (7 models) · seed.ts (owner + settings; --demo dataset)
+ ├ 📂 tests/unit           — 12 vitest files (the seam registry)
+ ├ 📂 tests/e2e            — 8 spec files + auth.setup + kill-port + provisioning
+ ├ 📂 docs                 — implementation plan, runbooks, Tailwind report, screenshots/
+ └ ⚙️ next.config.ts · playwright.config.ts · vitest.config.ts · package.json · .env.example
+```
+
+## 7. Data Model (Prisma/SQLite)
+
+| Model | Key fields | Relations & rules |
+|---|---|---|
+| `User` | email (unique), passwordHash, fullName, **role** (`owner`\|`cashier`), active, emailVerified | Owner of everything; named back-relations `ShiftCashier`/`SaleCashier` |
+| `StoreSettings` | storeName, logoDataUrl, contact fields, currency, primary/secondaryColor, receiptFooter, hideFiscalOnReceipt, fiscal* fields, cardProvider | 1:1 per owner (userId unique); lazily materialized on first GET |
+| `Category` | name, color | unique per (userId, name); products SetNull on delete |
+| `Product` | name, barcode, price, cost?, stock, minStock, taxRate, unit, image?, active | categoryId nullable (SetNull); barcode indexed for terminal search |
+| `Register` | name, location, status (`closed`\|`open`) | status mirrors its shift lifecycle; delete refused with shift history |
+| `CashierShift` | registerId, cashierId, openedAt/closedAt, openingFloat, countedCash?, expectedCash?, variance?, status | One ACTIVE shift per register (workflow-enforced); expected/variance computed server-side at close |
+| `Sale` | ticket (`T-000001`), items (JSON lines), subtotal/taxTotal/total, paymentMethod (`cash`\|`card`), amountPaid?, changeDue?, customer?, status | Pinned to register + shift; refund = status flip; ticket allocated from the store's sale count |
+
+**Invariants (pinned by tests + workflows):** every user-owned row carries `userId` with
+`onDelete: Cascade`; money crosses the seam as 2dp dollars and is computed in integer cents;
+the only JSON column is `Sale.items` (a read-model blob of the priced lines).
+
+## 8. Security Architecture
+
+| Control | Implementation |
+|---|---|
+| Password storage | scrypt (16-byte salt, 64-byte key, `timingSafeEqual` verify) |
+| Sessions | HMAC-SHA256 over `{uid, iat, exp}` (base64url), httpOnly + SameSite Lax cookie, 7-day TTL |
+| Secret governance | Production boot guard exits loudly on missing/weak `AUTH_SECRET`; dev fallback constant is public and warn-tagged |
+| Rate limiting | Fixed-window in-memory (10/IP/15 min) on login/register/forgot — the e2e suite's storageState reuse exists because of this |
+| Input validation | Zod strip mode at every boundary; length caps; enum membership; hex-color and data-URL refinements; `"" → null` transforms |
+| Ownership | Every query scoped by `userId`; mutations verify ownership before acting; cashiers additionally role-guarded (owner-only management, cashier rows never hard-deleted while shifts exist) |
+| Error surface | Uniform `{ error }` JSON; Zod → 400, unique → 409, missing → 404, unauthed → 401; unknown errors log server-side only (never the body) |
+| Uploads | Product images and the store logo are client-downscaled data URLs (≤2 MB), validated by prefix — no filesystem writes |
+
+## 9. Testing Strategy & the Local Gate
+
+```
+lint → typecheck → unit → build → (smoke) → e2e
+```
+
+1. **Unit (Vitest, 117/117):** the pure seams — money (cents math, formatting), cart (reducer,
+   totals, charge gate), shift (state machine, variance), reports (bucketing, shares),
+   inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
+   matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
+   Baseline: 12 files. New seams arrive with their file; fixes arrive with regression tests.
+2. **E2E (Playwright, 39/39):** production standalone on :3100, scratch db (`db/e2e.db`)
+   provisioned by the webServer command (kill-port → provision → boot — never touched while the
+   server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
+   suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
+   `navigation` (sidebar order/activation/collapse/persistence), `mobile-navigation` (the 10
+   drawer pins), `inventory` (CRUD + search + CSV-adjacent flows), `registers-shifts` (the
+   lifecycle), `terminal` (cart math, cash checkout + change, ticket, receipt, stock decrement),
+   `surfaces` (Sales/Cashiers/Reports/Settings/404/health).
+3. **Field-tested e2e doctrine:** auth waits for the hydration-gated submit button (`toBeEnabled`)
+   before filling; assertions use visibility (not DOM count) for `hidden md:*` elements; the
+   scratch db is never replaced while the server lives (clients bind the inode; field-tested
+   desynchronization); the port is freed before boot (`tests/e2e/kill-port.ts`).
+
+## 10. Build & Deployment
+
+- `bun run build` → standalone output at `.next/standalone` (static + public copied in).
+- Production boot: `DATABASE_URL="file:<ABSOLUTE>" AUTH_SECRET=<64-hex> PORT=3000 bun
+  .next/standalone/server.js` — the boot guard fails fast on secret problems; relative URLs are a
+  dev convention (ADR-007).
+- `COOKIE_SECURE=false` only for plain-HTTP production-style deployments (documented in
+  `.env.example`; the e2e server uses it).
+- Push path: commits on `main`, then `docs/ssh_git_wrapper_v3.py` with an operator-supplied key
+  (0600 temp file outside the repo, dry-run → push → remote ref verified → shredded). Runbook:
+  `docs/how-to-git-push-using-ssh-wrapper_SKILL.md`.
+
+## 11. Developer Handbook (the 20-minute onboarding)
+
+1. Read `README.md` (tour) → this §5/§6 (layers + map) → `AGENTS.md` (invariants).
+2. Provision: `cp .env.example .env` → set `AUTH_SECRET` → `bun run db:push && bun run db:seed`
+   → `bun run dev`. Verify `/api/health` → `{"status":"ok","db":"up","app":"veloxpos"}`.
+3. Sign in (`sepnetflix2023@outlook.com` / `$Abcd1234`), walk the 8 views, then run the gates.
+4. To add a feature: write the seam + its unit test first (red), wire the Zod contract, extend the
+   delegate or workflow route, then the view; update the e2e journey if the flow is user-visible.
+5. To change the design system: measure the live reference first (agent-browser, computed
+   styles), record the measurement in the plan doc, then move the token — never eyeball.
+
+## 12. Known Issues & Deliberate Simplifications
+
+| Item | Status | Note |
+|---|---|---|
+| `/Settings` route 404s | By design | Reference parity — the sidebar href is `/StoreSettings`; pinned by e2e |
+| Mixed EN/ES copy | By design | The reference's own quirk (Sales/Cashiers/404 are Spanish); preserved verbatim |
+| Rate limiter is in-memory | Documented | Single-instance deployment contract; horizontal scaling needs a shared store |
+| Cashier accounts are global | Documented | Cashier users are role-scoped rows, not per-owner rows — acceptable for the single-store deployment this targets |
+| Refunds do not restock | Documented | Refund flips the status; stock restoration is a manual Inventory action |
+| CSV import trusts category names | Guarded | Unknown categories fall back to null (Uncategorized); rows validate through the product schema |
+| e2e requires the production build | Documented | `bun run test:e2e` boots the standalone output; dev-server e2e is intentionally not supported |
+
+## Revision Block — v1.0 (2026-10-26)
+
+- Initial VeloxPOS PAD: the domain replacement of the previous (Omni-Study) generation of this
+  repository. ADR-001…007 record the load-bearing decisions; §9's doctrine entries are
+  field-tested (each traces to a live failure observed and fixed during Session-101 — see
+  `worklog.md`).
+- Baselines at lock: lint 0 errors (1 documented warning) · typecheck clean · unit 117/117 ·
+  e2e 39/39 · standalone build green.

@@ -1,34 +1,29 @@
 // ---------------------------------------------------------------------------
-// The measured not-found surface (plan F11): a centered dark card with the
-// violet-gradient 404 badge, "Página no encontrada" (the reference's own
-// copy), and the "Ir al Terminal" primary action.
+// The reference's 404 surface — SPANISH copy, dark, no sidebar:
+// "404 / Página no encontrada / La página que buscas no existe o fue movida."
+// and the violet gradient "← Ir al Terminal" action back into the app.
 // ---------------------------------------------------------------------------
 
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+
+export const metadata = { title: "Página no encontrada | VeloxPOS (Point Of Sale)" };
 
 export default function NotFound() {
   return (
-    <main className="vx-canvas flex min-h-dvh items-center justify-center p-4">
-      <div className="vx-card flex w-full max-w-md flex-col items-center gap-5 px-8 py-12 text-center">
-        <span
-          aria-hidden
-          className="vx-gradient vx-glow flex h-24 w-24 items-center justify-center rounded-3xl text-3xl font-extrabold text-white"
-        >
+    <main className="flex min-h-dvh items-center justify-center bg-ink p-4">
+      <div className="glass-card w-full max-w-md rounded-2xl p-10 text-center">
+        <div className="brand-chip mx-auto flex h-[72px] w-[72px] items-center justify-center rounded-2xl text-2xl font-black text-white">
           404
-        </span>
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold text-white">Página no encontrada</h1>
-          <p className="mx-auto max-w-xs text-sm text-slate-400">
-            La página que buscas no existe o fue movida.
-          </p>
         </div>
+        <h1 className="mt-6 text-2xl font-bold text-white/60">Página no encontrada</h1>
+        <p className="mt-3 text-white/50">
+          La página que buscas no existe o fue movida.
+        </p>
         <Link
-          href="/"
-          className="vx-gradient vx-gradient-hover vx-glow vx-focusable flex h-11 items-center justify-center gap-2 rounded-xl px-6 text-sm font-semibold text-white outline-none"
+          href="/POS"
+          className="glass-button-primary vpx-focus mt-7 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold"
         >
-          <ArrowLeft className="h-4 w-4" strokeWidth={2} />
-          Ir al Terminal
+          <span aria-hidden="true">←</span> Ir al Terminal
         </Link>
       </div>
     </main>

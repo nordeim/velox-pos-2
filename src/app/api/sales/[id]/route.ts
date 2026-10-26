@@ -1,27 +1,45 @@
 // ---------------------------------------------------------------------------
-// /api/sales/[id] — GET one sale (receipt detail) + PATCH refund (flips
-// status to refunded and restores stock in the same transaction).
+// /api/sales/[id] — GET one sale (the receipt) + PATCH refund (status flip
+// only — stock restocking is a manual Inventory action, documented).
 // ---------------------------------------------------------------------------
 
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { z } from "zod";
 
-import { NotFoundError, parseWith, readJson, withUserParams } from "@/lib/server/http";
-import { getSale, refundSale } from "@/lib/server/pos";
-import { saleUpdateSchema } from "@/lib/validation";
+import { db } from "@/lib/db";
+import {
+  NotFoundError,
+  ValidationError,
+  parseWith,
+  readJson,
+  withUserParams,
+} from "@/lib/server/http";
 
-type Ctx = { params: Promise<{ id: string }> };
+const refundSchema = z.object({ status: z.enum(["refunded", "completed"]) });
 
-export const GET = withUserParams(async (user, _request: NextRequest, id: string) => {
-  const sale = await getSale(user.id, id);
+export const GET = withUserParams(async (user, _request, id) => {
+  const sale = await db.sale.findFirst({
+    where: { id, userId: user.id },
+    include: {
+      cashier: { select: { fullName: true, email: true } },
+      register: { select: { name: true, location: true } },
+    },
+  });
+  if (!sale) throw new NotFoundError();
   return NextResponse.json(sale);
 });
 
-export const PATCH = withUserParams(async (user, request: NextRequest, id: string) => {
-  const input = parseWith(saleUpdateSchema, await readJson(request));
-  if (input.status !== "refunded") {
-    throw new NotFoundError("Only the refunded status transition exists.");
+export const PATCH = withUserParams(async (user, request, id) => {
+  const input = parseWith(refundSchema, await readJson(request));
+  const sale = await db.sale.findFirst({ where: { id, userId: user.id } });
+  if (!sale) throw new NotFoundError();
+  if (sale.status === input.status) return NextResponse.json(sale);
+  if (sale.status === "refunded" && input.status === "completed") {
+    throw new ValidationError("A refunded sale cannot be un-refunded.");
   }
-  const sale = await refundSale(user.id, id);
-  return NextResponse.json(sale);
+  const updated = await db.sale.update({
+    where: { id },
+    data: { status: input.status },
+  });
+  return NextResponse.json(updated);
 });

@@ -1,7 +1,5 @@
 // ---------------------------------------------------------------------------
-// /api/products — ownership-scoped CRUD (GET list + POST create). Product
-// payloads carry price/cost in dollars; the Zod moneyInput maps them to
-// cents at the boundary.
+// /api/products — ownership-scoped CRUD collection (GET list + POST create).
 // ---------------------------------------------------------------------------
 
 import { makeCollectionRoutes } from "@/lib/server/http";

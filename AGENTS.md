@@ -1,127 +1,109 @@
-# AGENTS.md — VeloxPOS
+# AGENTS.md — VeloxPOS (Point Of Sale)
 
-> Instructions for AI coding agents working in this repository. Read this
-> fully before writing code. Companion docs: `CLAUDE.md` (same contract),
-> `Project_Architecture_Document.md` (the deep dive), `worklog.md` (the
-> journal — append, never overwrite).
+Agent instructions for this repository. Every line answers "would an agent miss this without
+help?" — anything else lives in `README.md` (tour) or `Project_Architecture_Document.md` (deep
+reference). **Stack:** Next.js 16 (App Router, standalone) · React 19 · TypeScript strict ·
+Tailwind v4 (CSS-first) · ONE Zustand store · Zod 4 · Prisma 6 / SQLite.
 
-## What this repo is
+## Commands
 
-**VeloxPOS** — a self-hosted point-of-sale clone (functional superset) of
-`veloxposen.base44.app`, on Next.js 16 (App Router) + React 19 + TypeScript
-strict + Tailwind v4 + Prisma/SQLite + Bun. One page (`src/app/page.tsx`)
-hosts the whole app; the 8 view paths are URL rewrites and the view state
-lives in a Zustand store synced with `location.pathname`.
+| Command | Notes |
+|---|---|
+| `bun run dev` | Dev server :3000 — the ONLY sanctioned dev entrypoint |
+| `bun run lint && bun run typecheck && bun run test` | The fast gate, in this order |
+| `bun run build` | Standalone build — also the type gate (`ignoreBuildErrors` is OFF) |
+| `bun run test:e2e` | Playwright — **requires `bun run build` first** (boots the standalone build on :3100) |
+| `bun run db:push` / `db:seed` | Provision `db/custom.db` (scripts pin `DATABASE_URL` inline — schema-anchored) |
+| `bun run db:seed -- --demo` | Adds the showcase dataset (categories/products/register/shift/sales) |
+| `bunx prisma studio` | DB inspection |
 
-The reference was measured live (2026-10-26). Every visual token and the
-findings ledger (what is parity, what is a superset, what is broken in the
-reference) live in **`docs/veloxpos-implementation-plan.md`** — the §0
-evidence table is the ground truth for any "is this supposed to look like
-that?" question (e.g. the dark-on-dark slate-700 page titles are reference
-parity, NOT a bug).
+Run a single unit file: `bunx vitest run tests/unit/cart.test.ts`.
+Run one e2e spec: `bunx playwright test tests/e2e/mobile-navigation.spec.ts --project=mobile`.
 
-## Commands (bun — not npm/pnpm)
+## Non-negotiable invariants
 
-```bash
-bun run dev            # dev server :3000 (Turbopack)
-bun run lint           # eslint .
-bun run typecheck      # tsc --noEmit
-bun run test           # vitest (unit layer only — tests/**/*.test.ts)
-bun run build          # next build + copies static into .next/standalone
-bun run test:e2e       # playwright — REQUIRES `bun run build` first (boots the standalone server on :3100)
-bunx playwright test tests/e2e/<file>.spec.ts   # single e2e file
-bunx vitest run tests/cart.test.ts              # single unit file
-bun run db:push        # prisma db push (schema-anchored DATABASE_URL, set inline by the script)
-bun run db:seed        # demo account (EMPTY store — parity states)
-bun run db:seed:sample # + sample catalog/register/closed-shift
-```
+1. **The local gate is the only gate.** `lint → typecheck → test → build → e2e` must be green
+   before any push. There is no hosted CI.
+2. **Money math ONLY through `src/lib/money.ts`** (integer cents in the middle, 2dp dollars at the
+   edges). Never `parseFloat` arithmetic in components; never trust client totals — checkout
+   recomputes totals from stored prices server-side.
+3. **Every API boundary is Zod-validated** (`src/lib/validation.ts`) in strip mode. Unknown keys
+   are dropped by contract; partial PATCHes filter to sent keys.
+4. **Ownership scoping is by construction**: every query carries `where: { userId }` and
+   updates/removes verify ownership BEFORE mutating (`src/lib/server/entities.ts` +
+   `makeCollectionRoutes`/`makeItemRoutes` factories in `src/lib/server/http.ts`).
+5. **ONE Zustand store** (`usePosStore` in `src/lib/store.ts`). No React Context. Views subscribe
+   with selectors; the store holds state, the pure seams own the math.
+6. **The route↔nav map is `src/lib/router.ts`** — the 8 reference paths (`/POS /Dashboard
+   /Inventory /Sales /Registers /Cashiers /Reports /StoreSettings`) are real routes under
+   `src/app/(app)/`, server-gated by the group layout. `/Settings` 404s by design (the reference's
+   own href is `/StoreSettings`).
 
-**Gate order before any push:** `lint && typecheck && test && build &&
-test:e2e`. All five, every time. There is no hosted CI — the local gate is
-the only gate. e2e needs the production build (it runs
-`.next/standalone/server.js`); run `bun run build` again after ANY src change
-or you will test stale code.
+## The documented Tailwind v4 traps (the mobile-nav bug class)
 
-## Non-obvious things that will bite you
+Full list in `src/app/globals.css` header + `docs/Tailwind-V4-Validation-Report.md`. The ones that
+bite hardest here:
 
-### Database path contract
-`.env` carries `DATABASE_URL="file:../db/custom.db"`. Relative `file:` URLs
-resolve against the anchor that owns `prisma/schema.prisma` → the DB always
-lands at `<repo>/db/custom.db` (CLI, dev, build, standalone — same file).
-The rule is `src/lib/db-path.ts`, pinned by `tests/db-path.test.ts`. The
-`db:*` package scripts set the env var INLINE (shell-provided URLs are
-schema-anchored; .env-loaded ones are CWD-anchored — Prisma CLI quirk).
-`db/` is gitignored.
+- **Custom classes are PLAIN CSS** in `src/app/tokens.css` (`glass-*`, `brand-chip`,
+  `vpx-focus`). NEVER put them in `@layer utilities` — v4 emits those after generated utilities
+  and they silently lose the cascade (this is the drawer-styling killer).
+- **NO `tailwind.config.js`** — CSS-first `@theme` only. Reintroducing it is the documented
+  "#1 cause of the flat look".
+- **Exact gradients are CSS classes** (`.brand-chip`, `.glass-button-*`) — utility gradients
+  interpolate in oklab and drift from the measured 135° stops.
+- **Nav lists are `flex flex-col gap-*`** — never `space-y-*` with `mt-*`/`mb-*` children (v4's
+  `:where()` rewrite flips specificity).
+- Shadcn tokens are raw HSL triplets in `:root` routed through `hsl(var(--x))` inside `@theme`;
+  `.theme-light` re-points them for the login card only. The app shell is permanently dark.
 
-### Tailwind v4 traps (docs/Tailwind-V4-Validation-Report.md — the repo codes against these)
-1. **Never** put margin utilities on children of `space-y-*` containers —
-   v4's `:where()` rewrite flips specificity. Use `flex flex-col gap-*`.
-   The mobile drawer nav is the canonical example.
-2. Exact-sRGB gradients (brand violet→indigo, the emerald CHARGE) are CSS
-   classes (`.vx-gradient`, `.vx-charge-gradient` in globals.css) — never
-   utility gradients (v4 interpolates in oklab).
-3. v4 renamed the 4px blur stop: `backdrop-blur-xs` (not `-sm`).
-4. Design tokens live in `globals.css` `@theme` as literal hexes; the
-   measured values (canvas #080a14, surface #0d0f1a, violet #7c3aed, the
-   135° gradients, glow shadow) came from the live reference — change them
-   only with a re-measurement.
+## The mobile drawer contract (e2e-pinned — do not regress)
 
-### Money is integer cents
-Every monetary column is `*Cents` (Int). Dollar strings convert at the Zod
-boundary (`moneyInput` in `src/lib/validation.ts`); formatting via
-`src/lib/money.ts`. Never floats. The product API emits `price`/`cost`
-(dollars in) — `mapProductData` in `src/lib/server/entities.ts` maps them to
-`priceCents`/`costCents` columns. If a product create lands with the wrong
-column names, that mapping is why.
+`src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px
+sidebar on phones with no hamburger). The pins in `tests/e2e/mobile-navigation.spec.ts`:
+labeled hamburger ("Open navigation menu"), drawer `role="dialog"` with 8 labeled links,
+navigate ⇒ drawer UNMOUNTS, Escape closes, backdrop tap closes (click x>288 — the drawer is
+w-72), no horizontal overflow at 390px, icon-rail links KEEP accessible names when collapsed.
+`hidden md:flex` elements stay in the DOM below `md` — assert VISIBILITY, not count.
 
-### The API seams
-- Route files are 3-line shells over `makeCollectionRoutes`/`makeItemRoutes`
-  (`src/lib/server/http.ts`) — delegates live in `src/lib/server/entities.ts`.
-- Everything is ownership-scoped `where: { userId }` by construction.
-- Error contract: Zod → 400, P2002 → 409, P2025 → 404, unauthed → 401,
-  unknown → 500 (detail logged server-side only).
-- Transactional flows (checkout, close-shift, refund) live in
-  `src/lib/server/pos.ts` — one `$transaction`, stock guarded by
-  conditional `updateMany` (count !== 1 → insufficient stock).
-- The session cookie is `vx_session` (renamed from the study-era `sf_session`).
+## Environment & database contract
 
-### Testing conventions
-- Unit (Vitest): pure seams only — no DB, no React. Files: `tests/*.test.ts`.
-- E2E (Playwright): `tests/e2e/*.spec.ts`, single worker, shared seeded
-  `db/e2e.db`. The "setup" project signs the demo user in once →
-  storageState (auth routes are rate-limited: 10 attempts/15 min — keep real
-  logins per run well under that). Specs needing the logged-out surface opt
-  out with `test.use({ storageState: { cookies: [], origins: [] } })`.
-- Specs create their own data with unique names (`${Date.now()}` suffixes)
-  and clean up after themselves; the terminal spec closes foreign open
-  shifts before asserting the gate.
-- Mobile nav regression specs run at 390×844 — the drawer contract
-  (focus trap, Esc, backdrop, scroll lock, aria-expanded) is pinned there.
+- `.env`: `DATABASE_URL="file:../db/custom.db"` (relative dev form) — `src/lib/db-path.ts`
+  resolves it against the schema-anchored repo root for dev AND standalone. **Absolute `file:`
+  URLs for production/standalone** — relative URLs are bundle-anchor-dependent under the
+  standalone server (documented trap; see `.env.example`).
+- `db/` lives at the repo root; its `*.db` files are git-ignored (`.gitkeep` is committed).
+- `AUTH_SECRET` is fatal at boot in production (`src/instrumentation.ts`); dev falls back with a
+  warning. `COOKIE_SECURE=false` is the only sanctioned way to run a plain-HTTP production-style
+  server (the e2e suite uses it — headless browsers drop Secure cookies on http://localhost).
 
-### Copy is reference-verbatim
-The Sales and Cashiers surfaces are in Spanish on purpose ("Historial de
-Ventas", "Sin ventas", "Turnos Recientes", "Cajeros", the 404's "Página no
-encontrada") — that is reference parity, not an i18n bug. The auth card's
-social buttons render for parity and toast "SSO is not configured on this
-deployment" when pressed — do not fake working SSO.
+## Testing rules
 
-## Conventions
+- Unit tests live at the pure seams (`tests/unit/**`, vitest, node env). The existing 12 files are
+  the seam registry — new `src/lib` seams get a file; UI components don't get unit tests.
+- E2E (`tests/e2e/**`) runs against the PRODUCTION standalone build with its own scratch db
+  (`db/e2e.db`, provisioned by the webServer command: kill-port → provision → boot — the db is
+  NEVER replaced while the server lives; the login and page render must agree on the same inode).
+- Auth is established ONCE (`auth.setup.ts`, storageState) — the rate limiter allows 10
+  attempts/IP/15 min; per-test logins exhaust it mid-suite. `auth.spec.ts` opts out with an empty
+  storageState.
+- Never weaken a guardrail to pass a gate; never delete a pin without replacing its protection.
 
-- TypeScript strict; `unknown` over `any`; interfaces for object shapes.
-- One component per file in `src/components/views/` (8 views) +
-  `src/components/pos/` (shared primitives, charts) +
-  `src/components/auth/` + `src/components/layout/` + `src/components/ui/`.
-- Client API access ONLY through `src/lib/api.ts` (`apiGet/apiPost/apiPatch/
-  apiPut/apiDelete`) — never bare fetch.
-- State: Zustand stores (`src/lib/store.ts` — view + sidebar + drawer;
-  toast store in `src/components/ui/toast.tsx`). No React Context.
-- Effects: setState only after await boundaries (the
-  `react-hooks/set-state-in-effect` gate is active — async IIFE with a
-  `cancelled` flag is the house pattern).
-- Commit style: Conventional Commits (`feat:`, `fix:`, `docs:`, …), atomic,
-  main-branch only (no feature branches).
-- `skills/` is reference material shipped with the repo — EXCLUDED from
-  lint/type/tests; do not modify it.
-- The push path is `docs/ssh_git_wrapper_v3.py` (see
-  `docs/how-to-git-push-using-ssh-wrapper_SKILL.md`) — keys never live in
-  the repo.
+## Conventions that differ from defaults
+
+- **`bun` for everything** (dev, test runner, scripts). `npm`/`pnpm` are not configured here.
+- **Route handlers are 3-line shells** over the delegate factories — real logic goes in
+  `src/lib/server/entities.ts` delegates or dedicated workflow routes (shifts, sales).
+- Error responses are `{ error: string }` — the client `api.ts` seam unwraps and throws
+  `ApiError`; views toast via `useToast()` (`toast.success/error/info`), never `alert()`.
+- Client redirects after auth use `window.location.assign/replace` (a FULL reload — intentional,
+  lint-warned once and documented), because the app state must re-resolve from the cookie.
+- Dialogs/menus that must reset per-open are keyed by the open/editing identity
+  (`key={editing?.id ?? "new"}`) — no setState-in-effect resets (React 19 lint rule).
+- Spanish copy is preserved verbatim where the reference uses it (Sales = "Historial de Ventas",
+  Cashiers = "Cajeros"/"Turnos Recientes", the 404 page) — do not "fix" the mix.
+
+## Reference parity
+
+`docs/veloxpos-implementation-plan.md` §0 holds the measured reference spec (tokens, copy, routes,
+data model, the reference's own mobile defect). When a parity question arises, measure the live
+reference with `agent-browser` — computed styles beat screenshots — and record the measurement.

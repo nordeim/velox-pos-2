@@ -1,22 +1,33 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 /* ---------------------------------------------------------------------------
-   VeloxPOS design system — Tailwind v4, CSS-first. Dark-only.
+   VeloxPOS design system — Tailwind v4, CSS-first.
 
-   Every color below is MEASURED from the live reference
-   (veloxposen.base44.app, 2026-10-26 — docs/veloxpos-implementation-plan.md
-   §0). THE DOCUMENTED v3→v4 TRAPS (docs/Tailwind-V4-Validation-Report.md)
-   still govern this file:
+   THE DOCUMENTED v3→v4 TRAPS (docs/Tailwind-V4-Validation-Report.md +
+   web-application-engineering §3) — every pin below exists because a trap
+   shipped a parity bug. The POS-specific tokens + the measured glass system
+   live in src/app/tokens.css (imported at the bottom of this file).
 
+   1.  @theme inline vars must be FULL hsl() colors — bare triplets resolve to
+       transparent. Shadcn tokens therefore stay raw triplets in :root,
+       consumed as hsl(var(--x)) INSIDE @theme (trap 1 routing).
+   2.  The v3-era palette is PINNED below — v4's oklch defaults drift.
+   3.  --shadow-sm is pinned to v3's exact value — v4 shifted the scale a notch.
    4.  Never put margin utilities (mt-*, mb-*) as children of space-y/x-*
        containers — v4's :where() rewrite flips specificity. Convention:
-       flex gap-* only (the drawer nav is the pinned example).
-   5.  Exact-sRGB gradients are inline styles / CSS classes, never utility
-       gradients (v4 interpolates in oklab) — the brand/charge gradients are
-       the .vx-gradient classes below.
-   9.  BLUR scale shifted: v3 backdrop-blur-sm (4px) is v4 backdrop-blur-xs.
-   10. Modern color syntax serializes as legacy forms — pinned asserted
-       colors live as literal hexes in @theme.
+       flex gap-* only (this IS the documented mobile-nav drawer rule).
+   5.  Exact-sRGB gradients are CSS classes, never utility gradients
+       (v4 interpolates in oklab — the measured 135deg stops would drift).
+   6.  Radius scale: v4 is v3-identical EXCEPT rounded-sm (2px → xs). Pin
+       --radius-sm ONLY.
+   7.  Opacity utilities serialize as oklab in Chromium — e2e accepts both.
+   8.  BLUR scale shifted: v3 backdrop-blur-sm (4px) is v4 backdrop-blur-xs.
+   9.  Custom classes (the glass-* family) are PLAIN CSS in tokens.css —
+       never @layer utilities (v4 emits those AFTER generated utilities and
+       they silently lose the cascade — the mobile-nav bug class).
+   10. NO tailwind.config.js anywhere — the #1 cause of the flat-look bug.
 --------------------------------------------------------------------------- */
 
 @theme {
@@ -33,6 +44,29 @@
   --color-slate-900: #0f172a;
   --color-slate-950: #020617;
 
+  --color-zinc-50: #fafafa;
+  --color-zinc-100: #f4f4f5;
+  --color-zinc-200: #e4e4e7;
+  --color-zinc-300: #d4d4d8;
+  --color-zinc-400: #a1a1aa;
+  --color-zinc-500: #71717a;
+  --color-zinc-600: #52525b;
+  --color-zinc-700: #3f3f46;
+  --color-zinc-800: #27272a;
+  --color-zinc-900: #18181b;
+  --color-zinc-950: #09090b;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
+
   --color-violet-50: #f5f3ff;
   --color-violet-100: #ede9fe;
   --color-violet-200: #ddd6fe;
@@ -44,203 +78,137 @@
   --color-violet-800: #5b21b6;
   --color-violet-900: #4c1d95;
 
-  --color-indigo-400: #818cf8;
+  --color-indigo-50: #eef2ff;
+  --color-indigo-100: #e0e7ff;
   --color-indigo-500: #6366f1;
   --color-indigo-600: #4f46e5;
+  --color-indigo-700: #4338ca;
 
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-300: #93c5fd; /* S92/AS1: the assignments dark blue due pill — trap 2/10 (was unpinned) */
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-950: #172554; /* S92/AS1: the assignments dark blue due pill — trap 2/10 (was unpinned) */
+
+  --color-sky-50: #f0f9ff;
+  --color-sky-100: #e0f2fe;
+  --color-sky-300: #7dd3fc; /* S80/AG4: the GradeTracker dark sky pill (trap 10 — pin asserted colors) */
+  --color-sky-400: #38bdf8;
+  --color-sky-500: #0ea5e9;
+  --color-sky-600: #0284c7;
+  --color-sky-700: #0369a1;
+  --color-sky-950: #082f49; /* S80/AG4 */
+
+  --color-cyan-50: #ecfeff;
+  --color-cyan-100: #cffafe;
+  --color-cyan-400: #22d3ee;
+  --color-cyan-500: #06b6d4;
+  --color-cyan-600: #0891b2;
+  --color-cyan-700: #0e7490;
+
+  --color-teal-50: #f0fdfa;
+  --color-teal-100: #ccfbf1;
+  --color-teal-300: #5eead4;
+  --color-teal-400: #2dd4bf;
+  --color-teal-500: #14b8a6;
+  --color-teal-600: #0d9488;
+  --color-teal-700: #0f766e;
+  --color-teal-900: #134e4a;
+
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-200: #a7f3d0; /* S81/AH3: the success toast's dark text — trap 10 */
+  --color-emerald-300: #6ee7b7;
   --color-emerald-400: #34d399;
   --color-emerald-500: #10b981;
   --color-emerald-600: #059669;
   --color-emerald-700: #047857;
+  --color-emerald-900: #064e3b;
+  --color-emerald-950: #022c22; /* S80/AG4: the dark score pill — trap 10 */
 
+  /* green-100 is the reference's measured FOCUS TIME tint — #dcfce7, NOT
+     emerald-100 (S7 trap 12: same-hue families are not interchangeable). */
+  --color-green-100: #dcfce7;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a; /* S94/AU1 (was unpinned) — trap 10: the connectivity banner's light border / dark ink */
   --color-amber-300: #fcd34d;
   --color-amber-400: #fbbf24;
   --color-amber-500: #f59e0b;
   --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e; /* S94/AU1 (was unpinned) — the banner's light ink / the dark border's base */
+  --color-amber-900: #78350f;
+  --color-amber-950: #451a03; /* S80/AG4 */
 
-  --color-blue-400: #60a5fa;
-  --color-blue-500: #3b82f6;
-  --color-blue-600: #2563eb;
+  --color-orange-50: #fff7ed;
+  --color-orange-100: #ffedd5;
+  --color-orange-300: #fdba74; /* S92/AS1: the exams Tomorrow dark badge — trap 2/10 (was unpinned) */
+  --color-orange-400: #fb923c;
+  --color-orange-500: #f97316;
+  --color-orange-600: #ea580c;
+  --color-orange-700: #c2410c;
+  --color-orange-950: #431407; /* S92/AS1: the exams Tomorrow dark badge — trap 2/10 (was unpinned) */
 
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-200: #fecaca;
+  --color-red-300: #fca5a5;
   --color-red-400: #f87171;
   --color-red-500: #ef4444;
   --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-900: #7f1d1d;
+  --color-red-950: #450a0a; /* S80/AG3: the dark AC key — trap 10 (the house dark-pill family renders the stable v3 hex now) */
 
-  /* ---- the measured POS surfaces ---- */
-  --color-vx-canvas: #080a14;      /* body background  (rgb 8 10 20) */
-  --color-vx-surface: #0d0f1a;     /* sidebar          (rgb 13 15 26) */
-  --color-vx-card: #101220;        /* cards            (rgb 16 18 32) */
-  --color-vx-elevated: #141830;    /* inputs, hover plates */
-  --color-vx-border: #1e2235;      /* structural borders (rgb 30 34 53) */
-  --color-vx-border-soft: #232842;
+  --color-pink-50: #fdf2f8;
+  --color-pink-100: #fce7f3;
+  --color-pink-300: #f9a8d4;
+  --color-pink-400: #f472b6;
+  --color-pink-500: #ec4899;
+  --color-pink-600: #db2777;
+  --color-pink-700: #be185d;
+  --color-pink-900: #831843;
 
-  /* radius scale (trap 6): v4 is v3-identical except rounded-sm */
-  --radius-sm: 2px;
-}
+  --color-rose-50: #fff1f2;
+  --color-rose-100: #ffe4e6;
+  --color-rose-500: #f43f5e;
+  --color-rose-600: #e11d48;
+  --color-rose-700: #be123c;
 
-/* ---------------------------------------------------------------------------
-   CSS variables + semantic utilities
---------------------------------------------------------------------------- */
+  --color-yellow-50: #fefce8;
+  --color-yellow-100: #fef9c3;
+  --color-yellow-300: #fde047; /* S92/AS1: the exams/flashcards/assignments dark yellow pills — trap 2/10 (was unpinned) */
+  --color-yellow-500: #eab308;
+  --color-yellow-700: #a16207;
+  --color-yellow-950: #422006;
 
-:root {
-  --vx-canvas: 8 10 20;
-  --vx-surface: 13 15 26;
-  --vx-card: 16 18 32;
-  --vx-elevated: 20 24 48;
-  --vx-border: 30 34 53;
-  --vx-text: 226 232 240;      /* slate-200 */
-  --vx-muted: 148 163 184;     /* slate-400 */
-  --vx-faint: 100 116 139;     /* slate-500 */
-  --vx-title: 30 41 59;        /* slate-700 — the reference's dark-on-dark h1 */
-  --vx-primary: 124 58 237;    /* violet-600 */
-  --vx-primary-soft: 196 181 253; /* violet-300 */
-  --vx-primary-glow: rgba(124, 58, 237, 0.4);
-  --vx-line: 167 139 250;      /* violet-400 — the chart accent */
-  --vx-charge-from: 5 150 105; /* emerald-600 */
-  --vx-charge-to: 16 185 129;  /* emerald-500 */
-  --vx-danger: 239 68 68;
-  color-scheme: dark;
-}
+  /* S76/AC6: the exam topics chips — the neutral family (measured
+   * bg #262626 / text #fafafa on the reference); unpinned these read
+   * back as lab() (trap 10). S77/AD: neutral-950 joins for the study-
+   * mode Exit/Wrong/Divider black buttons (measured rgb(10,10,10)). */
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-neutral-950: #0a0a0a;
 
-.vx-canvas {
-  background-color: rgb(var(--vx-canvas));
-  color: rgb(var(--vx-text));
-}
+  --color-purple-100: #f3e8ff;
+  --color-purple-500: #a855f7;
 
-/* Exact-sRGB brand gradients (trap 5: never utility gradients). */
-.vx-gradient {
-  background-image: linear-gradient(135deg, #7c3aed, #6366f1);
-}
-.vx-gradient-hover:hover {
-  background-image: linear-gradient(135deg, #6d28d9, #4f46e5);
-}
-.vx-charge-gradient {
-  background-image: linear-gradient(135deg, #059669, #10b981);
-}
-.vx-charge-gradient:disabled {
-  background-image: linear-gradient(135deg, #059669, #10b981);
-  opacity: 0.5;
+  /* ---- trap 3: v3's shadow-sm — v4 shifted the whole scale one notch ---- */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+
+  /* ---- trap 6: only rounded-sm changed meaning in v4 ---- */
+  --radius-sm: 0.125rem;
+
+  /* ---- shadcn token utilities route through runtime-resolvable vars ---- */
+
 }
 
-/* The measured primary-action glow. */
-.vx-glow {
-  box-shadow: 0 4px 20px var(--vx-primary-glow);
-}
-
-/* Card surface: the measured rgba(16,18,32,0.9) + white/7% hairline. */
-.vx-card {
-  background-color: rgba(16, 18, 32, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 1rem;
-}
-
-/* Input surface shared by dialogs/forms. */
-.vx-input {
-  width: 100%;
-  border-radius: 0.5rem;
-  border: 1px solid var(--color-vx-border);
-  background-color: var(--color-vx-elevated);
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-  color: rgb(var(--vx-text));
-  outline: none;
-}
-.vx-input::placeholder {
-  color: rgb(var(--vx-faint));
-}
-.vx-input:focus-visible {
-  border-color: var(--color-violet-600);
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.35);
-}
-
-/* The reference's uppercase table headers (11px, wide tracking). */
-.vx-table-header {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
-}
-
-/* The reference's uppercase micro-labels (TODAY'S SALES, CART…). */
-.vx-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
-}
-
-/* Page titles: the measured dark-on-dark slate-700 h1 (kept for parity). */
-.vx-page-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: rgb(var(--vx-title));
-}
-
-/* Sidebar active nav item: violet wash + violet-300 text. */
-.vx-nav-active {
-  background-color: rgba(124, 58, 237, 0.2);
-  color: rgb(var(--vx-primary-soft));
-}
-
-/* Focus ring contract (WCAG 2.4.7): every interactive element gets the
-   violet focus-visible ring. */
-.vx-focusable:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.5);
-}
-
-/* Skip link (WCAG 2.4.1). */
-.vx-skip-link {
-  position: fixed;
-  left: 1rem;
-  top: -4rem;
-  z-index: 100;
-  border-radius: 0.5rem;
-  background-color: var(--color-violet-600);
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: white;
-  transition: top 120ms ease;
-}
-.vx-skip-link:focus-visible {
-  top: 1rem;
-}
-
-/* Drawer slide-in (respects prefers-reduced-motion). */
-@keyframes vx-slide-in {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-.vx-slide-in {
-  animation: vx-slide-in 200ms ease-out;
-}
-@media (prefers-reduced-motion: reduce) {
-  .vx-slide-in {
-    animation: none;
-  }
-}
-
-/* Thin scrollbars on the dark surfaces. */
-.vx-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-vx-border) transparent;
-}
-
-/* Print: the receipt prints black-on-white regardless of the app theme. */
-@media print {
-  body {
-    background: white !important;
-    color: black !important;
-  }
-  .vx-no-print {
-    display: none !important;
-  }
-}
+@import "./tokens.css";

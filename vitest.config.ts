@@ -1,15 +1,20 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — the VeloxPOS clone.
+// ---------------------------------------------------------------------------
+// Unit-test layer for VeloxPOS — the pure domain seams (src/lib).
 //
-// Matches *.test.ts under tests/ ONLY (never the e2e *.spec.ts files, which
-// Playwright owns — see playwright.config.ts). Run via `bun run test`.
+// 12 files: money, cart, shift, reports, inventory-status, currency, router,
+// validation, auth, db-path, env-check, site. Every seam is the public
+// boundary the API routes and views consume; nothing here imports React or
+// the database. Run: `bun run test`.
+// ---------------------------------------------------------------------------
+
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["tests/**/*.test.ts"],
-    exclude: ["tests/e2e/**", "node_modules/**"],
+    include: ["tests/unit/**/*.test.ts"],
+    globals: false,
   },
   resolve: {
     alias: {

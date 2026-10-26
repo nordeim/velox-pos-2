@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// /api/registers — ownership-scoped CRUD (GET list + POST create).
+// /api/registers — ownership-scoped CRUD collection.
 // ---------------------------------------------------------------------------
 
 import { makeCollectionRoutes } from "@/lib/server/http";

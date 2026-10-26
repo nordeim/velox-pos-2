@@ -1,11 +1,12 @@
 // ---------------------------------------------------------------------------
-// Every API payload contract (VeloxPOS). Zod in strip mode (unknown keys
-// dropped — the repo-wide convention). Unit-pinned by tests/validation.test.ts.
+// Every VeloxPOS API payload contract. Zod v4 in strip mode (unknown keys
+// dropped — the repo-wide convention). Unit-pinned by tests/unit/validation.test.ts.
 // ---------------------------------------------------------------------------
 
 import { z } from "zod";
 
-import { PAYMENT_METHODS } from "./cart";
+import { isCardProvider, isSupportedCurrency } from "./currency";
+import { UNITS } from "./inventory-status";
 
 // ---- shared atoms ----------------------------------------------------------
 
@@ -15,212 +16,241 @@ const nullableId = z
   .union([idField, z.literal("")])
   .nullish()
   .transform((v) => (v === "" ? null : (v ?? null)));
-const shortText = z.string().min(1).max(120);
-const mediumText = z.string().min(1).max(200);
-const optionalShort = z
+const money = z.coerce.number().min(0).max(1_000_000);
+const percent = z.coerce.number().min(0).max(100);
+const quantity = z.coerce.number().min(0).max(1_000_000);
+const boundedText = z.string().min(1).max(200);
+const optionalText = z
   .string()
-  .max(200)
-  .optional()
-  .transform((v) => v ?? "");
-const hexColor = z
+  .max(500)
+  .transform((v) => v.trim());
+const dataUrl = z
   .string()
-  .regex(/^#[0-9a-fA-F]{6}$/)
-  .optional()
-  .transform((v) => v ?? "#7c3aed");
+  .max(2_000_000)
+  .refine((v) => v === "" || v.startsWith("data:"), "Not a valid data URL")
+  .nullish()
+  .transform((v) => (v === "" ? null : (v ?? null)));
 
-const moneyInput = z.union([z.number(), z.string()]).transform((v) => {
-  const value = typeof v === "string" ? Number.parseFloat(v) : v;
-  if (!Number.isFinite(value) || value < 0) return 0;
-  return Math.round(value * 100);
+// ---- products ----------------------------------------------------------------
+
+export const productCreateSchema = z.object({
+  name: boundedText,
+  barcode: z
+    .string()
+    .max(500)
+    .nullish()
+    .transform((v) => (v ?? "").trim()),
+  categoryId: nullableId,
+  price: money,
+  cost: money.nullish().transform((v) => (v == null ? null : v)),
+  stock: quantity,
+  minStock: quantity,
+  taxRate: percent,
+  unit: z.enum(UNITS).default("Piece"),
+  image: dataUrl,
+  active: z.boolean().default(true),
 });
 
-const intInput = z.union([z.number(), z.string()]).transform((v) => {
-  const value = typeof v === "string" ? Number.parseInt(v, 10) : v;
-  if (!Number.isFinite(value)) return 0;
-  return Math.max(0, Math.trunc(value));
+export const productUpdateSchema = productCreateSchema.partial();
+
+// ---- categories ----------------------------------------------------------------
+
+export const categoryCreateSchema = z.object({
+  name: boundedText,
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Use a hex color like #8b5cf6")
+    .default("#8b5cf6"),
 });
 
-const percentInput = z.union([z.number(), z.string()]).transform((v) => {
-  const value = typeof v === "string" ? Number.parseFloat(v) : v;
-  if (!Number.isFinite(value) || value < 0) return 0;
-  return Math.min(100, Math.round(value));
+export const categoryUpdateSchema = categoryCreateSchema.partial();
+
+// ---- registers ------------------------------------------------------------------
+
+export const registerCreateSchema = z.object({
+  name: boundedText,
+  location: z
+    .string()
+    .max(500)
+    .nullish()
+    .transform((v) => (v ?? "").trim()),
 });
 
-export const UNITS = [
-  "Piece",
-  "Box",
-  "Pack",
-  "Kilogram",
-  "Gram",
-  "Liter",
-  "Milliliter",
-] as const;
-export const unitField = z.enum(UNITS).default("Piece");
+export const registerUpdateSchema = registerCreateSchema.partial().extend({
+  status: z.enum(["closed", "open"]).optional(),
+});
 
-export const ROLES = ["admin", "cashier"] as const;
-const roleField = z.enum(ROLES).default("cashier");
+// ---- shifts -----------------------------------------------------------------------
 
-// ---- auth (shared with the existing routes) --------------------------------
+export const shiftOpenSchema = z.object({
+  registerId: idField,
+  openingFloat: money.default(0),
+});
 
-export const registerSchema = z.object({
-  name: z.string().min(1).max(120),
-  email: z.string().email().max(200),
+export const shiftCloseSchema = z.object({
+  countedCash: z.coerce.number().min(0).max(1_000_000),
+});
+
+// ---- sales (checkout) ----------------------------------------------------------------
+
+export const saleItemSchema = z.object({
+  productId: idField,
+  name: boundedText,
+  price: money,
+  qty: z.coerce.number().int().min(1).max(999),
+  taxRate: percent,
+});
+
+export const saleCreateSchema = z.object({
+  items: z.array(saleItemSchema).min(1, "The cart is empty").max(200),
+  paymentMethod: z.enum(["cash", "card"]),
+  amountPaid: z.coerce.number().min(0).max(1_000_000).nullish(),
+  customer: z
+    .string()
+    .max(500)
+    .nullish()
+    .transform((v) => (v ?? "").trim()),
+});
+
+// ---- store settings -----------------------------------------------------------------
+
+const currencyEnum = z
+  .string()
+  .refine(isSupportedCurrency, "Unsupported currency code");
+
+const cardProviderEnum = z
+  .string()
+  .refine(isCardProvider, "Unsupported card provider");
+
+export const storeSettingsUpdateSchema = z
+  .object({
+    storeName: boundedText,
+    logoDataUrl: dataUrl,
+    address: z
+      .string()
+      .max(500)
+      .nullish()
+      .transform((v) => (v ?? "").trim()),
+    phone: z
+      .string()
+      .max(500)
+      .nullish()
+      .transform((v) => (v ?? "").trim()),
+    email: z
+      .union([z.literal(""), z.string().email()])
+      .nullish()
+      .transform((v) => (v ?? "").trim()),
+    taxId: z
+      .string()
+      .max(500)
+      .nullish()
+      .transform((v) => (v ?? "").trim()),
+    currency: currencyEnum,
+    primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Use a hex color like #6366f1"),
+    secondaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Use a hex color like #8b5cf6"),
+    receiptFooter: z
+      .string()
+      .max(500)
+      .nullish()
+      .transform((v) => (v ?? "").trim()),
+    hideFiscalOnReceipt: z.boolean(),
+    fiscalRuc: z
+      .string()
+      .max(500)
+      .nullish()
+      .transform((v) => (v ?? "").trim()),
+    fiscalBusinessType: z
+      .string()
+      .max(500)
+      .nullish()
+      .transform((v) => (v ?? "").trim()),
+    fiscalAddress: z
+      .string()
+      .max(500)
+      .nullish()
+      .transform((v) => (v ?? "").trim()),
+    fiscalExpenseAccount: z
+      .string()
+      .max(500)
+      .nullish()
+      .transform((v) => (v ?? "").trim()),
+    cardProvider: cardProviderEnum,
+  })
+  .partial();
+
+// ---- cashiers (owner-only user management) --------------------------------------------
+
+export const cashierCreateSchema = z.object({
+  fullName: boundedText,
+  email: z.string().email(),
   password: z.string().min(8).max(200),
 });
 
-export const loginSchema = z.object({
-  email: z.string().email().max(200),
-  password: z.string().min(1).max(200),
+export const cashierUpdateSchema = z.object({
+  fullName: boundedText.optional(),
+  active: z.boolean().optional(),
+  password: z.string().min(8).max(200).optional(),
 });
 
-export const forgotPasswordSchema = z.object({
-  email: z.string().email().max(200),
+// ---- auth (the scaffolding's contracts — unchanged) -----------------------------------
+
+export const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8).max(200),
+});
+
+export const registerSchema = z.object({
+  fullName: z.string().max(100).optional().default(""),
+  email: z.string().email(),
+  password: z.string().min(8).max(200),
+});
+
+export const verifyEmailSchema = z.object({
+  email: z.string().email(),
+  code: z.string().regex(/^\d{6}$/),
 });
 
 export const resetPasswordSchema = z.object({
-  token: z.string().min(10).max(200),
+  token: z.string().regex(/^[0-9a-f]{48}$/),
   password: z.string().min(8).max(200),
 });
 
-export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1).max(200),
-  newPassword: z.string().min(8).max(200),
-});
-
-/** The change-email journey: current-password proof + the typed-twice
- *  confirmation guarding the typo lockout (must match + must differ). */
-export const changeEmailSchema = z
+export const changePasswordSchema = z
   .object({
-    password: z.string().min(1).max(200),
-    newEmail: z.string().email().max(200),
-    confirmEmail: z.string().email().max(200),
+    currentPassword: z.string().min(8).max(200),
+    newPassword: z.string().min(8).max(200),
   })
-  .refine((v) => v.newEmail.toLowerCase() === v.confirmEmail.toLowerCase(), {
-    message: "The email addresses do not match.",
+  .refine((v) => v.currentPassword !== v.newPassword, {
+    message: "The new password must be different from your current password.",
   });
 
 export const deleteAccountSchema = z
   .object({
-    password: z.string().min(1).max(200),
+    password: z.string().min(8).max(200),
     confirmation: z.string(),
   })
   .refine((v) => v.confirmation === "DELETE", {
     message: "Type DELETE to confirm.",
   });
 
-export const verifyEmailSchema = z.object({
-  email: z.string().email().max(200),
-  code: z.string().min(4).max(8),
-});
+export const changeEmailSchema = z
+  .object({
+    password: z.string().min(8).max(200),
+    newEmail: z.string().max(200).email(),
+    confirmEmail: z.string().max(200).email(),
+  })
+  .refine((v) => v.newEmail === v.confirmEmail, {
+    message: "The email addresses do not match.",
+  });
 
-// ---- categories --------------------------------------------------------------
+// ---- types ------------------------------------------------------------------------
 
-export const categoryCreateSchema = z.object({
-  name: shortText,
-  color: hexColor,
-});
-
-export const categoryUpdateSchema = categoryCreateSchema.partial();
-
-// ---- products -----------------------------------------------------------------
-
-export const productCreateSchema = z.object({
-  name: mediumText,
-  barcode: z.string().min(1).max(64),
-  categoryId: nullableId,
-  price: moneyInput, // dollars in, cents out
-  cost: moneyInput.optional().default(0),
-  stock: intInput.optional().default(0),
-  minStock: intInput.optional().default(5),
-  taxRate: percentInput.optional().default(16),
-  unit: unitField,
-  imageUrl: optionalShort,
-  active: z.boolean().optional().default(true),
-});
-
-export const productUpdateSchema = productCreateSchema.partial();
-
-// ---- registers ------------------------------------------------------------------
-
-export const registerCreateSchema = z.object({
-  name: shortText,
-  location: optionalShort,
-});
-
-export const registerUpdateSchema = registerCreateSchema.partial();
-
-// ---- shifts -----------------------------------------------------------------------
-
-export const shiftOpenSchema = z.object({
-  registerId: idField,
-  openingFloat: moneyInput.optional().default(0),
-});
-
-export const shiftCloseSchema = z.object({
-  closingCash: moneyInput,
-});
-
-// ---- sales ---------------------------------------------------------------------------
-
-export const saleCreateSchema = z.object({
-  registerId: idField,
-  method: z.enum(PAYMENT_METHODS).default("cash"),
-  customerName: optionalShort,
-  note: z
-    .string()
-    .max(500)
-    .optional()
-    .transform((v) => v ?? ""),
-  discount: moneyInput.optional().default(0),
-  paid: moneyInput.optional().default(0),
-  items: z
-    .array(
-      z.object({
-        productId: idField,
-        qty: z.number().int().min(1).max(9999),
-      }),
-    )
-    .min(1, "A sale needs at least one item."),
-});
-
-export const saleUpdateSchema = z.object({
-  status: z.enum(["completed", "refunded"]),
-});
-
-// ---- cashiers ----------------------------------------------------------------------------
-
-export const cashierCreateSchema = z.object({
-  name: shortText,
-  email: z.string().email().max(200),
-  password: z.string().min(8).max(200),
-  role: roleField,
-  phone: optionalShort,
-});
-
-export const cashierUpdateSchema = z.object({
-  name: z.string().min(1).max(120).optional(),
-  role: roleField.optional(),
-  phone: optionalShort,
-  active: z.boolean().optional(),
-});
-
-// ---- settings --------------------------------------------------------------------------------
-
-export const settingsUpdateSchema = z.object({
-  storeName: z.string().min(1).max(120).optional(),
-  address: optionalShort,
-  phone: optionalShort,
-  currency: z
-    .string()
-    .min(3)
-    .max(3)
-    .optional()
-    .transform((v) => (v ?? "USD").toUpperCase()),
-  receiptFooter: optionalShort,
-  defaultTaxRate: percentInput.optional(),
-});
-
-export const accountUpdateSchema = z.object({
-  name: z.string().min(1).max(120),
-  phone: optionalShort,
-});
+export type ProductCreateInput = z.infer<typeof productCreateSchema>;
+export type ProductUpdateInput = z.infer<typeof productUpdateSchema>;
+export type CategoryCreateInput = z.infer<typeof categoryCreateSchema>;
+export type RegisterCreateInput = z.infer<typeof registerCreateSchema>;
+export type ShiftOpenInput = z.infer<typeof shiftOpenSchema>;
+export type ShiftCloseInput = z.infer<typeof shiftCloseSchema>;
+export type SaleCreateInput = z.infer<typeof saleCreateSchema>;
+export type StoreSettingsUpdateInput = z.infer<typeof storeSettingsUpdateSchema>;
+export type CashierCreateInput = z.infer<typeof cashierCreateSchema>;

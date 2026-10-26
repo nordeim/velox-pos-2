@@ -1,7 +1,7 @@
 {
-  "name": "velox-pos",
+  "name": "veloxpos",
   "version": "1.0.0",
-  "description": "VeloxPOS \u2014 a fast, self-hosted point of sale (terminal, inventory, registers, cashiers, reports). A production-ready clone (functional superset) of veloxposen.base44.app built on Next.js 16 + React 19 + Prisma/SQLite.",
+  "description": "VeloxPOS (Point Of Sale) \u2014 a production-ready POS web app (functional superset of veloxposen.base44.app) on Next.js 16 + React 19 + Prisma/SQLite.",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
@@ -16,8 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "typecheck": "tsc --noEmit",
-    "db:seed:sample": "DATABASE_URL=\"file:../db/custom.db\" bun prisma/seed-sample.ts"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@prisma/client": "^6.11.1",

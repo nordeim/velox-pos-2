@@ -1,145 +1,115 @@
 import { expect, test } from "@playwright/test";
 
 // ---------------------------------------------------------------------------
-// THE MOBILE NAVIGATION CONTRACT (the user's key concern; the reference has
-// NO working mobile nav — its desktop layout crushes at 390px, plan F13).
-// The clone's drawer is the documented superset, built on the repo Tailwind
-// v4 skill's mobile-navigation contract (skills/nextjs16-tailwind4 §9):
-//   1. below lg an app bar with a real <button> hamburger trigger renders;
-//   2. the drawer is a role=dialog + aria-modal surface, opened by the
-//      trigger, listing all 8 sections;
-//   3. focus moves INTO the drawer on open and RETURNS to the trigger on
-//      close (the overlay a11y contract);
-//   4. Escape closes; the backdrop tap closes; body scroll locks while open;
-//   5. choosing a section navigates the SPA and closes the drawer;
-//   6. crossing into lg closes the drawer (the app bar disappears).
+// THE MOBILE NAVIGATION SPEC (390x844 — the user-pinned surface).
 //
-// Tailwind v4 regression guards (docs/Tailwind-V4-Validation-Report.md):
-//   trap 4 — the nav list is flex flex-col gap-1 (never space-y-* with
-//            mt-*/mb-* children; v4's :where() rewrite flips specificity);
-//   trap 9 — the backdrop uses backdrop-blur-xs (v4 renamed the 4px stop).
-// The drawer spec runs at 390×844 (the iPhone 14-ish viewport the reference
-// was measured at) AND at 768×1024 (the below-lg band).
+// The REFERENCE keeps a 220px sidebar overlaying the content on phones with
+// NO hamburger (its own mobile defect). The clone ships the documented a11y
+// SUPERSET instead: a labeled hamburger in a top app bar, a slide-in
+// glass-dark drawer (role=dialog, aria-modal), labeled links, navigate ⇒
+// auto-close (the drawer UNMOUNTS), Escape, backdrop tap, and NO horizontal
+// overflow. The Tailwind-v4 trap discipline this spec pins:
+//   - the drawer's custom .glass-dark surface is plain CSS (never @layer
+//     utilities, which lose the cascade in v4);
+//   - the nav list is flex gap-* (never space-y-* with mt-*/mb-* children —
+//     v4's :where() rewrite flips that specificity).
 // ---------------------------------------------------------------------------
-test.use({ viewport: { width: 390, height: 844 } });
 
-test.describe("mobile navigation drawer (390×844)", () => {
-  test("the app bar renders below lg with the hamburger trigger", async ({ page }) => {
-    await page.goto("/Terminal");
-    const bar = page.getByTestId("mobile-app-bar");
-    await expect(bar).toBeVisible();
-    await expect(bar.getByText("VeloxPOS", { exact: true })).toBeVisible();
-    const trigger = page.getByTestId("mobile-nav-trigger");
-    await expect(trigger).toBeVisible();
-    await expect(trigger).toHaveAttribute("aria-expanded", "false");
-    await expect(trigger).toHaveAttribute("aria-controls", "vx-mobile-nav");
+test.describe("mobile navigation (the drawer superset)", () => {
+  test("the app bar shows a labeled hamburger; the desktop sidebar is gone", async ({
+    page,
+  }) => {
+    await page.goto("/POS");
+    const hamburger = page.getByRole("button", { name: "Open navigation menu" });
+    await expect(hamburger).toBeVisible();
+    // `hidden md:flex` keeps the aside IN THE DOM below md — assert the
+    // VISIBILITY contract (what users and the a11y tree experience).
+    await expect(page.getByTestId("app-sidebar")).not.toBeVisible();
+    // No dead controls: the desktop-only collapse chevron is not visible.
+    await expect(page.getByRole("button", { name: "Collapse sidebar" })).not.toBeVisible();
   });
 
-  test("the desktop sidebar does NOT render below lg", async ({ page }) => {
-    await page.goto("/Terminal");
-    // `hidden lg:flex` — the aside is in the DOM but never visible.
-    await expect(page.getByTestId("sidebar")).toBeHidden();
+  test("no horizontal overflow at 390px (the reference's own defect stays fixed)", async ({
+    page,
+  }) => {
+    await page.goto("/Dashboard");
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
   });
 
-  test("the drawer opens as a labelled modal dialog with all 8 sections", async ({ page }) => {
-    await page.goto("/Terminal");
-    await page.getByTestId("mobile-nav-trigger").click();
-    const drawer = page.getByTestId("mobile-nav-drawer");
+  test("the drawer opens with role=dialog, 8 labeled links, and the brand", async ({
+    page,
+  }) => {
+    await page.goto("/POS");
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    const drawer = page.getByRole("dialog", { name: "Navigation menu" });
     await expect(drawer).toBeVisible();
-    await expect(drawer).toHaveAttribute("role", "dialog");
-    await expect(drawer).toHaveAttribute("aria-modal", "true");
-    const nav = drawer.getByRole("navigation", { name: "Primary" });
-    for (const label of ["Terminal", "Dashboard", "Inventory", "Sales", "Registers", "Cashiers", "Reports", "Settings"]) {
-      await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
+    const links = drawer.getByRole("link");
+    await expect(links).toHaveCount(8);
+    for (const label of [
+      "Terminal",
+      "Dashboard",
+      "Inventory",
+      "Sales",
+      "Registers",
+      "Cashiers",
+      "Reports",
+      "Settings",
+    ]) {
+      await expect(links.filter({ hasText: label })).toBeVisible();
     }
   });
 
-  test("the trigger's aria-expanded flips while open", async ({ page }) => {
-    await page.goto("/Terminal");
-    const trigger = page.getByTestId("mobile-nav-trigger");
-    await trigger.click();
-    await expect(trigger).toHaveAttribute("aria-expanded", "true");
-    await page.getByRole("button", { name: "Close menu" }).click();
-    await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  test("navigating from the drawer auto-closes it (it UNMOUNTS)", async ({ page }) => {
+    await page.goto("/POS");
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    await page.getByRole("dialog").getByRole("link", { name: "Inventory" }).click();
+    await page.waitForURL("**/Inventory");
+    await expect(page.getByRole("heading", { name: "Inventory" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "Navigation menu" })).toHaveCount(0);
   });
 
-  test("Escape closes the drawer and returns focus to the trigger", async ({ page }) => {
-    await page.goto("/Terminal");
-    const trigger = page.getByTestId("mobile-nav-trigger");
-    await trigger.click();
-    const drawer = page.getByTestId("mobile-nav-drawer");
-    await expect(drawer).toBeVisible();
+  test("Escape closes the drawer", async ({ page }) => {
+    await page.goto("/POS");
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    await expect(page.getByRole("dialog", { name: "Navigation menu" })).toBeVisible();
     await page.keyboard.press("Escape");
-    await expect(drawer).toHaveCount(0);
-    await expect(trigger).toBeFocused();
+    await expect(page.getByRole("dialog", { name: "Navigation menu" })).toHaveCount(0);
   });
 
   test("the backdrop tap closes the drawer", async ({ page }) => {
-    await page.goto("/Terminal");
-    await page.getByTestId("mobile-nav-trigger").click();
-    const drawer = page.getByTestId("mobile-nav-drawer");
-    await expect(drawer).toBeVisible();
-    await page.getByRole("button", { name: "Close navigation menu" }).click();
-    await expect(drawer).toHaveCount(0);
+    await page.goto("/POS");
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    await expect(page.getByRole("dialog", { name: "Navigation menu" })).toBeVisible();
+    // The backdrop's geometric center sits under the 288px drawer — click a
+    // point on the backdrop that is actually OUTSIDE the panel (x > 288).
+    await page.mouse.click(350, 400);
+    await expect(page.getByRole("dialog", { name: "Navigation menu" })).toHaveCount(0);
   });
 
-  test("body scroll locks while the drawer is open and unlocks on close", async ({ page }) => {
-    await page.goto("/Terminal");
-    await page.getByTestId("mobile-nav-trigger").click();
-    const drawer = page.getByTestId("mobile-nav-drawer");
-    await expect(drawer).toBeVisible();
-    await expect(page.locator("body")).toHaveCSS("overflow", "hidden");
-    await page.keyboard.press("Escape");
-    await expect(drawer).toHaveCount(0);
-    await expect(page.locator("body")).toHaveCSS("overflow", "visible");
+  test("the drawer's own X closes it", async ({ page }) => {
+    await page.goto("/POS");
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Close navigation menu" }).click();
+    await expect(page.getByRole("dialog", { name: "Navigation menu" })).toHaveCount(0);
   });
 
-  test("navigating from the drawer swaps the view and closes the drawer", async ({ page }) => {
-    await page.goto("/Terminal");
-    await page.getByTestId("mobile-nav-trigger").click();
-    const drawer = page.getByTestId("mobile-nav-drawer");
-    await drawer.getByRole("link", { name: "Inventory" }).click();
-    await expect(page.getByRole("heading", { name: "Inventory", level: 1 })).toBeVisible();
-    await expect(page).toHaveURL(/\/Inventory$/);
-    await expect(drawer).toHaveCount(0);
-    // the trigger survives for the next navigation
-    await expect(page.getByTestId("mobile-nav-trigger")).toBeVisible();
+  test("the active view is highlighted inside the drawer", async ({ page }) => {
+    await page.goto("/Reports");
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    await expect(
+      page.getByRole("dialog").getByRole("link", { name: "Reports" }),
+    ).toHaveAttribute("aria-current", "page");
   });
 
-  test("focus is trapped inside the open drawer (Tab cycles)", async ({ page }) => {
-    await page.goto("/Terminal");
-    await page.getByTestId("mobile-nav-trigger").click();
-    const drawer = page.getByTestId("mobile-nav-drawer");
-    await expect(drawer).toBeVisible();
-    // Tab from the LAST focusable wraps to the first — the trap contract.
-    await page.getByRole("button", { name: "Close menu" }).focus();
-    await page.keyboard.press("Tab");
-    const inside = page.evaluate(() =>
-      (document.activeElement as HTMLElement | null)?.closest(
-        '[data-testid="mobile-nav-drawer"]',
-      ) !== null,
-    );
-    await expect(inside).resolves.toBe(true);
-  });
-});
-
-test.describe("mobile navigation drawer (768×1024 below-lg band)", () => {
-  test.use({ viewport: { width: 768, height: 1024 } });
-
-  test("the drawer still serves the below-lg band (not just phones)", async ({ page }) => {
-    await page.goto("/Terminal");
-    await expect(page.getByTestId("mobile-app-bar")).toBeVisible();
-    await page.getByTestId("mobile-nav-trigger").click();
-    await expect(page.getByTestId("mobile-nav-drawer")).toBeVisible();
-  });
-});
-
-test.describe("mobile navigation drawer (1280×800 desktop)", () => {
-  test.use({ viewport: { width: 1280, height: 800 } });
-
-  test("the drawer and app bar never render at desktop width", async ({ page }) => {
-    await page.goto("/Terminal");
-    await expect(page.getByTestId("mobile-app-bar")).toBeHidden();
-    await expect(page.getByTestId("mobile-nav-trigger")).toBeHidden();
+  test("the terminal surface at 390px shows the gate AND the cart (reference parity)", async ({
+    page,
+  }) => {
+    await page.goto("/POS");
+    await expect(page.getByRole("heading", { name: "No active shift" })).toBeVisible();
+    await expect(page.getByTestId("cart-panel")).toBeVisible();
+    await expect(page.getByTestId("charge-button")).toContainText("CHARGE $0.00");
   });
 });

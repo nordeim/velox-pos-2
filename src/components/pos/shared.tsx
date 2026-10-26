@@ -1,192 +1,215 @@
 "use client";
 
 // ---------------------------------------------------------------------------
-// Shared POS view primitives: the page header, the stat card (measured F14:
-// label + 24px/700 value + trailing icon block), the empty-state card (F16),
-// and the primary/ghost buttons (F6 gradients).
+// Shared view furniture: the page header (title + subtitle, the reference's
+// ghost-heading style), the stat card (icon blob + label + value — the
+// Dashboard/Reports card family), and the two hand-rolled SVG charts (dotted
+// grid + violet stroke — zero chart dependencies, pixel-controlled parity).
 // ---------------------------------------------------------------------------
 
-import type { LucideIcon } from "lucide-react";
 import * as React from "react";
-
-import { cn } from "@/lib/utils";
 
 export function PageHeader({
   title,
   subtitle,
-  action,
+  actions,
 }: {
   title: string;
   subtitle?: string;
-  action?: React.ReactNode;
+  actions?: React.ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+    <div className="flex flex-wrap items-start justify-between gap-3">
       <div>
-        <h1 className="vx-page-title">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-slate-400">{subtitle}</p>}
+        <h1 className="text-3xl font-bold text-white/80">{title}</h1>
+        {subtitle && <p className="mt-1 text-sm text-white/50">{subtitle}</p>}
       </div>
-      {action}
+      {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
   );
 }
-
-/** The reference's stat-card icon block: a rounded gradient-tinted square. */
-const ICON_TONES: Record<string, { bg: string; text: string }> = {
-  emerald: { bg: "bg-emerald-500/15", text: "text-emerald-400" },
-  violet: { bg: "bg-violet-500/20", text: "text-violet-400" },
-  blue: { bg: "bg-blue-500/15", text: "text-blue-400" },
-  amber: { bg: "bg-amber-500/15", text: "text-amber-400" },
-};
 
 export function StatCard({
   label,
   value,
-  icon: Icon,
-  tone = "violet",
-  testId,
+  icon,
+  tone,
 }: {
   label: string;
   value: string;
-  icon: LucideIcon;
-  tone?: keyof typeof ICON_TONES;
-  testId?: string;
+  icon: React.ReactNode;
+  tone: "green" | "violet" | "blue" | "orange";
 }) {
-  const colors = ICON_TONES[tone];
+  const tones: Record<string, { chip: string; blob: string }> = {
+    green: { chip: "bg-emerald-500/20 text-emerald-400", blob: "bg-emerald-500/25" },
+    violet: { chip: "bg-violet-500/20 text-violet-400", blob: "bg-violet-500/25" },
+    blue: { chip: "bg-blue-500/20 text-blue-400", blob: "bg-blue-500/25" },
+    orange: { chip: "bg-orange-500/20 text-orange-400", blob: "bg-orange-500/25" },
+  };
+  const t = tones[tone];
   return (
-    <div className="vx-card flex items-center justify-between gap-4 p-5" data-testid={testId}>
-      <div className="min-w-0">
-        <p className="vx-label">{label}</p>
-        <p
-          className="mt-1 truncate text-2xl font-bold text-slate-700"
-          style={{ color: "rgb(30 41 59)" }}
-          data-testid={testId ? `${testId}-value` : undefined}
-        >
-          {value}
-        </p>
+    <div className="glass-card relative overflow-hidden rounded-2xl p-5">
+      <div className={`absolute -right-4 -top-4 h-20 w-20 rounded-full ${t.blob}`} aria-hidden="true" />
+      <div className="relative flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-xs font-bold uppercase tracking-wider text-white/60">
+            {label}
+          </p>
+          <p className="mt-2 text-2xl font-extrabold text-white/90" data-testid={`stat-${label.toLowerCase().replace(/[^a-z]+/g, "-")}`}>
+            {value}
+          </p>
+        </div>
+        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${t.chip}`}>
+          {icon}
+        </div>
       </div>
-      <span
-        aria-hidden
-        className={cn(
-          "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
-          colors.bg,
-          colors.text,
-        )}
-      >
-        <Icon className="h-5.5 w-5.5" strokeWidth={2} />
-      </span>
     </div>
   );
 }
 
-/** The reference's empty-state card (F16): icon + title + copy, centered. */
-export function EmptyState({
-  icon: Icon,
-  title,
-  text,
-  children,
-  testId,
+export type SeriesPoint = { label: string; value: number };
+
+/** The "Sales — Last 7 days" line chart: dotted grid + violet stroke. */
+export function LineChart({
+  data,
+  height = 260,
+  ariaLabel,
 }: {
-  icon: LucideIcon;
-  title?: string;
-  text: React.ReactNode;
-  children?: React.ReactNode;
-  testId?: string;
+  data: SeriesPoint[];
+  height?: number;
+  ariaLabel: string;
 }) {
-  return (
-    <div className="vx-card flex flex-col items-center justify-center gap-4 px-6 py-14 text-center" data-testid={testId}>
-      <Icon aria-hidden className="h-12 w-12 text-slate-500" strokeWidth={1.5} />
-      {title && <h2 className="text-xl font-bold text-white">{title}</h2>}
-      <p className="text-sm text-slate-400">{text}</p>
-      {children}
-    </div>
-  );
-}
+  const width = 720;
+  const pad = { top: 14, right: 14, bottom: 28, left: 34 };
+  const innerW = width - pad.left - pad.right;
+  const innerH = height - pad.top - pad.bottom;
+  const max = Math.max(4, ...data.map((d) => d.value));
+  const niceMax = Math.ceil(max);
+  const x = (i: number): number =>
+    pad.left + (data.length <= 1 ? innerW / 2 : (i / (data.length - 1)) * innerW);
+  const y = (v: number): number => pad.top + innerH - (v / niceMax) * innerH;
+  const path = data.map((d, i) => `${i === 0 ? "M" : "L"}${x(i)},${y(d.value)}`).join(" ");
+  const gridLines = Array.from({ length: niceMax + 1 }, (_, i) => i);
 
-/** The measured primary action (F6): violet→indigo 135° gradient + glow. */
-export function PrimaryButton({
-  children,
-  className,
-  ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <button
-      type="button"
-      {...props}
-      className={cn(
-        "vx-gradient vx-gradient-hover vx-glow vx-focusable inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-medium text-white outline-none transition-colors disabled:cursor-not-allowed disabled:opacity-60",
-        className,
-      )}
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="h-auto w-full"
+      role="img"
+      aria-label={ariaLabel}
+      data-testid="line-chart"
     >
-      {children}
-    </button>
+      {gridLines.map((g) => (
+        <g key={g}>
+          <line
+            x1={pad.left}
+            x2={width - pad.right}
+            y1={y(g)}
+            y2={y(g)}
+            stroke="rgba(255,255,255,0.16)"
+            strokeWidth="1"
+            strokeDasharray="2 4"
+          />
+          <text x={pad.left - 8} y={y(g) + 4} textAnchor="end" className="fill-white/40" fontSize="11">
+            {g}
+          </text>
+        </g>
+      ))}
+      {data.map((d, i) => (
+        <g key={`${d.label}-${i}`}>
+          <line
+            x1={x(i)}
+            x2={x(i)}
+            y1={pad.top}
+            y2={pad.top + innerH}
+            stroke="rgba(255,255,255,0.16)"
+            strokeWidth="1"
+            strokeDasharray="2 4"
+          />
+          <text
+            x={x(i)}
+            y={height - 8}
+            textAnchor="middle"
+            className="fill-white/50"
+            fontSize="11"
+          >
+            {d.label}
+          </text>
+        </g>
+      ))}
+      <path d={path} fill="none" stroke="#8b5cf6" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+      {data.map((d, i) => (
+        <circle key={`dot-${i}`} cx={x(i)} cy={y(d.value)} r="3" fill="#8b5cf6">
+          <title>{`${d.label}: ${d.value.toFixed(2)}`}</title>
+        </circle>
+      ))}
+    </svg>
   );
 }
 
-export function GhostButton({
-  children,
-  className,
-  ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+/** The Reports DAILY SALES area chart: violet area fill + $-prefixed y axis. */
+export function AreaChart({
+  data,
+  height = 280,
+  ariaLabel,
+}: {
+  data: SeriesPoint[];
+  height?: number;
+  ariaLabel: string;
+}) {
+  const width = 1080;
+  const pad = { top: 16, right: 16, bottom: 30, left: 44 };
+  const innerW = width - pad.left - pad.right;
+  const innerH = height - pad.top - pad.bottom;
+  const rawMax = Math.max(4, ...data.map((d) => d.value));
+  const niceMax = Math.max(4, Math.ceil(rawMax));
+  const x = (i: number): number =>
+    pad.left + (data.length <= 1 ? innerW / 2 : (i / (data.length - 1)) * innerW);
+  const y = (v: number): number => pad.top + innerH - (v / niceMax) * innerH;
+  const line = data.map((d, i) => `${i === 0 ? "M" : "L"}${x(i)},${y(d.value)}`).join(" ");
+  const area = `${line} L${x(data.length - 1)},${pad.top + innerH} L${x(0)},${pad.top + innerH} Z`;
+  const gridLines = Array.from({ length: niceMax + 1 }, (_, i) => i);
+  const labelEvery = Math.max(1, Math.ceil(data.length / 10));
+
   return (
-    <button
-      type="button"
-      {...props}
-      className={cn(
-        "vx-focusable inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-vx-border bg-vx-elevated px-4 text-sm font-medium text-slate-200 outline-none transition-colors hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60",
-        className,
-      )}
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="h-auto w-full"
+      role="img"
+      aria-label={ariaLabel}
+      data-testid="area-chart"
     >
-      {children}
-    </button>
-  );
-}
-
-/** The reference's uppercase table wrapper: card + scroll-x + header row. */
-export function TableCard({ children, testId }: { children: React.ReactNode; testId?: string }) {
-  return (
-    <div className="vx-card overflow-hidden" data-testid={testId}>
-      <div className="vx-scroll overflow-x-auto">
-        <table className="w-full min-w-[720px] border-collapse text-left text-sm">{children}</table>
-      </div>
-    </div>
-  );
-}
-
-export function Th({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <th scope="col" className={cn("vx-table-header border-b border-white/10 px-5 py-3.5", className)}>
-      {children}
-    </th>
-  );
-}
-
-export function Td({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <td className={cn("border-b border-white/5 px-5 py-3.5 text-slate-300", className)}>{children}</td>;
-}
-
-/** Status pills (STATUS/ESTADO columns): soft tinted chips. */
-const PILL_TONES: Record<string, string> = {
-  open: "bg-emerald-500/15 text-emerald-400",
-  active: "bg-emerald-500/15 text-emerald-400",
-  completed: "bg-emerald-500/15 text-emerald-400",
-  closed: "bg-white/5 text-slate-400",
-  inactive: "bg-white/5 text-slate-400",
-  refunded: "bg-amber-500/15 text-amber-400",
-  low: "bg-amber-500/15 text-amber-400",
-  ok: "bg-emerald-500/15 text-emerald-400",
-  out: "bg-red-500/15 text-red-400",
-};
-
-export function StatusPill({ kind, label }: { kind: string; label: string }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium capitalize",
-        PILL_TONES[kind] ?? "bg-white/5 text-slate-300",
+      <defs>
+        <linearGradient id="vpx-area" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="rgba(139,92,246,0.35)" />
+          <stop offset="100%" stopColor="rgba(139,92,246,0.02)" />
+        </linearGradient>
+      </defs>
+      {gridLines.map((g) => (
+        <g key={g}>
+          <line
+            x1={pad.left}
+            x2={width - pad.right}
+            y1={y(g)}
+            y2={y(g)}
+            stroke="rgba(255,255,255,0.14)"
+            strokeWidth="1"
+            strokeDasharray="2 4"
+          />
+          <text x={pad.left - 8} y={y(g) + 4} textAnchor="end" className="fill-white/40" fontSize="11">
+            {`$${g}`}
+          </text>
+        </g>
+      ))}
+      <path d={area} fill="url(#vpx-area)" />
+      <path d={line} fill="none" stroke="#8b5cf6" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+      {data.map((d, i) =>
+        i % labelEvery === 0 || i === data.length - 1 ? (
+          <text key={`xl-${i}`} x={x(i)} y={height - 8} textAnchor="middle" className="fill-white/50" fontSize="11">
+            {d.label}
+          </text>
+        ) : null,
       )}
-    >
-      {label}
-    </span>
+    </svg>
   );
 }

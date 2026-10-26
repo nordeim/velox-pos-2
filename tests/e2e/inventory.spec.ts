@@ -1,69 +1,68 @@
 import { expect, test } from "@playwright/test";
 
-// Inventory: the measured layout (F17/F18) + working CRUD (the reference's
-// create flow never completes — F10).
-test.describe("inventory", () => {
-  test("the empty state and count subtitle render", async ({ page }) => {
+// ---------------------------------------------------------------------------
+// The Inventory journey (the superset CRUD the reference's demo account
+// cannot exercise): validation-gated create → row appears → search narrows →
+// edit → low-stock chip → delete confirm. A category is created via Settings
+// first (the reference's own categories flow).
+// ---------------------------------------------------------------------------
+
+test.describe.serial("inventory", () => {
+  test("creates a category through Settings and a product through Inventory", async ({
+    page,
+  }) => {
+    await page.goto("/StoreSettings");
+    await page.getByLabel("New category name").fill("Beverages");
+    await page.getByRole("button", { name: "Add", exact: true }).click();
+    await expect(page.getByText("Beverages").first()).toBeVisible();
+
     await page.goto("/Inventory");
-    await expect(page.getByRole("heading", { name: "Inventory", level: 1 })).toBeVisible();
-    const subtitle = page.getByText(/products? registered$/);
-    await expect(subtitle).toBeVisible();
+    await expect(page.getByText("No products found")).toBeVisible();
+    await page.getByRole("button", { name: "New Product" }).click();
+
+    // The Create button is gated on name+price (the dialog's validation).
+    const dialog = page.getByRole("dialog", { name: "New Product" });
+    await expect(dialog.getByRole("button", { name: "Create" })).toBeDisabled();
+    await dialog.getByLabel("Name *").fill("Espresso Beans");
+    await dialog.getByLabel("Barcode *").fill("7501234567811");
+    await dialog.getByLabel("Category").click();
+    await page.getByRole("option", { name: "Beverages" }).click();
+    await dialog.getByLabel("Selling price *").fill("8.50");
+    await dialog.getByLabel("Current stock").fill("24");
+    await dialog.getByLabel("Tax rate (%)").fill("16");
+    await dialog.getByRole("button", { name: "Create" }).click();
+
+    await expect(page.getByRole("cell", { name: "Espresso Beans", exact: true })).toBeVisible();
+    await expect(page.getByText("1 products registered")).toBeVisible();
   });
 
-  test("create a product through the dialog (the reference's broken flow, fixed)", async ({ page }) => {
+  test("search narrows by name or code and the empty query restores", async ({ page }) => {
     await page.goto("/Inventory");
-    await page.getByTestId("new-product").click();
-    const dialog = page.getByTestId("product-dialog");
-    await expect(dialog).toBeVisible();
-
-    const barcode = `INV${Date.now()}`;
-    await page.getByTestId("product-name").fill("Inventory Latte");
-    await page.getByTestId("product-barcode").fill(barcode);
-    await page.getByTestId("product-price").fill("4.20");
-    await page.getByTestId("product-cost").fill("1.90");
-    await page.getByTestId("product-stock").fill("12");
-    await page.getByTestId("product-min-stock").fill("3");
-    await page.getByTestId("product-tax").fill("16");
-    // defaults hold: Unit=Piece, Active checked (F18)
-    await expect(page.getByTestId("product-unit")).toHaveValue("Piece");
-    await expect(page.getByTestId("product-active")).toBeChecked();
-
-    await page.getByTestId("product-submit").click();
-    await expect(dialog).toHaveCount(0);
-    await expect(page.getByTestId("inventory-table")).toContainText("Inventory Latte");
-    await expect(page.getByTestId("inventory-table")).toContainText(barcode);
-    await expect(page.getByTestId("inventory-table")).toContainText("$4.20");
-    await expect(page.getByTestId("inventory-table")).toContainText("Active");
+    const search = page.getByLabel("Search by name or code");
+    await search.fill("espresso");
+    await expect(page.getByRole("cell", { name: "Espresso Beans", exact: true })).toBeVisible();
+    await search.fill("7501234567811");
+    await expect(page.getByRole("cell", { name: "Espresso Beans", exact: true })).toBeVisible();
+    await search.fill("nomatch-xyz");
+    await expect(page.getByText("No products found")).toBeVisible();
+    await search.fill("");
   });
 
-  test("edit a product inline (price change reflects immediately)", async ({ page }) => {
+  test("edits the price and the row updates", async ({ page }) => {
     await page.goto("/Inventory");
-    const row = page.getByTestId("inventory-table").getByRole("row", { name: /Inventory Latte/ });
-    await row.getByRole("button", { name: "Edit Inventory Latte" }).click();
-    const dialog = page.getByTestId("product-dialog");
-    await expect(dialog).toBeVisible();
-    await page.getByTestId("product-price").fill("4.50");
-    await page.getByTestId("product-submit").click();
-    await expect(dialog).toHaveCount(0);
-    await expect(page.getByTestId("inventory-table")).toContainText("$4.50");
+    await page.getByRole("button", { name: "Edit Espresso Beans" }).click();
+    const dialog = page.getByRole("dialog", { name: "Edit Product" });
+    await dialog.getByLabel("Selling price *").fill("9.25");
+    await dialog.getByRole("button", { name: "Save changes" }).click();
+    await expect(page.getByRole("cell", { name: "$9.25" })).toBeVisible();
   });
 
-  test("search filters by name and by code", async ({ page }) => {
+  test("deletes with a confirmation dialog", async ({ page }) => {
     await page.goto("/Inventory");
-    await page.getByTestId("inventory-search").fill("Latte");
-    await expect(page.getByTestId("inventory-table")).toContainText("Inventory Latte");
-    await page.getByTestId("inventory-search").fill("zzzz-no-match");
-    // the table itself persists (the reference's measured pattern): headers
-    // stay, the empty row reads the reference's copy
-    await expect(page.getByTestId("inventory-table")).toContainText("No products found");
-    await page.getByTestId("inventory-search").fill("");
-  });
-
-  test("delete a product (confirm dialog)", async ({ page }) => {
-    await page.goto("/Inventory");
-    page.once("dialog", (d) => d.accept());
-    const row = page.getByTestId("inventory-table").getByRole("row", { name: /Inventory Latte/ });
-    await row.getByRole("button", { name: "Delete Inventory Latte" }).click();
-    await expect(page.getByTestId("inventory-table").getByRole("row", { name: /Inventory Latte/ })).toHaveCount(0);
+    await page.getByRole("button", { name: "Delete Espresso Beans" }).click();
+    const confirm = page.getByRole("alertdialog");
+    await expect(confirm).toContainText('Delete "Espresso Beans"?');
+    await confirm.getByRole("button", { name: "Delete" }).click();
+    await expect(page.getByText("No products found")).toBeVisible();
   });
 });

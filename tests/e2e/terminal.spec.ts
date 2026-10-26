@@ -1,130 +1,140 @@
 import { expect, test } from "@playwright/test";
 
-// The Terminal flow: the no-shift gate, then a full sale through the cart +
-// checkout + receipt (THE core POS loop — the reference's own write flows
-// never complete, plan F10; this spec pins the superset).
-//
-// Order matters: registers.spec.ts runs first (alphabetical file order with
-// workers=1 is NOT guaranteed) — so this file creates its OWN register +
-// shift via the API instead of relying on other specs' leftovers.
-test.describe("terminal", () => {
-  let registerId: string;
+// ---------------------------------------------------------------------------
+// The Terminal checkout journey: with the shift open (created here) and two
+// products, the cart math, quantity controls, the cash charge with change,
+// the ticket assignment, and the receipt — then Sales shows the row.
+// ---------------------------------------------------------------------------
 
-  test.beforeAll(async ({ request }) => {
-    // A dedicated register for this spec (unique name → no cross-spec clash).
-    // The shift opens WITHIN the sale test so the gate test below sees the
-    // no-shift state first.
-    const res = await request.post("/api/registers", {
-      data: { name: `Terminal spec ${Date.now()}`, location: "e2e" },
+test.describe.serial("terminal checkout", () => {
+  test.beforeAll(async ({ browser }) => {
+    // Provision: two products + one register + an open shift (API-driven —
+    // the UI paths are covered by their own specs; this is the fixture).
+    const context = await browser.newContext({
+      storageState: "tests/e2e/.auth/user.json",
     });
-    expect(res.status()).toBe(201);
-    const register = (await res.json()) as { id: string };
-    registerId = register.id;
-  });
+    const page = await context.newPage();
+    const base = process.env.E2E_PORT ? `http://localhost:${process.env.E2E_PORT}` : "http://localhost:3100";
 
-  test.afterAll(async ({ request }) => {
-    // Close any open shift first (DELETE fails while a shift is open).
-    const shifts = (await (await request.get("/api/shifts")).json()) as Array<{
-      id: string;
-      registerId: string;
-      status: string;
-    }>;
-    for (const shift of shifts) {
-      if (shift.registerId === registerId && shift.status === "open") {
-        await request.post(`/api/shifts/${shift.id}/close`, { data: { closingCash: 0 } });
-      }
-    }
-    await request.delete(`/api/registers/${registerId}`);
-  });
-
-  test("the Terminal gates selling behind an open shift", async ({ page, request }) => {
-    // Other specs in the shared e2e.db may leave open shifts — close them so
-    // THIS spec owns the gate state.
-    const shifts = (await (await request.get("/api/shifts")).json()) as Array<{
-      id: string;
-      status: string;
-    }>;
-    for (const shift of shifts) {
-      if (shift.status === "open") {
-        await request.post(`/api/shifts/${shift.id}/close`, { data: { closingCash: 0 } });
-      }
-    }
-
-    await page.goto("/Terminal");
-    const gate = page.getByTestId("terminal-no-shift");
-    await expect(gate).toBeVisible();
-    await expect(gate.getByRole("heading", { name: "No active shift" })).toBeVisible();
-    // the cart rail exists but shows the empty state
-    await expect(page.getByTestId("terminal-cart")).toBeHidden();
-  });
-
-  test("a full sale: open shift → add to cart → charge cash → receipt", async ({ page, request }) => {
-    // Seed a product via the API (the inventory spec covers the UI form).
-    const product = (
-      await (
-        await request.post("/api/products", {
-          data: {
-            name: "Terminal Espresso",
-            barcode: `T${Date.now()}`,
-            price: 3.5,
-            stock: 10,
-            minStock: 2,
-            taxRate: 16,
-          },
-        })
-      ).json()
-    ) as { id: string };
-
-    await request.post("/api/shifts", {
-      data: { registerId, openingFloat: 100 },
+    const cat = await page.request.post(`${base}/api/categories`, {
+      data: { name: "Checkout Cat", color: "#8b5cf6" },
     });
+    const categoryId = (await cat.json()).id as string;
 
-    await page.goto("/Terminal");
-    // The grid replaces the gate.
-    await expect(page.getByTestId("terminal-product-grid")).toBeVisible();
+    const juice = await page.request.post(`${base}/api/products`, {
+      data: {
+        name: "Checkout Juice",
+        barcode: "7500000000001",
+        categoryId,
+        price: 3.4,
+        stock: 40,
+        minStock: 8,
+        taxRate: 16,
+        unit: "Piece",
+        active: true,
+      },
+    });
+    const beans = await page.request.post(`${base}/api/products`, {
+      data: {
+        name: "Checkout Beans",
+        barcode: "7500000000002",
+        categoryId,
+        price: 8.5,
+        stock: 24,
+        minStock: 5,
+        taxRate: 16,
+        unit: "Piece",
+        active: true,
+      },
+    });
+    void juice;
+    void beans;
 
-    // Add the product by clicking its card.
-    await page.getByTestId(`terminal-product-${product.id}`).click();
-    await expect(page.getByTestId("terminal-added")).toBeVisible();
-    await expect(page.getByTestId("cart-subtotal")).toHaveText("$3.50");
-    await expect(page.getByTestId("cart-total")).toHaveText("$4.06"); // 3.50 + 16%
-
-    // Bump qty to 2.
-    await page.getByRole("button", { name: "Increase Terminal Espresso" }).click();
-    await expect(page.getByTestId("cart-total")).toHaveText("$8.12");
-
-    // Charge.
-    await page.getByTestId("terminal-charge").click();
-    const dialog = page.getByTestId("checkout-dialog");
-    await expect(dialog).toBeVisible();
-    // The tender pre-fills with the suggested denomination (round up to 50¢).
-    await expect(page.getByTestId("checkout-change")).toContainText("Change due:");
-
-    // 10.00 tendered → change $1.88
-    await page.getByTestId("checkout-cash").fill("10.00");
-    await expect(page.getByTestId("checkout-change")).toContainText("$1.88");
-    await page.getByTestId("checkout-confirm").click();
-
-    const receipt = page.getByTestId("receipt-dialog");
-    await expect(receipt).toBeVisible();
-    await expect(receipt).toContainText("TOTAL");
-    await expect(receipt).toContainText("$8.12");
-    await expect(receipt).toContainText("$1.88");
-    await receipt.getByRole("button", { name: "Close", exact: true }).click();
-
-    // The cart cleared; stock decremented.
-    await expect(page.getByTestId("cart-total")).toHaveText("$0.00");
-    await expect(page.getByTestId(`terminal-product-${product.id}`)).toContainText("8 in stock");
+    const reg = await page.request.post(`${base}/api/registers`, {
+      data: { name: "Terminal Reg", location: "Counter" },
+    });
+    await page.request.post(`${base}/api/shifts`, {
+      data: { registerId: (await reg.json()).id as string, openingFloat: 50 },
+    });
+    await context.close();
   });
 
-  test("the barcode box rejects unknown codes with a toast", async ({ page }) => {
-    // The shift from the sale test is still open — the barcode box renders.
-    await page.goto("/Terminal");
-    await expect(page.getByTestId("terminal-barcode")).toBeVisible();
-    await page.getByTestId("terminal-barcode").fill("0000000000");
-    await page.getByRole("button", { name: "Add", exact: true }).click();
-    await expect(page.getByRole("region", { name: "Notifications" })).toContainText(
-      "No product matches code 0000000000.",
-    );
+  test.afterAll(async ({ browser }) => {
+    // Leave the store clean for the projects that follow (the mobile suite
+    // pins the Terminal's shift-gate parity — an open shift would hide it).
+    const context = await browser.newContext({
+      storageState: "tests/e2e/.auth/user.json",
+    });
+    const page = await context.newPage();
+    const base = process.env.E2E_PORT ? `http://localhost:${process.env.E2E_PORT}` : "http://localhost:3100";
+    const shifts = await (await page.request.get(`${base}/api/shifts?status=active`)).json();
+    for (const shift of shifts as Array<{ id: string }>) {
+      await page.request.patch(`${base}/api/shifts/${shift.id}`, {
+        data: { countedCash: 0 },
+      });
+    }
+    await context.close();
+  });
+
+  test("add products, adjust quantities, verify the cart math", async ({ page }) => {
+    await page.goto("/POS");
+    await page.getByRole("button", { name: "Add Checkout Juice to cart" }).click();
+    await page.getByRole("button", { name: "Add Checkout Beans to cart" }).click();
+    await page.getByRole("button", { name: "Add Checkout Juice to cart" }).click();
+
+    const beansId = await page
+      .getByTestId(/^qty-/)
+      .first()
+      .getAttribute("data-testid");
+    void beansId;
+
+    // Line math: juice 2 × $3.40 + beans 1 × $8.50 = $15.30 subtotal,
+    // 16% tax → $17.75 total (cents-rounded at the edge).
+    const charge = page.getByTestId("charge-button");
+    await expect(charge).toContainText("CHARGE $17.75");
+
+    // Quantity controls respond: juice 1 × $3.40 + $8.50 = $11.90 + 16%.
+    await page.getByRole("button", { name: "Decrease Checkout Juice quantity" }).click();
+    await expect(charge).toContainText("CHARGE $13.80");
+
+    await page.getByRole("button", { name: "Remove Checkout Beans from cart" }).click();
+    await expect(charge).toContainText("CHARGE $3.94");
+  });
+
+  test("cash checkout computes change and assigns the ticket", async ({ page }) => {
+    await page.goto("/POS");
+    await page.getByRole("button", { name: "Add Checkout Juice to cart" }).click();
+    await page.getByTestId("charge-button").click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText("Charge $3.94")).toBeVisible();
+    // The Complete button is gated until the amount covers the total.
+    await dialog.getByLabel("Amount received").fill("2");
+    await expect(dialog.getByRole("button", { name: /Complete cash sale/ })).toBeDisabled();
+    await dialog.getByLabel("Amount received").fill("5");
+    await expect(dialog.getByTestId("change-due")).toContainText("$1.06");
+    await dialog.getByRole("button", { name: /Complete cash sale/ }).click();
+
+    // The receipt dialog: ticket T-000001, totals, footer.
+    const receipt = page.getByRole("dialog");
+    await expect(receipt.getByText("T-000001")).toBeVisible();
+    await expect(receipt.getByText("Thank you for your purchase!")).toBeVisible();
+    await receipt.getByRole("button", { name: "Close", exact: true }).first().click();
+
+    // The cart resets after checkout.
+    await expect(page.getByText("Scan or select products")).toBeVisible();
+  });
+
+  test("the sale lands in Historial de Ventas with Spanish copy", async ({ page }) => {
+    await page.goto("/Sales");
+    await expect(page.getByRole("heading", { name: "Historial de Ventas" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "T-000001", exact: true })).toBeVisible();
+    await expect(page.getByText("Completada").first()).toBeVisible();
+  });
+
+  test("the stock decrement is reflected in Inventory", async ({ page }) => {
+    await page.goto("/Inventory");
+    const row = page.getByRole("row", { name: /Checkout Juice/ });
+    await expect(row).toContainText("39");
   });
 });

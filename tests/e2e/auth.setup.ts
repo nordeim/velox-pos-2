@@ -1,13 +1,22 @@
 import { expect, test as setup } from "@playwright/test";
-import { DEMO_EMAIL, DEMO_PASSWORD } from "./helpers";
 
-// One authenticated session for the whole run — saved as a storageState and
-// replayed into every main-project context (see playwright.config.ts for why
-// per-test logins are not an option: the auth rate limiter).
-setup("sign the demo user in", async ({ request }) => {
-  const res = await request.post("/api/auth/login", {
-    data: { email: DEMO_EMAIL, password: DEMO_PASSWORD },
-  });
-  expect(res.ok(), `login failed: ${res.status()} ${await res.text()}`).toBeTruthy();
-  await request.storageState({ path: "tests/e2e/.auth/user.json" });
+// The single sign-in the whole suite reuses (storageState): the rate limiter
+// allows 10 attempts/IP/15 min — logging in per test would exhaust it.
+const AUTH_STATE = "tests/e2e/.auth/user.json";
+
+const OWNER_EMAIL = "sepnetflix2023@outlook.com";
+const OWNER_PASSWORD = "$Abcd1234";
+
+setup("authenticate as the store owner", async ({ page }) => {
+  await page.goto("/login");
+  // The submit button is DISABLED until React hydrates (the pre-hydration
+  // native-submit guard) — waiting for it to enable also guarantees the
+  // controlled inputs are live before fill() types into them.
+  await expect(page.getByTestId("login-submit")).toBeEnabled();
+  await page.getByLabel("Email").fill(OWNER_EMAIL);
+  await page.getByLabel("Password").fill(OWNER_PASSWORD);
+  await page.getByTestId("login-submit").click();
+  await page.waitForURL("**/POS");
+  await expect(page.getByRole("heading", { name: "No active shift" })).toBeVisible();
+  await page.context().storageState({ path: AUTH_STATE });
 });

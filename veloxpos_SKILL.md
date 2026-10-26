@@ -92,3 +92,13 @@ StoreSetting (singleton) · VerificationToken / PasswordResetToken.
 data, ADRs) · `docs/veloxpos-implementation-plan.md` (evidence + decisions) ·
 `worklog.md` (journal) · `docs/how-to-git-push-using-ssh-wrapper_SKILL.md`
 (push runbook).
+
+---
+
+## Reconciliation note (Session-101)
+
+This distilled skill was recovered from the parallel-session commit
+(`816781f`) during the Session-101 merge reconciliation; the executable
+implementation of record is the Session-101 tree (see `AGENTS.md` and
+`Project_Architecture_Document.md`). Where this file and the code disagree,
+the code wins.
