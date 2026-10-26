@@ -475,3 +475,93 @@ narration (`docs/session_9.md`, following the one-ahead numbering).
 defect this cycle was a test-suite race, fixed at the doctrine level (every raw computed
 read in the suite now polls). Standing debt: NONE identified. Baselines: unit
 **123/123**, e2e **78/78**.
+
+---
+
+## Session-8 — the docs-counts lockstep + the artifact-hygiene pass (velox-pos-2)
+
+**Received state**: `16d4736` (Session-7's tree `025ec11` + the operator's
+`docs/session_10.md` transcript commit). **Directive**: the standing
+audit→remediate→push cycle — workspace refresh, doc re-internalization, the skills-led
+code audit, the live reference re-measurement, the TDD remediation, the docs lockstep,
+and the SSH-wrapper push.
+
+**Environment:** the workspace survived intact (bun, deps, Playwright chromium 1243,
+Prisma client, `db/custom.db` with the demo dataset); the pull brought in exactly one
+commit (`docs/session_10.md` — the Session-7 raw transcript). **Gate on the received
+tree: lint 0 errors (1 documented warning) · tsc clean · unit 123/123 · build green ·
+e2e 78/78** — the documented baseline held on first run (unlike Session-7's red pin).
+
+**The reference re-measured live end-to-end — NO drift for the SECOND consecutive cycle**
+(every Session-4/5/6 pin byte-exact: the sidebar chrome 40/42px + border pair +
+ChartColumnIncreasing + the 14px wordmark; Settings fiscal labels + 16px/700 h3s + Save
+54px + the 34px Add chip; Inventory 36px gradient chips + 42px New Product; Reports 14px
+uppercase white/60 + the 32px pills in the rgba(28,31,52,0.85) container; Dashboard Title
+Case + weekday axes; the POS gate p-8/64px /30/white-35/CHARGE 70/20/900; the Spanish
+copy; the login internals 48px/96px/54px/500; the reference's OWN mobile defect still
+present at 390×844). With the parity surface stable, the audit went codebase-side.
+
+**Four findings (the ledger is `docs/remediation-plan-session-8.md`):**
+- **F-52 (HIGH, docs integrity)**: the SKILL's live-tense count sites had re-staled
+  across Sessions 6–7 (§3 Commands: unit (117)/playwright (55); §12: 117/117 + 68/68) —
+  and the census swept up MORE: the PAD's scale line claimed 7 Prisma models · 22 API
+  route files against a live 9 · 26 (Session-101's model count never included the two
+  auth-support models), its file tree claimed 8 e2e spec files against a live 7 and 12
+  vitest files against a live 13, the README's architecture table + directory map said 7
+  models, and even vitest.config.ts's header said 12 files. The neo-crm F-99a1 genus.
+  **The family mechanism adopted** (web-application §14): `tests/unit/docs-counts.test.ts`
+  — LIVE censuses of the test/source tree (its own its included) + every live-tense doc
+  site pinned to the constants + the retired forms banned (scoped: history blocks keep
+  their numbers — the F-100a2 doctrine; the gate's own maiden run caught 3 README sites
+  the manual sweep missed, then the negatives caught the v1.6 revision block QUOTING the
+  retired forms and forced the proper live-part scoping). 17 stale sites corrected.
+- **F-53 (MEDIUM, gate gap)**: tier 3 of the testing doctrine never existed here —
+  `scripts/smoke-test.sh` now boots the standalone artifact on :3210 with a FRESH
+  `db/smoke.db` + a throwaway AUTH_SECRET and walks 13 assertions (health, the 401 wall,
+  the SSR shell, the login cookie round-trip, the sessioned list, the Zod 400, a category
+  create/DELETE, the logout teardown, the rate-limit 429 on the 11th attempt,
+  sitemap/robots, the no-AUTH_SECRET boot refusal, and the artifact-hygiene checks),
+  counting executed vs passed. `bun run smoke` + `bun run gate` wire it into the chain.
+- **F-54 (HIGH, security/hygiene)**: the standalone artifact shipped `.env` (the live
+  AUTH_SECRET) + `db/custom.db` (the dev database — user rows with scrypt password
+  hashes) on every build. The neo-crm F-170a genus. The double-cure:
+  `outputFileTracingExcludes` in next.config.ts + the build script's
+  `rm -f .next/standalone/.env` (Next's writeStandaloneDirectory copies .env explicitly —
+  immune to the excludes). `prisma/schema.prisma` stays traced (the db-path anchor);
+  policed by the smoke ladder's step 13 on every run. ADR-012 records the contract.
+- **F-55 (LOW, code integrity)**: the sales checkout's ticket-count + active-shift reads
+  executed OUTSIDE the `$transaction` while the route's own comment claimed they were
+  inside — two concurrent checkouts could read the same count and allocate the same
+  ticket. Both reads moved inside the transaction; verified live through the real UI.
+
+**Explicitly NOT findings**: the health route's "[health]" prefix (the bash
+``-eating display artifact — the Read tool proved the file clean, the documented
+discipline), `z-ai-web-dev-sdk` (used in `src/lib/server/ai.ts`), the Docker path
+(.dockerignore already excludes db/docs/skills — the exposure was the host-built
+artifact), the documented PAD known-issues rows, and the v4-trap sweep (all mitigated).
+
+**Re-certification (all on the final tree):** lint ✓ (0 errors, 1 documented warning) ·
+tsc ✓ · unit **133/133** (13 files; +10 the docs-counts gate) · build ✓ (the
+hygiene-clean artifact) · e2e **78/78** (no prior pin weakened) · smoke **13/13** (the
+new tier). Live evidence on the cleaned standalone (`scripts/capture-s8-evidence.mjs`,
+**8/8**): the login round-trip, the F-55 checkout journey (ticket T-000035 allocated +
+pinned + landed in the ledger), the mobile drawer contract (dialog, 8 labeled links, no
+overflow at 390), and the dashboard chart at data scale. VLM sweep **6/6** on the fresh
+screenshots 37–42 (the settle-wait discipline held — no mid-animation frames).
+
+**Docs lockstep:** README (the 133/13/78 counts + the smoke/gate rows + the 9-models
+sites); AGENTS.md (the renumbered invariants + the docs-counts law + the smoke tier +
+the artifact-hygiene law); CLAUDE.md (the command map + the smoke tier + the lockstep
+law); PAD v1.6 (ADR-012 + the corrected scale line 9/26/8 + the file tree + the gate
+line now including smoke); velox-pos_SKILL.md v2.4.0 (the corrected counts + the
+smoke/gate commands + the Session-8 addendum); vitest.config.ts's header;
+`.env.example` re-verified (all four vars); the remediation plan's execution record;
+this worklog entry; the session narration (`docs/session_11.md`).
+
+**Stage summary.** The clone's parity surface is stable (two consecutive drift-free
+reference cycles) and the engineering hygiene caught up with the family doctrine: the
+count-lockstep law is now MECHANICALLY enforced (a stale count anywhere fails the unit
+gate), the tier-3 smoke ladder polices the API surface + the boot gate + the artifact
+hygiene on every run, the deployable artifact no longer ships the dev secret + dev
+database, and the checkout's transaction now matches its own documentation. Standing
+debt: NONE identified. Baselines: unit **133/133**, e2e **78/78**, smoke **13/13**.

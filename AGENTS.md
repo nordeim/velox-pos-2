@@ -13,6 +13,8 @@ Tailwind v4 (CSS-first) · ONE Zustand store · Zod 4 · Prisma 6 / SQLite.
 | `bun run lint && bun run typecheck && bun run test` | The fast gate, in this order |
 | `bun run build` | Standalone build — also the type gate (`ignoreBuildErrors` is OFF) |
 | `bun run test:e2e` | Playwright — **requires `bun run build` first** (boots the standalone build on :3100) |
+| `bun run smoke` | The 13-step API smoke ladder — **requires the build** (boots the artifact on :3210 with `db/smoke.db`; ends with the boot-gate + artifact-hygiene probes) |
+| `bun run gate` | The one-command pre-push gate: `lint → typecheck → test → build → smoke → e2e` |
 | `bun run db:push` / `db:seed` | Provision `db/custom.db` (scripts pin `DATABASE_URL` inline — schema-anchored) |
 | `bun run db:seed -- --demo` | Adds the showcase dataset (categories/products/register/shift/sales) |
 | `bunx prisma studio` | DB inspection |
@@ -22,19 +24,26 @@ Run one e2e spec: `bunx playwright test tests/e2e/mobile-navigation.spec.ts --pr
 
 ## Non-negotiable invariants
 
-1. **The local gate is the only gate.** `lint → typecheck → test → build → e2e` must be green
-   before any push. There is no hosted CI.
-2. **Money math ONLY through `src/lib/money.ts`** (integer cents in the middle, 2dp dollars at the
+1. **The local gate is the only gate.** `lint → typecheck → test → build → smoke → e2e`
+   must be green before any push (`bun run gate` wires the chain). There is no hosted CI.
+2. **Test counts are documentation claims under the unit gate** (`tests/unit/docs-counts.test.ts`,
+   Session-8's F-52): every live-tense count site (README badges/rows, CLAUDE, AGENTS,
+   PAD, the SKILL, vitest.config.ts's header) is pinned to constants that are verified
+   against the LIVE test/source tree. When a suite grows, the constants AND every doc
+   site riding them change in the SAME commit — a stale count anywhere fails
+   `bun run test`. History blocks (session logs, revision blocks, the worklog) keep their
+   historical numbers by design.
+3. **Money math ONLY through `src/lib/money.ts`** (integer cents in the middle, 2dp dollars at the
    edges). Never `parseFloat` arithmetic in components; never trust client totals — checkout
    recomputes totals from stored prices server-side.
-3. **Every API boundary is Zod-validated** (`src/lib/validation.ts`) in strip mode. Unknown keys
+4. **Every API boundary is Zod-validated** (`src/lib/validation.ts`) in strip mode. Unknown keys
    are dropped by contract; partial PATCHes filter to sent keys.
-4. **Ownership scoping is by construction**: every query carries `where: { userId }` and
+5. **Ownership scoping is by construction**: every query carries `where: { userId }` and
    updates/removes verify ownership BEFORE mutating (`src/lib/server/entities.ts` +
    `makeCollectionRoutes`/`makeItemRoutes` factories in `src/lib/server/http.ts`).
-5. **ONE Zustand store** (`usePosStore` in `src/lib/store.ts`). No React Context. Views subscribe
+6. **ONE Zustand store** (`usePosStore` in `src/lib/store.ts`). No React Context. Views subscribe
    with selectors; the store holds state, the pure seams own the math.
-6. **The route↔nav map is `src/lib/router.ts`** — the 8 reference paths (`/POS /Dashboard
+7. **The route↔nav map is `src/lib/router.ts`** — the 8 reference paths (`/POS /Dashboard
    /Inventory /Sales /Registers /Cashiers /Reports /StoreSettings`) are real routes under
    `src/app/(app)/`, server-gated by the group layout. `/Settings` 404s by design (the reference's
    own href is `/StoreSettings`).
@@ -170,6 +179,12 @@ drawer + backdrop `animate-in` (tw-animate-css), and Radix dialogs compute a liv
   resolves it against the schema-anchored repo root for dev AND standalone. **Absolute `file:`
   URLs for production/standalone** — relative URLs are bundle-anchor-dependent under the
   standalone server (documented trap; see `.env.example`).
+- **The standalone artifact is hygiene-clean BY CONSTRUCTION** (Session-8, F-54):
+  `outputFileTracingExcludes` in `next.config.ts` keeps `.env`/`db/`/`skills/`/`docs/`/`tests/`
+  out of `.next/standalone/`, and the build script's trailing `rm -f .next/standalone/.env`
+  removes the copy Next's writeStandaloneDirectory makes explicitly (immune to the excludes —
+  the double-cure). `prisma/schema.prisma` STAYS traced (the db-path anchor). The smoke
+  ladder's step 13 polices this on every run — never add repo-root files back to the artifact.
 - `db/` lives at the repo root; its `*.db` files are git-ignored (`.gitkeep` is committed).
 - `AUTH_SECRET` is fatal at boot in production (`src/instrumentation.ts`); dev falls back with a
   warning. `COOKIE_SECURE=false` is the only sanctioned way to run a plain-HTTP production-style
@@ -177,11 +192,19 @@ drawer + backdrop `animate-in` (tw-animate-css), and Radix dialogs compute a liv
 
 ## Testing rules
 
-- Unit tests live at the pure seams (`tests/unit/**`, vitest, node env). The existing 12 files are
-  the seam registry — new `src/lib` seams get a file; UI components don't get unit tests.
+- Unit tests live at the pure seams (`tests/unit/**`, vitest, node env). The 13 existing files are
+  the seam registry + the docs-counts lockstep gate — new `src/lib` seams get a file; UI
+  components don't get unit tests.
 - E2E (`tests/e2e/**`) runs against the PRODUCTION standalone build with its own scratch db
   (`db/e2e.db`, provisioned by the webServer command: kill-port → provision → boot — the db is
   NEVER replaced while the server lives; the login and page render must agree on the same inode).
+- The API smoke ladder (`scripts/smoke-test.sh`, tier 3) boots the SAME standalone artifact on
+  :3210 with a FRESH `db/smoke.db` each run and walks 13 assertions: health, the 401 wall, the
+  SSR login shell, the owner login (sf_session cookie), the sessioned list, the Zod 400, a
+  category create/DELETE round-trip, the logout teardown, the rate-limit 429 (LAST — it
+  exhausts the bucket), sitemap/robots, the no-AUTH_SECRET boot refusal, and the
+  ARTIFACT-HYGIENE checks (no `.env`/`db`/`skills`/`docs`/`tests` inside `.next/standalone`;
+  `prisma/schema.prisma` + `public/` present). It counts executed vs passed — failure is loud.
 - Auth is established ONCE (`auth.setup.ts`, storageState) — the rate limiter allows 10
   attempts/IP/15 min; per-test logins exhaust it mid-suite. `auth.spec.ts` opts out with an empty
   storageState.

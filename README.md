@@ -4,7 +4,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6)
-![Tests](https://img.shields.io/badge/unit%20tests-123%20%2F%20123-brightgreen)
+![Tests](https://img.shields.io/badge/unit%20tests-133%20%2F%20133-brightgreen)
 ![E2E](https://img.shields.io/badge/e2e-78%20%2F%2078-brightgreen)
 ![License](https://img.shields.io/badge/license-Proprietary-lightgrey)
 
@@ -97,8 +97,10 @@ register, a closed shift, and a week of sales).
 | `bun run build` | Standalone production build (`next build` + static/public copy) |
 | `bun run lint` | ESLint (flat config) |
 | `bun run typecheck` | `tsc --noEmit` (strict) |
-| `bun run test` | Vitest unit suite — the pure domain seams (123 tests / 12 files) |
+| `bun run test` | Vitest unit suite — the pure domain seams (133 tests / 13 files) |
 | `bun run test:e2e` | Playwright suite against the production standalone build (78 tests; desktop 1440×900 + mobile 390×844 projects) |
+| `bun run smoke` | The 13-step API smoke ladder against the standalone artifact on :3210 (own scratch `db/smoke.db`; health → auth wall → Zod seam → CRUD → rate limit → boot gate → artifact hygiene) |
+| `bun run gate` | The full pre-push gate: `lint → typecheck → test → build → smoke → e2e` |
 | `bun run db:push` | `prisma db push` against `db/custom.db` |
 | `bun run db:seed` | Idempotent owner + default store settings (`-- --demo` adds showcase data) |
 
@@ -110,7 +112,7 @@ register, a closed shift, and a week of sales).
 | UI runtime | React 19 | Client views; ONE Zustand store (`usePosStore`) |
 | Styling | Tailwind CSS v4 (CSS-first, no config file) | Pinned palette + the measured `glass-*` classes |
 | Primitives | Radix UI (shadcn-style components in `src/components/ui`) | Dialogs, selects, toasts, switches |
-| ORM | Prisma 6 / SQLite (`db/custom.db`) | 7 models, all ownership-scoped |
+| ORM | Prisma 6 / SQLite (`db/custom.db`) | 9 models, all ownership-scoped |
 | Auth | scrypt + HMAC httpOnly cookie (`sf_session`) | Boot-guarded secret, rate-limited public endpoints |
 | Validation | Zod 4 at every API boundary | Nothing reaches Prisma unvalidated |
 | Charts | Hand-rolled SVG (`src/components/pos/shared.tsx`) | Zero chart dependencies; dotted-grid parity |
@@ -152,9 +154,9 @@ Browser ──► /POS /Dashboard /Inventory /Sales /Registers /Cashiers /Report
  │  ├ 🗄️ db.ts/db-path.ts — the documented DATABASE_URL resolution contract
  │  └ 🌐 store.ts        — the ONE Zustand store
  └ 📂 lib/server         — http.ts (error mapper + CRUD factories), auth.ts (cookies), entities.ts
-📂 prisma                — schema.prisma (7 models) + seed.ts
+📂 prisma                — schema.prisma (9 models) + seed.ts
 📂 tests
- ├ 📂 unit/              — 12 vitest files over the pure seams
+ ├ 📂 unit/              — 13 vitest files over the pure seams
  └ 📂 e2e/               — Playwright specs (desktop + mobile projects)
 ```
 
@@ -184,11 +186,16 @@ All endpoints return domain JSON; errors use `{ error: string }` with the docume
 ## Testing
 
 ```bash
-bun run test            # unit: 123 tests / 12 files — the pure seams (money, cart, shift,
+bun run test            # unit: 133 tests / 13 files — the pure seams (money, cart, shift,
                         # reports, inventory-status, currency, router, validation, auth,
-                        # db-path, env-check, site)
+                        # db-path, env-check, site) + the docs-counts lockstep gate
 bun run test:e2e        # e2e: 78 tests — needs `bun run build` first (boots the standalone
                         # build on :3100 with its own scratch db, db/e2e.db)
+bun run smoke           # the 13-step API smoke ladder — also needs the build (boots the
+                        # artifact on :3210 with db/smoke.db; verifies the boot gate +
+                        # artifact hygiene on every run)
+bun run gate            # the one-command pre-push gate: lint → typecheck → unit → build
+                        # → smoke → e2e
 ```
 
 The e2e suite runs two projects: **desktop** (1440×900) and **mobile** (390×844, the

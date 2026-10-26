@@ -25,9 +25,9 @@ reports, validation) underneath **server-gated thin routes**, a **single Zustand
 (lint → typecheck → unit → build → e2e) is the only gate — there is no hosted CI — so every
 guardrail is enforced by tooling that runs in this checkout.
 
-**Scale & baselines (verified 2026-10-26, Session-6 re-certification):** 7 Prisma models · 22 API
+**Scale & baselines (verified 2026-10-26, Session-8 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views
-+ login/reset/404 · 123 unit tests (12 files) · 78 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 133 unit tests (13 files) · 78 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -40,7 +40,7 @@ production build.
 | Styling | Tailwind CSS (CSS-first) | ^4 | No config file — tokens in `@theme`; the ten v3→v4 traps are pinned in code |
 | Primitives | Radix UI (shadcn-style, `src/components/ui`) | latest | Accessible dialogs/selects/toasts — never hand-rolled |
 | State | Zustand | ^5.0.15 | ONE store (`usePosStore`); selectors with `useShallow` semantics |
-| ORM | Prisma / SQLite | ^6.19.3 | 7 models; ownership scoping by construction; `db-path.ts` anchors the file |
+| ORM | Prisma / SQLite | ^6.19.3 | 9 models; ownership scoping by construction; `db-path.ts` anchors the file |
 | Validation | Zod | ^4.6.5 | Strip mode at every API boundary |
 | Auth | scrypt + HMAC (hand-rolled, `node:crypto`) | — | Minimalist by design (ADR-002); no auth library |
 | Charts | Hand-rolled SVG components | — | Zero dependencies; pixel-controlled parity (ADR-006) |
@@ -68,7 +68,7 @@ flowchart TB
         R --> W
     end
     subgraph Data["Prisma 6 / SQLite"]
-        DB[("db/custom.db\n7 models, user-scoped")]
+        DB[("db/custom.db\n9 models, user-scoped")]
     end
     F --> DB
     W --> DB
@@ -213,7 +213,7 @@ field-tested desynchronization source (e2e evidence in §9).
 │   delegates (ownership-scoped) · workflows (shifts, checkout)    │
 ├──────────────────────────────────────────────────────────────────┤
 │ Persistence — Prisma client (src/lib/db.ts) → SQLite file        │
-│   7 models; user-owned rows; cascade deletes; JSON columns only  │
+│   9 models; user-owned rows; cascade deletes; JSON columns only  │
 │   for sale items (read-model blobs)                              │
 └──────────────────────────────────────────────────────────────────┘
 ```
@@ -244,9 +244,9 @@ Dependency rule: arrows point downward only. `src/lib` pure seams never import R
  ├ 📂 src/lib              — pure seams (money, cart, shift, reports, inventory-status,
  │                           currency, router, validation, auth, date, site, env-check,
  │                           db-path, db, store, api, utils) + server/ (http, auth, entities)
- ├ 📂 prisma               — schema.prisma (7 models) · seed.ts (owner + settings; --demo dataset)
- ├ 📂 tests/unit           — 12 vitest files (the seam registry)
- ├ 📂 tests/e2e            — 8 spec files + auth.setup + kill-port + provisioning
+ ├ 📂 prisma               — schema.prisma (9 models) · seed.ts (owner + settings; --demo dataset)
+ ├ 📂 tests/unit           — 13 vitest files (the seam registry + the docs-counts gate)
+ ├ 📂 tests/e2e            — 7 spec files + auth.setup + kill-port + provisioning
  ├ 📂 docs                 — implementation plan, runbooks, Tailwind report, screenshots/
  └ ⚙️ next.config.ts · playwright.config.ts · vitest.config.ts · package.json · .env.example
 ```
@@ -265,7 +265,10 @@ Dependency rule: arrows point downward only. `src/lib` pure seams never import R
 
 **Invariants (pinned by tests + workflows):** every user-owned row carries `userId` with
 `onDelete: Cascade`; money crosses the seam as 2dp dollars and is computed in integer cents;
-the only JSON column is `Sale.items` (a read-model blob of the priced lines).
+the only JSON column is `Sale.items` (a read-model blob of the priced lines). Plus the
+auth-support pair — `VerificationToken` (6-digit OTP, 15-minute window) and
+`PasswordResetToken` (48-hex one-shot, 30-minute window), both `userId`-owned with
+`onDelete: Cascade` — the POS-domain table above plus this pair is the schema's 9 models.
 
 ## 8. Security Architecture
 
@@ -283,14 +286,14 @@ the only JSON column is `Sale.items` (a read-model blob of the priced lines).
 ## 9. Testing Strategy & the Local Gate
 
 ```
-lint → typecheck → unit → build → (smoke) → e2e
+lint → typecheck → unit → build → smoke → e2e
 ```
 
-1. **Unit (Vitest, 123/123):** the pure seams — money (cents math, formatting), cart (reducer,
+1. **Unit (Vitest, 133/133):** the pure seams — money (cents math, formatting), cart (reducer,
    totals, charge gate), shift (state machine, variance), reports (bucketing, shares),
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
-   Baseline: 12 files. New seams arrive with their file; fixes arrive with regression tests.
+   Baseline: 13 files. New seams arrive with their file; fixes arrive with regression tests.
 2. **E2E (Playwright, 78/78):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
@@ -453,6 +456,10 @@ the Settings CTAs, the Inventory chips, the POS gate) + the chart-axis readabili
   invisible to the empty-store e2e, caught by a VLM eyeball of the live dashboard). The
   Dashboard x axis renders weekday abbreviations at 12px (the reference's measured form);
   Reports keeps date labels at 11px with `$` ticks.
+- **ADR-012 (the artifact-hygiene contract)**: the standalone artifact ships ONLY runtime
+  needs — `outputFileTracingExcludes` + the build script's `.env` removal (the
+  double-cure) keep the dev secret + dev database out of `.next/standalone/`; the smoke
+  ladder polices it every run. Audit the ARTIFACT, not just the source tree.
 - **Testing doctrine addition (the oklab/alpha pin rule)**: v4 serializes fractional-alpha
   utilities as `oklab(… / 0.4)` while the reference emits `rgba(…, 0.4)` (same color) —
   pin the ALPHA via `expect.poll` + regex; raw `evaluate` computed reads do not retry
@@ -520,3 +527,73 @@ and the drift-free reference re-measurement.
 - Baselines at lock (unchanged): lint 0 errors (1 documented warning) · typecheck clean ·
   unit **123/123** · e2e **78/78** (the mobile spec re-proven stable across 3 consecutive
   full runs) · standalone build green.
+
+### ADR-012 — The artifact-hygiene contract (nothing but runtime needs ships)
+
+**Context.** The Session-8 artifact audit (the neo-crm F-170a genus, never swept here)
+found the standalone build shipping `.env` (the live `AUTH_SECRET` value) and
+`db/custom.db` (the dev SQLite — user rows with scrypt password hashes, sales data)
+inside `.next/standalone/` on every build. A standalone artifact is the deployable unit
+(Docker COPY / zip-and-ship); carrying the dev secret and the dev database in it is a
+security exposure and a stale-copy trap (a deployment booting the artifact with a
+relative DATABASE_URL would serve — and then lose on the next deploy — a build-time
+snapshot of the dev data).
+
+**Decision.** (1) `outputFileTracingExcludes` in `next.config.ts` keeps the repo-root
+entries the server never needs at runtime out of the artifact: `.env*`, `.git/**`,
+`db/**`, `skills/**`, `docs/**`, `tests/**`, `scripts/**`, `test-results/**`,
+`research/**`, the top-level docs, and the tooling configs. (2) The build script's
+trailing `rm -f .next/standalone/.env` removes the copy Next's own
+writeStandaloneDirectory makes explicitly (that copy is immune to the excludes — the
+double-cure). (3) `prisma/schema.prisma` STAYS traced — it is the db-path resolution
+anchor; `public/` and `.next/static` are copied by the build script as before. (4) The
+smoke ladder's step 13 (F-53) polices the artifact on every run: no `.env`/`db`/`skills`/
+`docs`/`tests`/`.git`/`worklog.md` entries; anchor + public present.
+
+**Consequences.** The deployable artifact carries only the server's true runtime needs
+(verified live: the login round-trip, a full checkout journey, and the whole e2e suite
+run green against the cleaned artifact). Dev and e2e are unaffected (the e2e server
+passes an ABSOLUTE `DATABASE_URL` + its own `AUTH_SECRET` by env — the artifact's env
+copy was never load-bearing for them). The pattern generalizes: audit the ARTIFACT, not
+just the source tree — the tracer's output is a shipping surface.
+
+## Revision Block — v1.6 (2026-10-26, Session-8)
+
+**Scope:** the standing audit→remediate→push cycle on the Session-7 tree (HEAD `16d4736`;
+the ledger is `docs/remediation-plan-session-8.md`). Four findings — the reference itself
+did NOT drift (the second consecutive drift-free cycle; every Session-4/5/6 pin
+re-measured byte-exact, including the reference's own mobile defect at 390×844).
+
+- **F-52 (docs integrity — the count-lockstep law now enforced)**: the SKILL's live-tense
+  count sites had re-staled across Sessions 6–7 (§3 Commands said unit (117)/playwright
+  (55); §12 said 117/117 + 68/68), and the audit's census swept up MORE stale sites: the
+  PAD's scale line said 7 Prisma models · 22 API route files against a live 9 · 26 (the
+  Session-101 model count never included the two auth-support models), the PAD file tree
+  said 8 e2e spec files against a live 7 and 12 vitest files against a live 13, and even
+  vitest.config.ts's header carried the old count. The neo-crm docs-counts mechanism is
+  now adopted (`tests/unit/docs-counts.test.ts`): every live-tense count site pinned to
+  constants that LIVE-census the test/source tree — 17 stale sites corrected; a stale
+  count anywhere now fails `bun run test`. History blocks keep their historical numbers
+  (the F-100a2 scope doctrine).
+- **F-53 (the tier-3 smoke ladder)**: `scripts/smoke-test.sh` (the neo-crm form adapted)
+  boots the standalone artifact on :3210 with a FRESH `db/smoke.db` + a throwaway
+  AUTH_SECRET and walks 13 assertions — health, the 401 wall, the SSR shell, the owner
+  login (sf_session cookie), the sessioned list, the Zod 400, a category create/DELETE
+  round-trip, the logout teardown, the rate-limit 429 (the 11th attempt), sitemap/robots,
+  the no-AUTH_SECRET boot refusal, and the artifact-hygiene checks. `bun run smoke` and
+  `bun run gate` wire it into the quality gate (§9's doctrine line now includes smoke).
+- **F-54 (ADR-12 above)**: the standalone artifact no longer ships `.env` (the live
+  AUTH_SECRET) or `db/custom.db` (the dev database with password hashes) — the
+  tracing-excludes + build-script `rm` double-cure; policed by the smoke ladder.
+- **F-55 (code integrity)**: the sales checkout's ticket-count + active-shift reads moved
+  INSIDE the `$transaction` (the route's own comment always claimed they were; two
+  concurrent checkouts could previously read the same count and allocate the same ticket).
+  Verified live through the real UI: the checkout journey allocated T-000035 and pinned
+  the shift; the ledger row landed.
+- **Live evidence** (`scripts/capture-s8-evidence.mjs`, 8/8 checks + a 6/6 VLM sweep of
+  the fresh screenshots 37–42): the CLEANED artifact serves the login round-trip, the
+  full checkout journey, every view, and the mobile drawer contract (dialog, 8 labeled
+  links, no horizontal overflow at 390px).
+- Test baselines: unit **133/133** (13 files; +10 the docs-counts gate) · e2e **78/78**
+  (unchanged — no pin weakened) · smoke **13/13** (the new tier). The gate is now
+  `lint → typecheck → test → build → smoke → e2e` (`bun run gate`).

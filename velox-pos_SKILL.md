@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.3.1
+version: 2.4.0
 last_updated: 2026-10-26
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-5 lock: unit **117/117** (12 files) · e2e **68/68**
-(54 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-8 lock: unit **133/133** (13 files) · e2e **78/78**
+(64 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -66,17 +66,23 @@ removed `quill`, `web-vitals`, `tailwindcss-animate`, `@radix-ui/react-radio-gro
 bun run dev                    # :3000 (output teed to dev.log)
 bun run lint                   # eslint flat config — 0 errors, 1 documented warning
 bun run typecheck              # tsc --noEmit — strict
-bun run test                   # vitest — tests/unit/** (117)
+bun run test                   # vitest — tests/unit/** (133)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               # playwright (55) — NEEDS the build first (:3100)
+bun run test:e2e               # playwright (78) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
+bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
+bun run gate                   # the one-command pre-push gate: lint → typecheck → test →
+                               # build → smoke → e2e
 bunx vitest run tests/unit/cart.test.ts          # one unit file
 bunx playwright test tests/e2e/mobile-navigation.spec.ts --project=mobile   # one spec
 ```
 
-Gate order before any push: `lint → typecheck → test → build → test:e2e`. There is
-no hosted CI; the local gate is the only gate.
+Gate order before any push: `lint → typecheck → test → build → smoke → e2e`
+(`bun run gate`). There is no hosted CI; the local gate is the only gate.
+Count sites in the docs live under the unit gate (`tests/unit/docs-counts.test.ts`) —
+when a suite grows, the constants and every doc site riding them change in the SAME
+commit.
 
 ## 4. Architecture in 60 seconds
 
@@ -93,7 +99,7 @@ Browser ──► /POS /Dashboard /Inventory /Sales /Registers /Cashiers /Report
            · workflow routes: /api/shifts (open/close), /api/sales (checkout),
              /api/store-settings (lazy singleton); /api/auth/* (rate-limited)
               ▼
-        Prisma 6 / SQLite — db/custom.db (7 models, user-scoped, cascade deletes)
+        Prisma 6 / SQLite — db/custom.db (9 models, user-scoped, cascade deletes)
 ```
 
 **Layer rule:** arrows point DOWN only. `src/lib` pure seams never import React or
@@ -115,7 +121,7 @@ Prisma; `src/lib/server/**` may import both; views import client seams only.
 | `db-path.ts` | the `DATABASE_URL` resolution contract (standalone-dir detector → module anchor → CWD guard) | `db.ts` never reads `process.env.DATABASE_URL` directly |
 | `store.ts` | THE Zustand store: collections + cart + chrome (`sidebarCollapsed`, `mobileNavOpen`, `activeView`) | One store; selectors are stable slices |
 
-### Data model (7 models, all `userId`-owned with `onDelete: Cascade`)
+### Data model (9 models, all `userId`-owned with `onDelete: Cascade`)
 
 `User` (role owner|cashier, emailVerified) · `StoreSettings` (1:1 lazy singleton:
 storeName, branding colors, receipt footer, fiscal fields, cardProvider) ·
@@ -125,7 +131,9 @@ unit, image data-URL ≤2MB) · `Register` (delete refused with shift history) �
 `CashierShift` (openingFloat, countedCash?, expectedCash?, variance?, status —
 expected/variance computed server-side at close) · `Sale` (ticket `T-000001`
 sequential, items JSON read-model blob, subtotal/taxTotal/total, method
-cash|card, amountPaid?/changeDue?, status — refund = status flip, no restock).
+cash|card, amountPaid?/changeDue?, status — refund = status flip, no restock) ·
+`VerificationToken` (6-digit OTP, 15-min window) + `PasswordResetToken`
+(48-hex one-shot, 30-min window) — the auth-support pair.
 
 ## 5. The checkout invariant (ADR-003 — the money law)
 
@@ -330,9 +338,10 @@ SUPERSET instead:
 
 ## 12. Testing strategy (three tiers)
 
-1. **Unit (Vitest, 117/117, 12 files)** — the pure seams only. New `src/lib`
-   seam ⇒ new `tests/unit` file (red → green). UI components get no unit tests.
-2. **E2E (Playwright, 68/68)** — against the PRODUCTION standalone build on :3100
+1. **Unit (Vitest, 133/133, 13 files)** — the pure seams only (plus the docs-counts
+   lockstep gate). New `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
+   components get no unit tests.
+2. **E2E (Playwright, 78/78)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -542,3 +551,42 @@ Gate: lint 0 errors (1 documented warning) · tsc clean · unit **123/123** · b
 e2e **78/78** (the mobile spec re-proven stable across 3 consecutive full runs). The F-51
 path verified LIVE (lock engages → releases on growth) plus the Session-6 chrome
 spot-checked on the rebuilt standalone. Five fresh screenshots (32–36). Skill v2.3.1.
+
+## Session history addendum — Session-8
+
+The standing audit→remediate→push cycle on the Session-7 tree (HEAD `16d4736`). The
+received-tree gate came back GREEN on first run (78/78 — the F-51 hardening held), and
+the full reference re-measurement found **NO drift for the second consecutive cycle**
+(every Session-4/5/6 pin byte-exact; the reference's own mobile defect still present at
+390×844). All four findings were codebase-side:
+
+- **F-52 (the docs-counts genus)**: this skill's OWN live-tense sites had re-staled
+  (§3 said unit (117)/playwright (55); §12 said 117/117 + 68/68) while the headline docs
+  rode the per-session re-anchor — plus the PAD's scale line said 7 models · 22 routes
+  against a live 9 · 26, its file tree said 8 spec files against a live 7, and
+  vitest.config.ts's header said 12 files against a live 13. **The neo-crm docs-counts
+  mechanism is now adopted** (`tests/unit/docs-counts.test.ts`): live censuses of the
+  test/source tree + every live-tense doc site pinned + the retired forms banned
+  (scoped — history blocks keep their numbers). 17 stale sites corrected; the gate's
+  maiden run even caught 3 README sites the manual sweep missed.
+- **F-53 (the missing tier 3)**: `scripts/smoke-test.sh` — the 13-step API ladder
+  against the standalone artifact (own `db/smoke.db`, throwaway AUTH_SECRET, fresh db
+  each run): health, the 401 wall, the SSR shell, the login cookie round-trip, the Zod
+  400, a CRUD create/DELETE, the logout teardown, the rate-limit 429, sitemap/robots,
+  the no-secret boot refusal, and the artifact-hygiene checks. `bun run smoke` +
+  `bun run gate` wire it into the gate chain.
+- **F-54 (the artifact shipped secrets)**: `.next/standalone/` carried `.env` (the live
+  AUTH_SECRET) + `db/custom.db` (dev user rows with scrypt hashes) on every build. The
+  double-cure: `outputFileTracingExcludes` + the build script's
+  `rm -f .next/standalone/.env` (Next's writeStandaloneDirectory copies .env explicitly,
+  immune to the excludes). `prisma/schema.prisma` stays traced (the db-path anchor);
+  policed by smoke step 13 every run. ADR-012 records the contract.
+- **F-55 (comment/code mismatch)**: the checkout's ticket-count + active-shift reads
+  moved inside the `$transaction` (the comment always claimed they were; two concurrent
+  checkouts could previously allocate the same ticket). Verified live through the real
+  UI: the journey allocated T-000035, pinned the shift, and the ledger row landed.
+
+Gate: lint 0 errors (1 documented warning) · tsc clean · unit **133/133** (13 files,
++10 the docs-counts gate) · build green (hygiene-clean) · e2e **78/78** · smoke
+**13/13**. Live evidence 8/8 (the cleaned artifact serves login, checkout, every view,
+and the mobile drawer contract) + a 6/6 VLM sweep of screenshots 37–42. Skill v2.4.0.

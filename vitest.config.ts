@@ -4,10 +4,10 @@ import path from "node:path";
 // ---------------------------------------------------------------------------
 // Unit-test layer for VeloxPOS — the pure domain seams (src/lib).
 //
-// 12 files: money, cart, shift, reports, inventory-status, currency, router,
-// validation, auth, db-path, env-check, site. Every seam is the public
-// boundary the API routes and views consume; nothing here imports React or
-// the database. Run: `bun run test`.
+// 13 files: money, cart, shift, reports, inventory-status, currency, router,
+// validation, auth, db-path, env-check, site, docs-counts (the lockstep
+// gate). Every seam is the public boundary the API routes and views consume;
+// nothing here imports React or the database. Run: `bun run test`.
 // ---------------------------------------------------------------------------
 
 export default defineConfig({

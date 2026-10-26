@@ -81,18 +81,22 @@ export const POST = withUser(async (user, request) => {
   }
 
   // Ticket allocation + the active shift (if the register has one) — both
-  // resolved inside the transaction that decrements stock and writes the sale.
-  const saleCount = await db.sale.count({ where: { userId: user.id } });
-  const activeShift = await db.cashierShift.findFirst({
-    where: { userId: user.id, status: "active" },
-    orderBy: { openedAt: "desc" },
-  });
-  if (!activeShift) {
-    throw new ValidationError("Open a register shift before making sales.");
-  }
-
+  // resolved inside the transaction that decrements stock and writes the sale
+  // (Session-8, F-55: these reads previously executed BEFORE the $transaction,
+  // contradicting the comment and widening the ticket-allocation race window
+  // — two concurrent checkouts could read the same count and allocate the
+  // same ticket number. Inside the transaction the reads join the
+  // decrement+create unit).
   const paid = input.paymentMethod === "cash" ? round2(input.amountPaid ?? 0) : null;
   const sale = await db.$transaction(async (tx) => {
+    const saleCount = await tx.sale.count({ where: { userId: user.id } });
+    const activeShift = await tx.cashierShift.findFirst({
+      where: { userId: user.id, status: "active" },
+      orderBy: { openedAt: "desc" },
+    });
+    if (!activeShift) {
+      throw new ValidationError("Open a register shift before making sales.");
+    }
     for (const line of lines) {
       await tx.product.update({
         where: { id: line.productId },

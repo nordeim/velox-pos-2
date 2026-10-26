@@ -17,14 +17,16 @@ Tailwind v4 CSS-first · Radix/shadcn primitives · ONE Zustand store · Zod 4 �
 bun run dev                    # :3000
 bun run lint                   # eslint flat config — 0 errors expected
 bun run typecheck              # tsc --noEmit — strict
-bun run test                   # vitest — tests/unit/** (the pure seams)
+bun run test                   # vitest — tests/unit/** (the pure seams + the docs-counts gate)
 bun run build                  # standalone build; doubles as the type gate
 bun run test:e2e               # playwright — needs the build; desktop + mobile projects
+bun run smoke                  # the 13-step API smoke ladder — needs the build (own db/smoke.db)
+bun run gate                   # the one-command pre-push gate: lint → typecheck → test → build → smoke → e2e
 bun run db:push && bun run db:seed   # provision db/custom.db
 ```
 
-The push gate order: `lint → typecheck → test → build → e2e`. No hosted CI exists; the local gate
-is the only gate.
+The push gate order: `lint → typecheck → test → build → smoke → e2e` (`bun run gate` wires it).
+No hosted CI exists; the local gate is the only gate.
 
 ## Architecture seams (where code lives and why)
 
@@ -122,7 +124,10 @@ is the only gate.
 
 - **Unit** (`tests/unit/**`, vitest): only the pure seams. If you add a `src/lib` seam, add its
   file here — red → green (TDD) for new logic, regression tests for fixes. Expected baseline:
-  123 tests / 12 files.
+  133 tests / 13 files. **`docs-counts.test.ts` is the lockstep gate** (Session-8, F-52): it
+  LIVE-censuses the test/source tree and pins every live-tense count site in the docs to the
+  constants — when a suite grows, update the constants AND every doc site in the SAME commit
+  (the gate fails until you do; history blocks keep their historical numbers by design).
 - **E2E** (`tests/e2e/**`, Playwright, production standalone on :3100): user journeys through the
   real UI. Two projects — `chromium` (1440×900) and `mobile` (390×844; runs only
   `mobile-navigation.spec.ts`). **Baseline: 78 tests.** Auth once via `auth.setup.ts` +
@@ -130,6 +135,12 @@ is the only gate.
   by the webServer command (kill-port → provision → boot) and never replaced while the server
   lives — replacing it after boot desynchronizes the login and page-render clients
   (field-tested failure).
+- **Smoke** (`scripts/smoke-test.sh`, tier 3): boots the standalone artifact on :3210 with a
+  FRESH `db/smoke.db` + a throwaway AUTH_SECRET, walks the 13-step API ladder (health, the 401
+  wall, the SSR shell, the login cookie round-trip, the Zod 400, a CRUD create/DELETE, the
+  logout teardown, the rate-limit 429, sitemap/robots, the no-secret boot refusal, the
+  ARTIFACT-HYGIENE checks), and counts executed vs passed. Cookie round-trips on plain HTTP
+  need `COOKIE_SECURE=false` (curl will not replay a Secure cookie over http).
 - Parity assertions use computed styles/geometry (`toHaveCSS`, `boundingBox` semantics) and
   visibility (`not.toBeVisible` for `hidden md:*` elements — they stay in the DOM), never class
   lists.
