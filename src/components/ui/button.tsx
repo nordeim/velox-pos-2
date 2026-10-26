@@ -6,32 +6,29 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-// The session-5 chrome rule: primary CTAs use variant="gradient" (the
-// .sf-gradient classes — sRGB-exact stops through the runtime accent vars).
-// The default variant stays the plain solid token button.
+// The button contract (Session-6 re-measured on the live reference):
+// standard actions are the glass family — `glass-button` (neutral) or
+// `glass-button-primary` (primary CTA) — on the padding-driven px-4 py-2.5
+// (42px) size. The glass-* classes are UNLAYERED plain CSS in tokens.css:
+// their border/color always beat same-element utilities (the v4 cascade
+// law), so inert classes like border-0/text-* on glass buttons compute
+// nothing — the glass class owns the surface.
+// The focus ring below is the clone's a11y SUPERSET: the reference ships no
+// custom button focus ring (browser outline only); we keep the visible
+// keyboard ring (the same superset posture as the drawer + readable
+// heading colors).
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-sf-primary text-sf-primary-foreground shadow-sm hover:bg-sf-primary-strong sf-print-exact",
-        gradient: "sf-gradient sf-gradient-shadow text-sf-primary-foreground",
+        default: "glass-button rounded-xl",
         destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline: "border border-[#e5e5e5] bg-card text-[#0a0a0a] shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-card dark:text-foreground",
         secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-sf-primary-strong underline-offset-4 hover:underline",
-        // S9-R2 (measured s69): the reference's More Options button is the
-        // shadcn default shape on a neutral-950 fill (rgb(10,10,10), 6px
-        // radius) — arbitrary hexes on purpose: the neutral ramp is
-        // unpinned (v4 trap 10 — unpinned palette classes serialize as
-        // lab()). S80/AG1 (re-measured s80 on the live ref in DARK
-        // mode): the ref does NOT re-theme this button — dark keeps the
-        // SAME neutral-950 fill + light text. The s69 "dark superset
-        // inverts the ramp" (dark:#f5f5f5) was drift and a standing
-        // dark-sweep flashbulb; dropped.
-        neutral: "bg-[#0a0a0a] text-[#fafafa] shadow-sm hover:bg-[#262626] sf-print-exact",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         // Session-5 (measured live): the reference's standard buttons are

@@ -302,3 +302,101 @@ silently defeated it is fixed at the root). Standing debt: NONE identified. Base
 unit **117/117**, e2e **68/68**. The @theme inline lesson is codified in
 AGENTS/CLAUDE/PAD/skill: measure the MECHANISM, not just the surface — a bug that ships
 invisible for four sessions is a measurement gap, not just a styling one.
+
+---
+
+## Session-6 — the chrome-depth parity pass + the chart-axis bug (velox-pos-2)
+
+**Received state**: `d8d9e92` (Session-5's tree + the session-log doc). **Directive**:
+the standing audit→remediate→push cycle — fresh-clone gate re-verification, re-measure
+the live reference, fix what drifted, keep TDD and the docs in lockstep, push via the
+SSH wrapper.
+
+**Environment (fresh-clone bootstrap):** `bun install` (485 pkgs) → `.env` from
+`.env.example` + generated AUTH_SECRET → `db:push` + `db:seed` + `--demo` (15 products /
+5 categories / 1 register / 33 sales) → `bunx playwright install chromium` (the fresh
+sandbox lacked build 1243). **Gate on the received tree: lint 0 errors (1 documented
+warning) · tsc clean · unit 117/117 · build green · e2e 68/68** — the Session-5
+baselines hold on a pristine clone. (The sandbox's background-process reaper ate one
+detached build mid-compile — foreground builds are the reliable path here.)
+
+**Audit (the full ledger is `docs/remediation-plan-session-6.md`):** the reference
+re-measured live at CHROME depth (the surfaces between the pinned ones): the sidebar
+nav (items, active pill, brand row, footer), the Settings section headers + the category
+flow, the Settings CTAs, the Inventory filter chips, and the POS shift gate. **The
+reference itself drifted again since Session-5** — its nav items are now padding-driven
+40px py-2.5 pills (font-medium, 16px icons, white/40 inactive) with an active
+border-violet-500/30 + shadow-violet-500/10 pair, and its Reports glyph is now
+`ChartColumnIncreasing` (Session-101's FileText reading is stale). All Session-4/5 pins
+re-verified holding (fiscal card, headings, Title Case, form controls 12px/#262a36,
+buttons 42px, CHARGE 70px, Reports pills, login internals, the mobile defect).
+
+**Ten findings TDD red → green (9 new e2e pins + the inventory category pin REWRITTEN to
+drive the reference's dialog flow + 6 unit pins on a new seam):**
+- **F-44 (the structural one)**: the reference adds categories through a HEADER Add chip
+  (`glass-button px-3 py-1.5 text-sm rounded-lg` + Plus, 34px) opening a "New Category"
+  dialog (18px/600 title, Name + "e.g. Beverages", Cancel/Create 42px); the clone's inline
+  input row is gone, the empty state reads "No categories", and the e2e pin now drives the
+  dialog (protection preserved and strengthened).
+- **F-45**: SectionCard headers — bare `w-5 h-5` icons in per-section colors (Store
+  indigo-500, Palette purple-500, FileText green-500, Receipt orange-500, CreditCard
+  blue-500, Tag amber-500), gap-2, no 36px chip wrapper; three glyphs corrected; the
+  readable heading colors stay (the reference's text-slate-700 is its own defect).
+- **F-46/F-47/F-48/F-49 (the sidebar chrome)**: padding-driven 40px items + font-medium +
+  16px icons + white/40 inactive + transition-all; the active border/shadow pair; the
+  14px white/90 tracking-wide wordmark + 16px stroke-2 Zap; the p-3 footer cell + 16px
+  chevron.
+- **F-39**: Save Changes is the reference's LARGER primary CTA — px-6 py-3.5 text-base
+  font-medium (54px), not the standard 42px.
+- **F-41**: Inventory chips — the 36px pill family (`px-4 rounded-xl text-xs
+  font-semibold`, container `flex gap-2 overflow-x-auto`), active = glass-button-primary;
+  the reference's +2px button-base quirk pinned via h-9; the inactive treatment is the
+  documented family assumption (the live reference renders only its active "All" chip).
+- **F-42**: the POS gate — card p-8 (was p-10), Monitor text-violet-400/30 mb-4 (stroke 2),
+  h2 mb-2, paragraph text-white/35 with the "Registers" emphasis styled like the
+  reference's <strong> (font-bold text-white/60, NO underline — the working href is the
+  kept functional superset).
+- **F-43 (hygiene)**: button.tsx's dead Omni-Study-era sf-* variants replaced (default →
+  the measured glass-button neutral), the false "S9-R2/s69" comment blocks removed; the
+  a11y focus ring kept (the reference ships none — superset posture).
+- **F-50 (the headline — found by the VLM visual sweep, NOT the calipers)**: both
+  hand-rolled charts drew ONE grid line + label per unit of the y domain — for dollar
+  revenue a $470 day rendered 471 labels stacked ~0.46px apart (the live demo rendered
+  108; invisible to four audits because the e2e store is empty). Fixed with a pure
+  `niceTicks` seam in `src/lib/reports.ts` (1/2/2.5/5×10^k steps; 6 unit pins), both
+  charts render from it, the Dashboard x axis now labels WEEKDAY abbreviations at 12px
+  (the reference's Recharts convention), and a data-state e2e pin drives a real
+  checkout before asserting the axis — the oracle the suite lacked. ADR-011 records the
+  contract.
+
+**Pin-doctrine additions (both e2e-hardened):** v4's fractional-alpha utilities
+serialize as oklab while Base44 emits rgba (same color) — pin the ALPHA with
+`expect.poll` + regex; and raw `evaluate` computed reads do NOT retry like toHaveCSS (a
+mid-load style race flaked a pin once before the poll hardening — every raw computed read
+in the new pins now polls).
+
+**Re-certification (all on the final tree):** lint ✓ (0 errors, 1 documented warning) ·
+tsc ✓ · unit **123/123** (12 files; +6 niceTicks) · build ✓ · e2e **78/78** (all 68
+prior pins green, none weakened). Live re-verification on the rebuilt standalone: every
+Session-6 contract byte-checked (nav 40/42px + the border pair, 16px icons,
+chart-column-increasing, 14px wordmark, section icon colors, Save 54px, the Add chip,
+the New Category dialog round-trip — created a category live, chips 36px + gradient,
+the gate p-8 + /30 + white/35), the chart at data scale renders 0/25/50/75/100 +
+Tue..Mon (VLM-verified readable), and the mobile drawer contract re-verified at 390×844
+(hamburger, 288px dialog, 8 links, `animation-name: enter`, focus on close, no
+overflow) — the mobile-nav bug class stays fixed.
+
+**Docs lockstep:** README badges/counts (unit 123, e2e 78); AGENTS.md — the Session-6
+chrome + chart contracts + the oklab/expect.poll rule; CLAUDE.md — the same laws + the
+new baselines; PAD v1.4 + ADR-011; velox-pos_SKILL.md v2.3.0 (traps 14 + 15 + the
+Session-6 addendum); the remediation plan's checkboxes + execution record; seven fresh
+screenshots (25–31) from the production standalone build; this worklog entry.
+
+**Stage summary.** The clone now tracks the reference at the chrome depth — the sidebar,
+the section headers, the category-creation flow, the CTAs, the chips, and the gate —
+and both charts render readable nice-tick axes at any revenue scale (a Session-101
+defect that survived four audits by hiding from the empty-store oracle). Standing debt:
+NONE identified. Baselines: unit **123/123**, e2e **78/78**. The Session-6 lessons are
+codified in AGENTS/CLAUDE/PAD/skill: re-measure the reference's chrome each cycle (it
+drifts), pin computed ALPHAs not strings, poll every raw computed read — and the e2e
+oracle must exercise the DATA state, not only the empty state.

@@ -327,3 +327,152 @@ test("select triggers compute the reference's 12px radius + #262a36 border", asy
   await expect(currency).toHaveCSS("border-color", "rgb(38, 42, 54)");
   await expect(currency).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
 });
+
+// ---------------------------------------------------------------------------
+// Session-6 pins: the chrome-depth census (measured live on the reference).
+// Save Changes is the reference's LARGER primary CTA (px-6 py-3.5, 54px,
+// 16px/medium — bigger than the standard 42px); section headers carry BARE
+// 20px icons in per-section colors (indigo/purple/green/orange/blue/amber);
+// the category flow is header-Add → "New Category" dialog; the Inventory
+// chips are the 36px pill family; the POS shift gate is p-8 with the /30
+// icon and the white/35 paragraph.
+// ---------------------------------------------------------------------------
+
+test("Save Changes computes the reference's py-3.5 primary CTA (54px, 16px/500)", async ({
+  page,
+}) => {
+  await page.goto("/StoreSettings");
+  const save = page.getByTestId("save-settings");
+  await expect(save).toBeVisible();
+  await expect(save).toHaveCSS("height", "54px");
+  await expect(save).toHaveCSS("padding", "14px 24px");
+  await expect(save).toHaveCSS("font-size", "16px");
+  await expect(save).toHaveCSS("font-weight", "500");
+});
+
+test("section headers carry the reference's bare 20px icons in per-section colors", async ({
+  page,
+}) => {
+  await page.goto("/StoreSettings");
+  const sections: Array<[string, string]> = [
+    ["Business Information", "rgb(99, 102, 241)"], // indigo-500 (Store)
+    ["Branding", "rgb(168, 85, 247)"], // purple-500 (Palette)
+    ["Receipt", "rgb(34, 197, 94)"], // green-500 (FileText)
+    ["Fiscal / Tax Data", "rgb(249, 115, 22)"], // orange-500 (Receipt)
+    ["Card Payment Provider", "rgb(59, 130, 246)"], // blue-500 (CreditCard)
+    ["Product Categories", "rgb(245, 158, 11)"], // amber-500 (Tag)
+  ];
+  for (const [title, color] of sections) {
+    const section = page.locator(`section[aria-label="${title}"]`);
+    const icon = section.locator("h2 svg");
+    await expect(icon).toBeVisible();
+    await expect(icon).toHaveCSS("color", color);
+    const box = await icon.boundingBox();
+    expect(box?.width, `${title} icon width`).toBe(20);
+    expect(box?.height, `${title} icon height`).toBe(20);
+  }
+});
+
+test("the category Add button lives in the section header (34px, 8px radius)", async ({
+  page,
+}) => {
+  await page.goto("/StoreSettings");
+  const add = page.getByRole("button", { name: "Add", exact: true });
+  await expect(add).toBeVisible();
+  // It sits in the Product Categories HEADER row, beside the heading.
+  await expect(add.locator("..").getByRole("heading", { name: "Product Categories" })).toBeVisible();
+  await expect(add).toHaveCSS("height", "34px");
+  await expect(add).toHaveCSS("border-radius", "8px");
+  await expect(add).toHaveCSS("padding", "6px 12px");
+  const plus = add.locator("svg");
+  const plusBox = await plus.boundingBox();
+  expect(plusBox?.width).toBe(16);
+});
+
+test("the New Category dialog matches the reference's flow (title/Name/Create 42px)", async ({
+  page,
+}) => {
+  await page.goto("/StoreSettings");
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "New Category" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "New Category" })).toHaveCSS(
+    "font-size",
+    "18px",
+  );
+  const name = dialog.getByLabel("Name");
+  await expect(name).toHaveAttribute("placeholder", "e.g. Beverages");
+  await expect(dialog.getByRole("button", { name: "Cancel" })).toHaveCSS("height", "42px");
+  const create = dialog.getByRole("button", { name: "Create" });
+  await expect(create).toHaveCSS("height", "42px");
+  // The Create action is gated on a non-empty name (the dialog's validation).
+  await expect(create).toBeDisabled();
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(dialog).not.toBeVisible();
+});
+
+test("the Inventory chips compute the reference's 36px pill geometry", async ({ page }) => {
+  await page.goto("/Inventory");
+  const all = page.getByRole("button", { name: "All", exact: true });
+  await expect(all).toBeVisible();
+  await expect(all).toHaveCSS("height", "36px");
+  await expect(all).toHaveCSS("border-radius", "12px");
+  await expect(all).toHaveCSS("font-size", "12px");
+  await expect(all).toHaveCSS("font-weight", "600");
+  // The active chip is the glass-button-primary gradient (measured live).
+  await expect
+    .poll(async () => all.evaluate((el) => getComputedStyle(el).backgroundImage))
+    .toContain("linear-gradient");
+  // An inactive chip (Beverages — created by the inventory spec).
+  // white/40 serializes as oklab with /0.4 — pin the ALPHA.
+  const bev = page.getByRole("button", { name: "Beverages", exact: true });
+  if (await bev.count()) {
+    await expect(bev).toHaveCSS("height", "36px");
+    await expect(bev).toHaveCSS("border-radius", "12px");
+    await expect(bev).toHaveCSS("font-size", "12px");
+    const bevColor = await bev.evaluate((el) => getComputedStyle(el).color);
+    expect(bevColor).toMatch(/(?:\/\s*0\.4\)|,\s*0\.4\))/);
+  }
+});
+
+test("the POS shift gate computes the reference's card + icon + copy treatment", async ({
+  page,
+}) => {
+  // Close any active shift first (the gate must be live, order-independent).
+  const base = process.env.E2E_PORT
+    ? `http://localhost:${process.env.E2E_PORT}`
+    : "http://localhost:3100";
+  const shifts = (await (await page.request.get(`${base}/api/shifts`)).json()) as Array<{
+    id: string;
+    status: string;
+  }>;
+  for (const s of shifts.filter((s) => s.status === "active")) {
+    await page.request.patch(`${base}/api/shifts/${s.id}`, { data: { countedCash: 0 } });
+  }
+
+  await page.goto("/POS");
+  const heading = page.getByRole("heading", { name: "No active shift" });
+  await expect(heading).toBeVisible();
+  // The card: p-8 (Session-101 shipped p-10).
+  const card = heading.locator("..");
+  await expect(card).toHaveCSS("padding", "32px");
+  // The Monitor icon: text-violet-400/30 + mb-4 (the reference's dimmed
+  // glyph). violet-400/30 serializes as oklab with /0.3 — pin the ALPHA.
+  const icon = card.locator("svg").first();
+  await expect
+    .poll(async () => icon.evaluate((el) => getComputedStyle(el).color))
+    .toMatch(/(?:\/\s*0\.3\)|,\s*0\.3\))/);
+  await expect(icon).toHaveCSS("margin-bottom", "16px");
+  await expect(heading).toHaveCSS("margin-bottom", "8px");
+  // The paragraph: text-white/35 with a <strong>-styled, non-underlined
+  // emphasis. white/35 + white/60 serialize as oklab — pin the ALPHAs.
+  const copy = card.locator("p").first();
+  await expect
+    .poll(async () => copy.evaluate((el) => getComputedStyle(el).color))
+    .toMatch(/(?:\/\s*0\.35\)|,\s*0\.35\))/);
+  const emphasis = card.getByRole("link", { name: "Registers" });
+  await expect
+    .poll(async () => emphasis.evaluate((el) => getComputedStyle(el).color))
+    .toMatch(/(?:\/\s*0\.6\)|,\s*0\.6\))/);
+  await expect(emphasis).toHaveCSS("text-decoration-line", "none");
+});

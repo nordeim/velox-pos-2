@@ -66,3 +66,92 @@ test("the mobile app bar is hidden on desktop (no dead controls)", async ({ page
   await page.goto("/POS");
   await expect(page.getByRole("button", { name: "Open navigation menu" })).not.toBeVisible();
 });
+
+// ---------------------------------------------------------------------------
+// Session-6 pins: the nav chrome census (measured live on the reference).
+// The reference's nav items are py-2.5 PADDING-DRIVEN (40px inactive; the
+// active pill's 1px violet border grows it to 42px), font-medium, 16px
+// icons, white/40 inactive text, an active border+shadow pair, a 14px
+// white/90 wordmark, and a 16px footer chevron in a p-3 cell.
+// ---------------------------------------------------------------------------
+
+test("nav items compute the reference's py-2.5 padding-driven 40px + medium weight", async ({
+  page,
+}) => {
+  await page.goto("/Dashboard");
+  const sidebar = page.getByTestId("app-sidebar");
+  const inactive = sidebar.getByRole("link", { name: "Terminal" });
+  await expect(inactive).toBeVisible();
+  await expect(inactive).toHaveCSS("height", "40px");
+  await expect(inactive).toHaveCSS("padding", "10px 12px");
+  await expect(inactive).toHaveCSS("font-weight", "500");
+  // v4 serializes text-white/40 as oklab(...) with "/ 0.4)" — the reference's
+  // rgba(255,255,255,0.4) is the same color; pin the ALPHA (the /40).
+  // expect.poll: raw computed reads don't retry like toHaveCSS — poll until
+  // the stylesheet has applied (the mid-load race once flaked this pin).
+  await expect
+    .poll(async () => inactive.evaluate((el) => getComputedStyle(el).color))
+    .toMatch(/(?:\/\s*0\.4\)|,\s*0\.4\))/);
+});
+
+test("the active pill adds the reference's violet border + shadow (42px)", async ({ page }) => {
+  await page.goto("/Dashboard");
+  const sidebar = page.getByTestId("app-sidebar");
+  const active = sidebar.locator("a[aria-current='page']");
+  await expect(active).toBeVisible();
+  await expect(active).toHaveCSS("height", "42px");
+  await expect(active).toHaveCSS("border-top-width", "1px");
+  // border-violet-500/30 — v4 serializes as oklab with /0.3 (same color as
+  // the reference's rgba(139,92,246,0.3)); pin the ALPHA.
+  await expect
+    .poll(async () => active.evaluate((el) => getComputedStyle(el).borderTopColor))
+    .toMatch(/(?:\/\s*0\.3\)|,\s*0\.3\))/);
+  // bg-violet-600/20 — v4 serializes as oklab(0.54132 0.0964073 -0.226955 / 0.2)
+  // (the reference computes rgba(124,58,237,0.2) — the same color). Pin the
+  // oklab channel signature + the ALPHA.
+  await expect
+    .poll(async () => active.evaluate((el) => getComputedStyle(el).backgroundColor))
+    .toMatch(/oklab\(0\.54\d*\s+0\.09\d*\s+-0\.2\d*\s*\/\s*0\.2\)/);
+  await expect(active).toHaveCSS("color", "rgb(196, 181, 253)");
+  // shadow-sm shadow-violet-500/10 — v4 serializes the composed shadow with
+  // an oklab/alpha color stop; pin the /10 alpha.
+  await expect
+    .poll(async () => active.evaluate((el) => getComputedStyle(el).boxShadow))
+    .toMatch(/(?:\/\s*0\.1\)|,\s*0\.1\))/);
+});
+
+test("nav icons, the wordmark, and the footer chevron compute the reference's 16px family", async ({
+  page,
+}) => {
+  await page.goto("/Dashboard");
+  const sidebar = page.getByTestId("app-sidebar");
+
+  // Nav icons: w-4 h-4 (16px) — measured on the reference's live sidebar.
+  const icon = sidebar.getByRole("link", { name: "Terminal" }).locator("svg");
+  await expect(icon).toBeVisible();
+  const iconBox = await icon.boundingBox();
+  expect(iconBox?.width).toBe(16);
+  expect(iconBox?.height).toBe(16);
+
+  // The brand wordmark: text-sm font-bold text-white/90 (14px — Session-101
+  // shipped text-lg; the live reference measures 14px). white/90 serializes
+  // as oklab with /0.9 — pin the ALPHA.
+  const wordmark = page.locator("#vpx-brand-label");
+  await expect(wordmark).toHaveCSS("font-size", "14px");
+  await expect(wordmark).toHaveCSS("font-weight", "700");
+  await expect
+    .poll(async () => wordmark.evaluate((el) => getComputedStyle(el).color))
+    .toMatch(/(?:\/\s*0\.9\)|,\s*0\.9\))/);
+
+  // The chip's Zap: w-4 h-4, stroke 2 (measured: lucide-zap w-4 h-4 text-white).
+  const zap = wordmark.locator("..").locator("svg").first();
+  const zapBox = await zap.boundingBox();
+  expect(zapBox?.width).toBe(16);
+
+  // The footer cell (p-3) and its chevron (w-4 h-4).
+  const collapse = sidebar.getByRole("button", { name: "Collapse sidebar" });
+  await expect(collapse.locator("..")).toHaveCSS("padding", "12px");
+  const chevron = collapse.locator("svg");
+  const chevronBox = await chevron.boundingBox();
+  expect(chevronBox?.width).toBe(16);
+});

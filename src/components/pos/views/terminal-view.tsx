@@ -28,18 +28,24 @@ import { formatMoney, round2 } from "@/lib/money";
 import { stockStatus } from "@/lib/inventory-status";
 
 // ---- the shift gate (the measured empty state) --------------------------------
+// Session-6 (re-measured live): the reference's card is p-8 (not p-10), the
+// Monitor icon is text-violet-400/30 with mb-4 (the h2 follows with mb-2, no
+// top margin), and the paragraph is text-white/35 with the "Registers"
+// emphasis rendered <strong>-style — font-bold text-white/60, NO underline.
+// The clone keeps the working href (a functional superset) styled to the
+// reference's computed rendering.
 
 export function ShiftGate() {
   return (
     <div className="flex h-full min-h-[60vh] items-center justify-center p-6">
-      <div className="glass-card w-full max-w-md rounded-2xl p-10 text-center">
-        <Monitor className="mx-auto h-16 w-16 text-violet-400/70" strokeWidth={1.5} aria-hidden="true" />
-        <h2 className="mt-5 text-xl font-bold text-white/70">No active shift</h2>
-        <p className="mt-2 text-sm text-white/50">
+      <div className="glass-card w-full max-w-md rounded-2xl p-8 text-center">
+        <Monitor className="mx-auto mb-4 h-16 w-16 text-violet-400/30" strokeWidth={2} aria-hidden="true" />
+        <h2 className="mb-2 text-xl font-bold text-white/70">No active shift</h2>
+        <p className="text-sm text-white/35">
           Go to{" "}
           <a
             href="/Registers"
-            className="vpx-focus font-bold text-white/90 underline decoration-white/30 underline-offset-2 hover:decoration-white/70"
+            className="vpx-focus font-bold text-white/60"
           >
             Registers
           </a>{" "}

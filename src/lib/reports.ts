@@ -45,6 +45,30 @@ export function summarize(sales: SaleLike[], days: number, now = new Date()): Pe
   };
 }
 
+/**
+ * Nice axis ticks for the charts (Session-6, F-50): ~`count` evenly spaced
+ * "nice" values from 0 up to `max` — 1/2/2.5/5×10^k steps, like the
+ * reference's Recharts axes (measured: 0..4 on its empty dashboard, $0..$4
+ * on its empty Reports chart). Replaces the Session-101 per-unit grid,
+ * which drew ONE label per dollar of revenue — hundreds of labels stacked
+ * fractions of a pixel apart (an unreadable white block on any real
+ * dataset; invisible to the e2e suite, whose store is empty).
+ */
+export function niceTicks(max: number, count = 5): number[] {
+  const safeMax = Math.ceil(Math.max(0, max));
+  if (safeMax <= 0) return [0];
+  if (safeMax === 1) return [0, 1];
+  const rough = safeMax / count;
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  const norm = rough / mag;
+  const step = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10) * mag;
+  const out: number[] = [];
+  for (let v = 0; v <= safeMax + step * 1e-6; v += step) {
+    out.push(Math.round(v * 1e6) / 1e6);
+  }
+  return out;
+}
+
 /** One bucket per day in the window (inclusive), in chronological order. */
 export type DailyBucket = { date: string; label: string; revenue: number; count: number };
 

@@ -25,9 +25,9 @@ reports, validation) underneath **server-gated thin routes**, a **single Zustand
 (lint → typecheck → unit → build → e2e) is the only gate — there is no hosted CI — so every
 guardrail is enforced by tooling that runs in this checkout.
 
-**Scale & baselines (verified 2026-10-26, Session-3 re-certification):** 7 Prisma models · 22 API
+**Scale & baselines (verified 2026-10-26, Session-6 re-certification):** 7 Prisma models · 22 API
 route files · 8 gated views
-+ login/reset/404 · 117 unit tests (12 files) · 68 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 123 unit tests (12 files) · 78 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -286,12 +286,12 @@ the only JSON column is `Sale.items` (a read-model blob of the priced lines).
 lint → typecheck → unit → build → (smoke) → e2e
 ```
 
-1. **Unit (Vitest, 117/117):** the pure seams — money (cents math, formatting), cart (reducer,
+1. **Unit (Vitest, 123/123):** the pure seams — money (cents math, formatting), cart (reducer,
    totals, charge gate), shift (state machine, variance), reports (bucketing, shares),
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 12 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 68/68):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 78/78):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
@@ -421,3 +421,72 @@ e2e-pinned red → green (13 new pins; e2e 55→68, unit 117/117 unchanged).
   pins). No prior pin weakened; no guardrail loosened.
 - Baselines at lock: lint 0 errors (1 documented warning) · typecheck clean · unit 117/117 ·
   e2e 68/68 · standalone build green.
+
+## Revision Block — v1.4 (2026-10-26, Session-6)
+
+**Scope:** the chrome-depth parity pass (sidebar nav, section headers, the category flow,
+the Settings CTAs, the Inventory chips, the POS gate) + the chart-axis readability bug
+(the audit ledger is `docs/remediation-plan-session-6.md`). Ten findings, TDD red → green
+(9 parity pins + 1 pin rewritten to the reference's flow + 6 unit pins for the new
+`niceTicks` seam; e2e 68→78, unit 117→123).
+
+- **The reference's nav chrome re-measured live (it drifted)**: nav items are
+  padding-driven `px-3 py-2.5` (40px inactive), `font-medium`, 16px icons, white/40
+  inactive; the ACTIVE pill adds `border border-violet-500/30 shadow-sm
+  shadow-violet-500/10` (42px with the border). The Reports glyph is
+  `ChartColumnIncreasing` (the reference swapped it live). The wordmark is 14px
+  white/90 tracking-wide; the footer chevron 16px in a p-3 cell.
+- **Section-card headers**: bare `w-5 h-5` icons in per-section colors (indigo/purple/
+  green/orange/blue/amber-500) — the 36px chip wrapper and the all-violet icons removed;
+  the readable heading colors stay (the documented a11y superset).
+- **The category flow is now the reference's own**: header Add chip → "New Category"
+  dialog (Name + Cancel/Create 42px); the inline input row is gone; the empty state reads
+  "No categories". The inventory.spec pin was REWRITTEN to drive the new flow (its
+  protection preserved and strengthened).
+- **Save Changes is a larger primary CTA**: py-3.5/text-base/font-medium (54px). The
+  Inventory category chips adopt the 36px pill family (glass-button-primary active). The
+  POS gate renders the reference's p-8 card + /30 icon + white/35 copy with the
+  <strong>-styled, non-underlined "Registers" emphasis (the working href is the superset).
+- **ADR-011 (the chart-axis contract)**: both hand-rolled charts render ~5 NICE ticks via
+  the `niceTicks` seam (`src/lib/reports.ts`, unit-pinned) — the Session-101 per-unit
+  grid stacked one label per DOLLAR of revenue (an unreadable block on any real dataset;
+  invisible to the empty-store e2e, caught by a VLM eyeball of the live dashboard). The
+  Dashboard x axis renders weekday abbreviations at 12px (the reference's measured form);
+  Reports keeps date labels at 11px with `$` ticks.
+- **Testing doctrine addition (the oklab/alpha pin rule)**: v4 serializes fractional-alpha
+  utilities as `oklab(… / 0.4)` while the reference emits `rgba(…, 0.4)` (same color) —
+  pin the ALPHA via `expect.poll` + regex; raw `evaluate` computed reads do not retry
+  (a mid-load style race flaked a pin once before the poll hardening).
+- Scaffold hygiene: the dead Omni-Study-era Button variants (sf-* classes that exist
+  nowhere in this codebase) replaced with the measured neutral (`glass-button`); the
+  factually-wrong comment blocks removed. The Button focus ring stays (a11y superset — the
+  reference ships no button focus ring).
+- Test baselines: unit **123/123** (+6 niceTicks pins, still 12 files) · e2e **78/78**
+  (+9 Session-6 pins +1 chart pin, all prior pins intact). No pin weakened; no guardrail
+  loosened.
+- Baselines at lock: lint 0 errors (1 documented warning) · typecheck clean · unit 123/123 ·
+  e2e 78/78 · standalone build green.
+
+### ADR-011 — The chart-axis contract (niceTicks, never per-unit grids)
+
+**Context.** The two hand-rolled SVG charts (Dashboard line, Reports area) drew one grid
+line + one axis label per unit of the y domain (`Array.from({length: niceMax + 1})`). For
+count-based series that reads fine; for DOLLAR revenue (the only thing these charts plot)
+a $470 day rendered 471 labels stacked ~0.46px apart — a solid unreadable band. The defect
+shipped in Session-101 and survived four audit sessions because the e2e store is empty
+(max = 4 → 5 tidy labels) and nobody measured the chart at data scale until the Session-6
+VLM sweep flagged the live dashboard's "dense vertical block of white pixels."
+
+**Decision.** (1) A pure `niceTicks(max, count=5)` seam in `src/lib/reports.ts` computes
+nice 1/2/2.5/5×10^k steps (unit-pinned: 4 → [0..4], 17 → [0,5,10,15], 470 →
+[0,100,200,300,400], tick count ≤ 6 always). (2) Both charts render their grid/labels from
+`niceTicks`. (3) The Dashboard's 7-day x axis renders weekday abbreviations at 12px and
+the Reports chart date labels at 11px with `$`-prefixed y ticks — both measured on the live
+reference (Recharts-style axes). (4) An e2e regression pin drives a real checkout then
+asserts the rendered y-label count < 8 and the weekday x labels — the pin that could never
+exist while the suite's store was the only oracle.
+
+**Consequences.** Chart axes stay readable at any revenue scale; the axis math is a pure,
+documented, unit-tested seam; the empty-store e2e blind spot is now covered by a data-state
+pin. The per-unit grid pattern is recorded as a trap in the skill (v2.3.0) — a "correct at
+demo scale" implementation is a latent bug at production scale.

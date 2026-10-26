@@ -10,9 +10,10 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { Palette, Receipt, Store, Upload, Landmark, CreditCard, Tags } from "lucide-react";
+import { Palette, FileText, Receipt, Store, Upload, CreditCard, Tag, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -46,20 +47,24 @@ function SectionCard({
 }) {
   return (
     <section className="glass-card rounded-2xl p-5" aria-label={title}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* Session-6 (measured live): the header row matches the reference —
+          `flex items-center justify-between mb-4`, a BARE w-5 h-5 icon in a
+          per-section color (gap-2), no chip wrapper. The heading keeps the
+          clone's readable color (the reference's text-slate-700 on dark
+          glass is its own near-invisible defect — the documented a11y
+          superset posture). */}
+      <div className="mb-4 flex items-center justify-between">
         <h2
-          className={`flex items-center gap-2.5 text-base font-bold ${
-            tone === "green" ? "text-emerald-400/80" : "text-violet-300/80"
+          className={`flex items-center gap-2 text-base font-bold ${
+            tone === "green" ? "text-emerald-300/80" : "text-violet-300/80"
           }`}
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5">
-            {icon}
-          </span>
+          {icon}
           {title}
         </h2>
         {headerAction}
       </div>
-      <div className="mt-4">{children}</div>
+      <div>{children}</div>
     </section>
   );
 }
@@ -88,7 +93,9 @@ export function StoreSettingsView() {
     cardProvider: "none",
     logoDataUrl: "",
   });
-  const [newCategory, setNewCategory] = React.useState("");
+  const [newCategoryName, setNewCategoryName] = React.useState("");
+  const [catDialogOpen, setCatDialogOpen] = React.useState(false);
+  const [catBusy, setCatBusy] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
 
   // Render-time adjustment (the React-recommended pattern for "state that
@@ -152,19 +159,27 @@ export function StoreSettingsView() {
     }
   };
 
-  const addCategory = async (): Promise<void> => {
-    const name = newCategory.trim();
+  // Session-6 (measured live): the reference adds categories through a
+  // "New Category" dialog opened from the section header's Add button —
+  // not an inline input row. The name resets in the OPEN handler (the
+  // key-identity doctrine: no setState-in-effect).
+  const createCategory = async (): Promise<void> => {
+    const name = newCategoryName.trim();
     if (!name) return;
+    setCatBusy(true);
     try {
       const row = await apiSend<Category>("POST", "/api/categories", {
         name,
         color: form.secondaryColor,
       });
       upsertCategory(row);
-      setNewCategory("");
+      setCatDialogOpen(false);
+      setNewCategoryName("");
       toastApi.success("Category added")
     } catch (err) {
       toastApi.error(`Could not add category: ${err instanceof Error ? err.message : "Please try again."}`)
+    } finally {
+      setCatBusy(false);
     }
   };
 
@@ -173,7 +188,7 @@ export function StoreSettingsView() {
       <PageHeader title="Store Settings" subtitle="Customize your business" />
 
       <div className="mt-5 grid max-w-4xl gap-5">
-        <SectionCard icon={<Store className="h-5 w-5 text-violet-400" aria-hidden="true" />} title="Business Information">
+        <SectionCard icon={<Store className="h-5 w-5 text-indigo-500" aria-hidden="true" />} title="Business Information">
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="set-name" className="text-white/70">
@@ -271,7 +286,7 @@ export function StoreSettingsView() {
           </div>
         </SectionCard>
 
-        <SectionCard icon={<Palette className="h-5 w-5 text-violet-400" aria-hidden="true" />} title="Branding">
+        <SectionCard icon={<Palette className="h-5 w-5 text-purple-500" aria-hidden="true" />} title="Branding">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="set-primary" className="text-white/70">
@@ -316,7 +331,7 @@ export function StoreSettingsView() {
           </div>
         </SectionCard>
 
-        <SectionCard icon={<Receipt className="h-5 w-5 text-emerald-400" aria-hidden="true" />} title="Receipt" tone="green">
+        <SectionCard icon={<FileText className="h-5 w-5 text-green-500" aria-hidden="true" />} title="Receipt" tone="green">
           <div className="grid gap-2">
             <Label htmlFor="set-footer" className="text-white/70">
               Receipt footer
@@ -334,7 +349,7 @@ export function StoreSettingsView() {
         </SectionCard>
 
         <SectionCard
-          icon={<Landmark className="h-5 w-5 text-violet-400" aria-hidden="true" />}
+          icon={<Receipt className="h-5 w-5 text-orange-500" aria-hidden="true" />}
           title="Fiscal / Tax Data"
           headerAction={
             // The reference mounts the toggle in the card header row, right of
@@ -409,7 +424,7 @@ export function StoreSettingsView() {
           </div>
         </SectionCard>
 
-        <SectionCard icon={<CreditCard className="h-5 w-5 text-violet-400" aria-hidden="true" />} title="Card Payment Provider">
+        <SectionCard icon={<CreditCard className="h-5 w-5 text-blue-500" aria-hidden="true" />} title="Card Payment Provider">
           <div className="grid max-w-xs gap-2">
             <Label className="text-white/70">Provider</Label>
             <Select value={form.cardProvider} onValueChange={(v) => set({ cardProvider: v })}>
@@ -427,52 +442,94 @@ export function StoreSettingsView() {
           </div>
         </SectionCard>
 
-        <SectionCard icon={<Tags className="h-5 w-5 text-violet-400" aria-hidden="true" />} title="Product Categories">
-          <div className="grid gap-4">
-            <ul className="flex flex-wrap gap-2" aria-label="Product categories">
-              {categories.map((c) => (
-                <li
-                  key={c.id}
-                  className="inline-flex items-center gap-2 rounded-full border border-edge bg-white/5 px-3 py-1.5 text-sm text-white/80"
-                >
-                  <span
-                    className="h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: c.color }}
-                    aria-hidden="true"
-                  />
-                  {c.name}
-                </li>
-              ))}
-              {categories.length === 0 && (
-                <li className="text-sm text-white/40">No categories yet.</li>
-              )}
-            </ul>
-            <div className="flex max-w-sm gap-2">
+        <SectionCard
+          icon={<Tag className="h-5 w-5 text-amber-500" aria-hidden="true" />}
+          title="Product Categories"
+          headerAction={
+            // Session-6 (measured live): the header-row Add chip — glass-button
+            // px-3 py-1.5 text-sm rounded-lg font-medium + Plus w-4 h-4 (the
+            // glass-button class owns the text color; the reference's inert
+            // text-slate-700 computes nothing).
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setNewCategoryName("");
+                setCatDialogOpen(true);
+              }}
+              className="glass-button px-3 py-1.5 text-sm rounded-lg font-medium"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Add
+            </Button>
+          }
+        >
+          <ul className="flex flex-wrap gap-2" aria-label="Product categories">
+            {categories.map((c) => (
+              <li
+                key={c.id}
+                className="inline-flex items-center gap-2 rounded-full border border-edge bg-white/5 px-3 py-1.5 text-sm text-white/80"
+              >
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: c.color }}
+                  aria-hidden="true"
+                />
+                {c.name}
+              </li>
+            ))}
+            {categories.length === 0 && (
+              <li className="text-sm text-slate-400">No categories</li>
+            )}
+          </ul>
+        </SectionCard>
+
+        {/* The New Category dialog (Session-6 — the reference's own flow). */}
+        <Dialog open={catDialogOpen} onOpenChange={setCatDialogOpen}>
+          <DialogContent className="glass-dark border-edge sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="text-white">New Category</DialogTitle>
+              <DialogDescription className="sr-only">
+                Register a new product category.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-2">
+              <Label htmlFor="new-cat-name" className="text-white/70">
+                Name
+              </Label>
               <Input
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-                placeholder="New category name"
-                aria-label="New category name"
+                id="new-cat-name"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="e.g. Beverages"
                 className="text-white"
+                autoFocus
               />
+            </div>
+            <DialogFooter>
               <Button
                 variant="ghost"
-                onClick={() => void addCategory()}
-                disabled={!newCategory.trim()}
-                className="glass-button rounded-xl text-white/80"
+                onClick={() => setCatDialogOpen(false)}
+                className="glass-button rounded-xl border-0"
               >
-                Add
+                Cancel
               </Button>
-            </div>
-          </div>
-        </SectionCard>
+              <Button
+                onClick={() => void createCategory()}
+                disabled={catBusy || !newCategoryName.trim()}
+                className="glass-button-primary rounded-xl border-0"
+              >
+                {catBusy ? "Creating…" : "Create"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <div className="sticky bottom-4 flex justify-end">
           <Button
             onClick={() => void save()}
             disabled={busy}
             data-testid="save-settings"
-            className="glass-button-primary rounded-xl border-0 px-6 font-bold shadow-lg"
+            className="glass-button-primary rounded-xl border-0 px-6 py-3.5 text-base font-medium shadow-lg"
           >
             {busy ? "Saving…" : "Save Changes"}
           </Button>

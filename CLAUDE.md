@@ -94,6 +94,22 @@ is the only gate.
 - **Key-based modal resets** (`key={editing?.id ?? "new"}`) — no setState-in-effect dialog resets
   (React 19 lint rule `react-hooks/set-state-in-effect`).
 - **Toasts via `useToast()`** → `toast.success/error/info(message)` — never `alert()`.
+- **Chart axes render `niceTicks`** (`src/lib/reports.ts`, unit-pinned): ~5 nice
+  1/2/2.5/5×10^k steps, NEVER one grid line per unit of the domain — the
+  Session-101 per-dollar grid stacked hundreds of labels on real data (F-50,
+  invisible to the empty-store e2e; caught by a VLM eyeball of the live
+  dashboard). The Dashboard x axis = weekday abbreviations (12px); Reports =
+  dates (11px) + `$` y ticks.
+- **The Session-6 chrome contracts are e2e-pinned**: padding-driven 40px nav
+  items (active pill + violet border/shadow → 42px, 16px icons,
+  ChartColumnIncreasing for Reports, 14px wordmark); bare per-section-colored
+  section-header icons; the category DIALOG flow (header Add → New Category →
+  Cancel/Create 42px); Save Changes py-3.5 (54px); the 36px Inventory chips
+  (glass-button-primary active); the POS gate p-8 + /30 icon + white/35 copy.
+- **oklab/alpha pin rule**: fractional-alpha utilities serialize as `oklab(…
+  / 0.4)` (the reference emits rgba — same color). Pin the ALPHA with
+  `expect.poll` + regex; raw `evaluate` computed reads do NOT retry (a mid-load
+  race flaked a pin once).
 - **The 10 documented v4 traps** live in the `globals.css` header; the mobile-nav-critical ones
   are repeated in `AGENTS.md`.
 
@@ -101,10 +117,10 @@ is the only gate.
 
 - **Unit** (`tests/unit/**`, vitest): only the pure seams. If you add a `src/lib` seam, add its
   file here — red → green (TDD) for new logic, regression tests for fixes. Expected baseline:
-  117 tests / 12 files.
+  123 tests / 12 files.
 - **E2E** (`tests/e2e/**`, Playwright, production standalone on :3100): user journeys through the
   real UI. Two projects — `chromium` (1440×900) and `mobile` (390×844; runs only
-  `mobile-navigation.spec.ts`). **Baseline: 68 tests.** Auth once via `auth.setup.ts` +
+  `mobile-navigation.spec.ts`). **Baseline: 78 tests.** Auth once via `auth.setup.ts` +
   storageState (the rate limiter is 10/IP/15 min). The scratch db (`db/e2e.db`) is provisioned
   by the webServer command (kill-port → provision → boot) and never replaced while the server
   lives — replacing it after boot desynchronizes the login and page-render clients

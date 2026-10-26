@@ -497,13 +497,24 @@ export function InventoryView() {
             className="pl-10 text-white"
           />
         </div>
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by category">
+        {/* Session-6 (measured live): the reference's chip family — container
+            `flex gap-2 overflow-x-auto`; chips `px-4 rounded-xl text-xs
+            font-semibold whitespace-nowrap` computing 36px (the reference's
+            py-2 chip measures 36px — a Base44 base-button quirk +2px over the
+            utility math; pinned via h-9) with the ACTIVE chip on the
+            glass-button-primary gradient. The inactive treatment follows the
+            reference's pill family (white/40 → white/70 on hover) — the live
+            reference renders only the active "All" chip in its empty store,
+            so the inactive state is the documented family assumption. */}
+        <div className="flex gap-2 overflow-x-auto" role="group" aria-label="Filter by category">
           <button
             type="button"
             onClick={() => setCategoryId("all")}
             aria-pressed={categoryId === "all"}
-            className={`vpx-focus rounded-lg px-3.5 py-1.5 text-sm font-semibold ${
-              categoryId === "all" ? "bg-violet-600 text-white" : "bg-white/5 text-white/60"
+            className={`vpx-focus flex h-9 items-center gap-2 whitespace-nowrap rounded-xl px-4 text-xs font-semibold ${
+              categoryId === "all"
+                ? "glass-button-primary"
+                : "text-white/40 hover:bg-white/5 hover:text-white/70"
             }`}
           >
             All
@@ -514,8 +525,10 @@ export function InventoryView() {
               type="button"
               onClick={() => setCategoryId(c.id)}
               aria-pressed={categoryId === c.id}
-              className={`vpx-focus rounded-lg px-3.5 py-1.5 text-sm font-semibold ${
-                categoryId === c.id ? "bg-violet-600 text-white" : "bg-white/5 text-white/60"
+              className={`vpx-focus flex h-9 items-center gap-2 whitespace-nowrap rounded-xl px-4 text-xs font-semibold ${
+                categoryId === c.id
+                  ? "glass-button-primary"
+                  : "text-white/40 hover:bg-white/5 hover:text-white/70"
               }`}
             >
               {c.name}

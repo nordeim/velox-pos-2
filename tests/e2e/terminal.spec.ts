@@ -158,4 +158,36 @@ test.describe.serial("terminal checkout", () => {
     const row = page.getByRole("row", { name: /Checkout Juice/ });
     await expect(row).toContainText("39");
   });
+
+  test("the dashboard chart renders nice ticks with REAL data (the F-50 regression)", async ({
+    page,
+  }) => {
+    // The Session-101 charts drew ONE y-axis label per dollar of revenue —
+    // with this suite's sales the dashboard rendered ~20 stacked labels a few
+    // pixels apart (an unreadable block; invisible while the e2e store was
+    // empty). The F-50 fix renders ~5 nice ticks. Re-measured on the live
+    // reference: Recharts-style axes (0,1,2,3,4 at ~60px spacing on its
+    // empty dashboard; 12px fonts; weekday x labels).
+    await page.goto("/Dashboard");
+    const chart = page.getByTestId("line-chart");
+    await expect(chart).toBeVisible();
+    const axis = await chart.evaluate((svg) => {
+      const texts = Array.from(svg.querySelectorAll("text")).map((t) => {
+        const c = getComputedStyle(t);
+        return { t: (t.textContent || "").trim(), x: Number(t.getAttribute("x")), fs: c.fontSize };
+      });
+      // The y-axis labels sit left of the plot (x < pad.left = 34).
+      const yLabels = texts.filter((t) => t.x < 34).map((t) => t.t);
+      // The 7-day x axis renders weekday abbreviations (Tue..Mon).
+      const xLabels = texts
+        .filter((t) => t.x >= 34 && /^[A-Z][a-z]{2}$/.test(t.t))
+        .map((t) => t.t);
+      return { yLabels, xLabels, xFont: texts.find((t) => t.x >= 34)?.fs };
+    });
+    expect(axis.yLabels.length, "y-axis label count (nice ticks, not per-dollar)").toBeLessThan(8);
+    expect(axis.yLabels[0]).toBe("0");
+    expect(axis.xLabels.length).toBe(7);
+    expect(axis.xLabels[0]).toMatch(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)$/);
+    expect(axis.xFont).toBe("12px");
+  });
 });

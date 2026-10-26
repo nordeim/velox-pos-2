@@ -163,18 +163,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         }`}
       >
         <SidebarBody collapsed={sidebarCollapsed} />
-        <div className="border-t border-edge p-2">
+        <div className="border-t border-edge p-3">
           <button
             type="button"
             onClick={toggleSidebar}
             aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             aria-expanded={!sidebarCollapsed}
-            className="vpx-focus flex w-full items-center justify-center rounded-xl p-2 text-white/30 transition-colors hover:text-white/80"
+            className="vpx-focus flex w-full items-center justify-center rounded-xl p-2 text-white/30 transition-all hover:bg-white/5 hover:text-white/70"
           >
             {sidebarCollapsed ? (
-              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
             ) : (
-              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             )}
           </button>
         </div>

@@ -12,8 +12,15 @@ test.describe.serial("inventory", () => {
     page,
   }) => {
     await page.goto("/StoreSettings");
-    await page.getByLabel("New category name").fill("Beverages");
+    // The reference's empty state (Session-6): "No categories".
+    await expect(page.getByText("No categories", { exact: true })).toBeVisible();
+    // The reference's flow (Session-6): the HEADER Add opens the New
+    // Category dialog (name + Cancel/Create) — not an inline input row.
     await page.getByRole("button", { name: "Add", exact: true }).click();
+    const catDialog = page.getByRole("dialog", { name: "New Category" });
+    await expect(catDialog).toBeVisible();
+    await catDialog.getByLabel("Name").fill("Beverages");
+    await catDialog.getByRole("button", { name: "Create" }).click();
     await expect(page.getByText("Beverages").first()).toBeVisible();
 
     await page.goto("/Inventory");

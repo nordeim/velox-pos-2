@@ -107,6 +107,46 @@ bite hardest here:
   buttons are `px-5 py-3.5` (54px, text-base); sign-in is `font-medium`. E2E-pinned in
   `tests/e2e/auth.spec.ts`.
 
+## The chrome + chart contracts (Session-6 pins)
+
+- **Nav items are `px-3 py-2.5` PADDING-DRIVEN** (40px inactive; the reference dropped its
+  fixed height) + `font-medium` + 16px icons (`w-4 h-4`) + inactive `text-white/40
+  hover:text-white/80` + `transition-all duration-150`. The ACTIVE pill ADDS
+  `border border-violet-500/30 shadow-sm shadow-violet-500/10` (→ 42px with the border).
+  The Reports nav glyph is `ChartColumnIncreasing` (the reference swapped it live —
+  Session-101's FileText reading is stale). The wordmark is `text-sm font-bold
+  tracking-wide text-white/90` (14px); the chip Zap + footer chevron are `w-4 h-4` in a
+  `p-3` cell.
+- **Settings section headers**: BARE `w-5 h-5` icons in per-section colors — Store
+  indigo-500, Palette purple-500, FileText green-500 (Receipt section), Receipt orange-500
+  (Fiscal), CreditCard blue-500, Tag amber-500 (Categories) — no chip wrapper, `gap-2`.
+  The heading KEEPS the readable white/violet color (the reference's `text-slate-700` is
+  its own near-invisible defect).
+- **The category flow is a DIALOG**: the section header's Add chip (`glass-button px-3
+  py-1.5 text-sm rounded-lg font-medium` + Plus w-4, 34px) opens the "New Category"
+  dialog (title 18px/600, `Name` + ph "e.g. Beverages", Cancel/Create = the standard 42px
+  glass buttons). Empty state: "No categories" (`text-slate-400`).
+- **Save Changes is the LARGER primary CTA**: `glass-button-primary px-6 py-3.5 text-base
+  font-medium` — 54px (bigger than the standard 42px action buttons).
+- **Inventory category chips**: `px-4 rounded-xl text-xs font-semibold whitespace-nowrap`
+  computing 36px (the reference's own +2px button-base quirk — pinned via `h-9`), active =
+  `glass-button-primary`, container `flex gap-2 overflow-x-auto`.
+- **The POS shift gate**: card `p-8` (not p-10), Monitor `text-violet-400/30 mb-4`
+  (stroke 2), h2 `mb-2`, paragraph `text-white/35` with the "Registers" emphasis styled
+  `font-bold text-white/60` NO underline (the clone keeps the working href — a functional
+  superset styled to the reference's computed rendering).
+- **Chart axes use `niceTicks`** (`src/lib/reports.ts`): ~5 nice 1/2/2.5/5×10^k steps —
+  NEVER one grid line per unit of the domain (the Session-101 per-dollar grid rendered
+  hundreds of stacked labels on any real dataset — the F-50 bug, caught by the VLM on the
+  live dashboard, invisible to the empty-store e2e). The Dashboard chart labels its 7-day
+  axis with WEEKDAY abbreviations at 12px; the Reports chart uses date labels at 11px
+  with `$`-prefixed y ticks.
+- **v4 oklab serialization in pins**: fractional-alpha utilities (white/40, violet-500/30,
+  …) serialize as `oklab(… / 0.4)` while the reference (Base44) emits `rgba(…, 0.4)` —
+  same color. Pin the ALPHA (the `/0.4)`) via `expect.poll` + regex; raw `evaluate` reads
+  do NOT retry like `toHaveCSS` (a mid-load style race flaked a pin once — always
+  `expect.poll` raw computed reads).
+
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
 `src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px

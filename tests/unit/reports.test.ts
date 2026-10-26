@@ -5,6 +5,7 @@ import {
   categorySlices,
   dailySeries,
   inPeriod,
+  niceTicks,
   periodStart,
   PERIODS,
   summarize,
@@ -130,5 +131,43 @@ describe("categorySlices", () => {
 
   it("an empty store has no slices (the dashboard's No-data-yet state)", () => {
     expect(categorySlices([{ id: "c1", name: "Beverages" }], [])).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// niceTicks (Session-6, F-50 — the chart axis contract): the reference renders
+// Recharts-style ~5 NICE ticks (measured: y = 0,1,2,3,4 on its empty
+// dashboard; $0..$4 on its empty Reports chart). The Session-101 charts drew
+// ONE grid line + label per UNIT of the y domain — for dollar revenue that is
+// hundreds of labels stacked fractions of a pixel apart (the unreadable
+// white block the VLM caught on the live dashboard).
+// ---------------------------------------------------------------------------
+
+describe("niceTicks (the chart axis contract — ~5 nice steps, never per-unit)", () => {
+  it("keeps small integer domains at unit steps (the reference's empty state)", () => {
+    expect(niceTicks(4)).toEqual([0, 1, 2, 3, 4]);
+  });
+
+  it("rounds dollar domains to nice steps (no 471-label explosion at $470)", () => {
+    expect(niceTicks(470)).toEqual([0, 100, 200, 300, 400]);
+  });
+
+  it("steps 5 for domains in the tens", () => {
+    expect(niceTicks(17)).toEqual([0, 5, 10, 15]);
+  });
+
+  it("steps 20 for domains in the high tens", () => {
+    expect(niceTicks(99)).toEqual([0, 20, 40, 60, 80]);
+  });
+
+  it("handles fractional and zero maxima", () => {
+    expect(niceTicks(2.4)).toEqual([0, 1, 2, 3]);
+    expect(niceTicks(0)).toEqual([0]);
+  });
+
+  it("never explodes the tick count (the F-50 regression pin)", () => {
+    for (const max of [4, 8, 17, 99, 470, 2500, 99_999, 1_000_000]) {
+      expect(niceTicks(max).length).toBeLessThanOrEqual(6);
+    }
   });
 });

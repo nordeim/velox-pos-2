@@ -36,7 +36,12 @@ export function DashboardView() {
   const series: SeriesPoint[] = React.useMemo(
     () =>
       dailySeries(sales, 7).map((b) => ({
-        label: b.label,
+        // Session-6 (measured live): the reference's dashboard chart labels
+        // its 7-day x axis with WEEKDAY abbreviations ("Tue".."Mon", 12px) —
+        // the date-string form belongs to the Reports chart.
+        label: new Date(`${b.date}T00:00:00`).toLocaleString("en-US", {
+          weekday: "short",
+        }),
         value: b.revenue,
       })),
     [sales],

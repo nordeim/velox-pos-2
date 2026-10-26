@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.2.0
+version: 2.3.0
 last_updated: 2026-10-26
 ---
 
@@ -230,6 +230,15 @@ is a loss machine.
     utilities; the login inputs rendered dark borders on the light card for four
     sessions. `@theme inline` emits `hsl(var(--x))` directly in each utility
     rule (per-element resolution — verified in the built CSS).
+14. **(Session-6) Fractional-alpha utilities serialize as oklab** (`text-white/40` →
+    `oklab(… / 0.4)`) while the reference (Base44) emits `rgba(…, 0.4)` — the same
+    color. E2e pins match the ALPHA (`/0.4)`) with `expect.poll` + regex; raw
+    `evaluate` computed reads do NOT retry like `toHaveCSS` (a mid-load style
+    race flaked a pin once before the poll hardening).
+15. **(Session-6) Unlayered plain CSS beats utilities both ways** — a `glass-*` class's
+    `border`/`color`/`background` always win over same-element utilities, so
+    `border-0`/`text-*` on a glass button compute NOTHING (the reference ships such
+    inert classes verbatim). Never "fix" what the glass class already owns.
 
 ## 8. Component architecture & the React patterns that are law
 
@@ -465,3 +474,36 @@ Button default to py-2.5 (42px); CHARGE to py-5 (70px); the receipt footer to a
 TEXTAREA; the Reports pills to the reference's geometry; the login card frame
 (shadow-2xl + the 4px strip + the vendored logo + 54px SSO buttons). 13 new
 e2e pins, red → green; unit untouched at 117/117.
+
+## Session history addendum — Session-6
+
+**The chrome-depth parity pass + the chart-axis bug.** The standing audit cycle re-measured
+the live reference at a depth earlier sessions never pinned — the SIDEBAR CHROME (which had
+drifted under our feet: the reference's nav items are now padding-driven 40px py-2.5 pills
+with `font-medium` 16px icons and an active `border-violet-500/30 + shadow-violet-500/10`
+pair; its Reports glyph is now `ChartColumnIncreasing`), the SETTINGS section headers
+(bare per-section-colored 20px icons — indigo/purple/green/orange/blue/amber — no chip
+wrapper), the CATEGORY flow (a header Add chip opening a "New Category" dialog — not an
+inline input row), the 54px py-3.5 Save Changes CTA, the 36px Inventory chip family, and
+the POS gate (p-8 card, /30 icon, white/35 copy with a <strong>-styled emphasis). Ten
+findings, all TDD red → green: 9 new e2e pins + the inventory category pin rewritten to
+drive the reference's dialog flow (protection preserved) + a button.tsx scaffold cleanup
+(the dead sf-* variants).
+
+**The headline catch — F-50, the chart-axis bug — came from the VLM, not the calipers:**
+the visual sweep of the live dashboard flagged "a dense vertical block of white pixels" on
+the Sales chart. Both hand-rolled charts drew ONE grid line + label per unit of the y
+domain — for dollar revenue that is hundreds of labels stacked fractions of a pixel apart
+(the demo week rendered 108). Shipped in Session-101; invisible to every audit because the
+e2e store is EMPTY (max=4 → five tidy labels). The fix is a pure `niceTicks` seam
+(`src/lib/reports.ts`, 6 unit pins: 4→[0..4], 17→[0,5,10,15], 470→[0,100..400], count ≤ 6)
++ both charts render from it + the Dashboard x axis now labels weekdays at 12px (measured:
+the reference's Recharts convention). The regression pin drives a REAL checkout first, so
+the chart is finally asserted at data scale. Lesson codified in ADR-011: **a "correct at
+demo scale" implementation is a latent production bug — the e2e oracle must exercise the
+data state, not only the empty state.**
+
+Two pin-doctrine additions: (1) v4's fractional-alpha utilities serialize as oklab while
+Base44 emits rgba — pin the ALPHA (`/0.4)`), never the string; (2) raw `evaluate` computed
+reads do not retry — one mid-load style race flaked a passing pin before everything moved
+to `expect.poll`. Unit 117→123 (the niceTicks seam), e2e 68→78, all prior pins intact.

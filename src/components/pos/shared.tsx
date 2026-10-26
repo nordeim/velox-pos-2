@@ -9,6 +9,8 @@
 
 import * as React from "react";
 
+import { niceTicks } from "@/lib/reports";
+
 export function PageHeader({
   title,
   subtitle,
@@ -69,7 +71,9 @@ export function StatCard({
 
 export type SeriesPoint = { label: string; value: number };
 
-/** The "Sales — Last 7 days" line chart: dotted grid + violet stroke. */
+/** The "Sales — Last 7 days" line chart: dotted grid + violet stroke.
+ * Session-6 (F-50): the y axis renders NICE TICKS (the reference's
+ * Recharts convention, ~5 steps — measured 12px fonts, weekday x labels). */
 export function LineChart({
   data,
   height = 260,
@@ -89,7 +93,8 @@ export function LineChart({
     pad.left + (data.length <= 1 ? innerW / 2 : (i / (data.length - 1)) * innerW);
   const y = (v: number): number => pad.top + innerH - (v / niceMax) * innerH;
   const path = data.map((d, i) => `${i === 0 ? "M" : "L"}${x(i)},${y(d.value)}`).join(" ");
-  const gridLines = Array.from({ length: niceMax + 1 }, (_, i) => i);
+  // F-50: nice ticks — never one grid line per unit of the domain.
+  const gridLines = niceTicks(niceMax, 5);
 
   return (
     <svg
@@ -110,7 +115,7 @@ export function LineChart({
             strokeWidth="1"
             strokeDasharray="2 4"
           />
-          <text x={pad.left - 8} y={y(g) + 4} textAnchor="end" className="fill-white/40" fontSize="11">
+          <text x={pad.left - 8} y={y(g) + 4} textAnchor="end" className="fill-white/40" fontSize="12">
             {g}
           </text>
         </g>
@@ -131,7 +136,7 @@ export function LineChart({
             y={height - 8}
             textAnchor="middle"
             className="fill-white/50"
-            fontSize="11"
+            fontSize="12"
           >
             {d.label}
           </text>
@@ -168,7 +173,8 @@ export function AreaChart({
   const y = (v: number): number => pad.top + innerH - (v / niceMax) * innerH;
   const line = data.map((d, i) => `${i === 0 ? "M" : "L"}${x(i)},${y(d.value)}`).join(" ");
   const area = `${line} L${x(data.length - 1)},${pad.top + innerH} L${x(0)},${pad.top + innerH} Z`;
-  const gridLines = Array.from({ length: niceMax + 1 }, (_, i) => i);
+  // F-50: nice ticks — never one grid line per unit of the domain.
+  const gridLines = niceTicks(niceMax, 5);
   const labelEvery = Math.max(1, Math.ceil(data.length / 10));
 
   return (
