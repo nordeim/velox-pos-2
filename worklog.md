@@ -93,3 +93,62 @@ another agent's VeloxPOS pivot). Reconciled by adopting its purely-additive arti
 (docs/archive/omni-study1/ reorganization + the veloxpos_SKILL.md distillation, with a
 reconciliation note) and merging the histories with `-s ours` — the Session-101 tree (all gates
 green in this session) is the implementation of record; the parallel tree remains an ancestor.
+
+---
+
+## Session-3 — the audit-driven parity pass (velox-pos-2)
+
+**Received state**: `c5c9661` (Session-101's tree: unit 117/117, e2e 39/39, zero standing debt
+in the POS domain). **Directive**: re-verify against the live reference, audit with the repo
+skills (web-application master skill + agent-browser + tdd + clone-app-pat-pro), use neo-crm as
+the family-pattern source, remediate with TDD, ship the fresh `velox-pos_SKILL.md`, and push.
+
+**Audit (the full ledger is `docs/remediation-plan-session-3.md`):** the reference re-measured
+live (agent-browser, computed styles) — its OWN mobile defect confirmed still present (220px
+z-50 sidebar overlay, no hamburger at 390×844); the clone's desktop tokens re-verified exact
+(sidebar 220/68, nav item 42px/12px, active violet-600/20 + #c4b5fd, CHARGE 135° emerald,
+brand chip violet→indigo, canvas #080a14). Fourteen findings, two HIGH: **F-1** `tw-animate-css`
+installed but never imported — every Radix `data-[state]` animation class was dead CSS (dialogs,
+selects, toasts popped with no motion); **F-2** v4's `(hover: hover)` wrap — every hover affordance
+no-op'd on touch devices (the neo-crm session-80 live-proven trap). Plus: the drawer lacked
+focus management (F-3) and the md-growth auto-close (F-4, the sibling's pinned S8-P1 bug class);
+the cart rail activated at `lg` where the reference uses `md` (F-5); the brand row missed the
+measured `px-4 py-5 border-b` frame (F-6); five dead deps + a stale npm lockfile (F-7/F-15);
+stale StudyFlow `.env.example` + missing COOKIE_SECURE row (F-8); PAD count drift (F-9);
+nav-container spacing drift (F-10); study-era palette comments (F-11); the stale recovered
+`veloxpos_SKILL.md` contradicting the code (F-12); the un-animated drawer (F-13);
+`tracking-wider` vs the reference's `tracking-wide` CART heading (F-14).
+
+**TDD execution (red before green — six new e2e pins written first, verified failing, then
+fixed):** dialog animation (`animation-name: enter`), cart-md geometry at 800px (380px +
+border-l), drawer focus-in (close button focused on open), Tab wrap (both ends), Escape focus
+restore to the hamburger, md-growth auto-close (drawer unmounts, scroll lock released).
+
+**Implemented:** `@import "tw-animate-css"` + `@custom-variant hover (&:hover)` in globals.css;
+the drawer focus trap + restore + matchMedia auto-close + slide-in/fade-in entrance classes
+(exit stays the instant conditional unmount so the UNMOUNT pins stay deterministic); cart rail
+`md:w-[380px] md:border-l` (+ `md:flex-row` / `md:p-6` on the terminal layout); the brand row's
+measured frame (`px-4 py-5 border-b`, BrandRow padding removed — 73px, logo x=16, verified
+against the reference); nav `px-2 py-4 gap-0.5`; dead deps removed via `bun remove` (quill,
+web-vitals, tailwindcss-animate, @radix-ui/react-radio-group, @radix-ui/react-scroll-area) and
+the stale `package-lock.json` retired (bun.lock is the single lockfile); `.env.example`
+rebranded + COOKIE_SECURE documented; the stale study-era palette comments neutralized;
+`velox-pos_SKILL.md` authored per the distill skills (code-accurate, v2.0.0) and the stale
+`veloxpos_SKILL.md` removed.
+
+**Re-certification (all on the final tree):** lint ✓ (0 errors, 1 documented warning) · tsc ✓ ·
+unit **117/117** (no pure seam touched) · build ✓ (standalone; the instrumentation Edge-runtime
+warning is the documented benign one) · e2e **45/45** (30 chromium + 13 mobile + 2 setup/geometry;
+all 39 prior pins green, none weakened) · live agent-browser re-verification: brand 73px/border-b,
+nav px-8, cart 380px at 800px, drawer `animation-name: enter` with focus on the close button,
+dialog `animation-name: enter`, 0 `(hover: hover)` media queries in the built CSS.
+
+**Docs lockstep:** README/AGENTS/CLAUDE/PAD counts updated (e2e 39→45, mobile spec 13 tests) in
+the same commit; PAD v1.1 revision block + ADR-008 added; this skill chain now points at
+`velox-pos_SKILL.md`; five new screenshots (09–13) in `docs/screenshots/` captured from the
+production standalone build (the family rule: never the dev badge).
+
+**Stage summary.** The clone is now a verified superset: visual parity on every measured token
+including the previously-drifting brand row/nav/cart breakpoints, touch-correct hovers, animated
+dialogs/drawer, and the full drawer a11y contract (focus trap, restore, md-growth close) — every
+behavior e2e-pinned. Standing debt: NONE identified. Baselines: unit **117/117**, e2e **45/45**.

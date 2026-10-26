@@ -58,6 +58,15 @@ is the only gate.
 - **Plain-CSS custom classes** (`glass-*`, `brand-chip`, `vpx-focus` in `src/app/tokens.css`) —
   never `@layer utilities` (Tailwind v4 cascade trap), never `tailwind.config.js`, exact
   gradients as classes (oklab drift trap).
+- **`tw-animate-css` is imported in `globals.css`** — the Radix `data-[state]` animation family
+  depends on it (e2e pins a live `animation-name` on open dialogs). Removing the import silently
+  kills every dialog/select/toast animation (the Session-3 F-1 bug).
+- **`@custom-variant hover (&:hover)`** un-wraps v4's `@media (hover: hover)` — without it every
+  hover affordance no-ops on touch devices (a POS runs on tablets; the reference's v3-era CSS
+  applies hovers on touch).
+- **The drawer focus contract** (app-shell): focus → close button on open, Tab wraps inside the
+  drawer, Escape restores the hamburger's focus, viewport growth past `md` auto-closes — all
+  e2e-pinned in `tests/e2e/mobile-navigation.spec.ts`.
 - **Key-based modal resets** (`key={editing?.id ?? "new"}`) — no setState-in-effect dialog resets
   (React 19 lint rule `react-hooks/set-state-in-effect`).
 - **Toasts via `useToast()`** → `toast.success/error/info(message)` — never `alert()`.

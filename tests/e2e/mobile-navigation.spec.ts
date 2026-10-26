@@ -112,4 +112,54 @@ test.describe("mobile navigation (the drawer superset)", () => {
     await expect(page.getByTestId("cart-panel")).toBeVisible();
     await expect(page.getByTestId("charge-button")).toContainText("CHARGE $0.00");
   });
+
+  // -------------------------------------------------------------------------
+  // Session-3 a11y pins (the focus-management superset — the neo-crm family
+  // standard): focus moves into the dialog on open, Tab is contained (wraps
+  // at both ends), Escape restores focus to the trigger, and the drawer
+  // auto-closes when the viewport grows past md (no stuck scroll lock).
+  // -------------------------------------------------------------------------
+
+  test("opening the drawer moves focus into the dialog (the close button)", async ({ page }) => {
+    await page.goto("/POS");
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    const drawer = page.getByRole("dialog", { name: "Navigation menu" });
+    await expect(drawer).toBeVisible();
+    await expect(drawer.getByRole("button", { name: "Close navigation menu" })).toBeFocused();
+  });
+
+  test("Tab is trapped inside the drawer (wraps at both ends)", async ({ page }) => {
+    await page.goto("/POS");
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    const drawer = page.getByRole("dialog", { name: "Navigation menu" });
+    await expect(drawer).toBeVisible();
+    // Tab from the LAST focusable (Settings) wraps to the FIRST (the X).
+    await drawer.getByRole("link", { name: "Settings" }).focus();
+    await page.keyboard.press("Tab");
+    await expect(drawer.getByRole("button", { name: "Close navigation menu" })).toBeFocused();
+    // Shift+Tab from the FIRST wraps back to the LAST.
+    await page.keyboard.press("Shift+Tab");
+    await expect(drawer.getByRole("link", { name: "Settings" })).toBeFocused();
+  });
+
+  test("Escape closes the drawer and restores focus to the hamburger", async ({ page }) => {
+    await page.goto("/POS");
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    await expect(page.getByRole("dialog", { name: "Navigation menu" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog", { name: "Navigation menu" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Open navigation menu" })).toBeFocused();
+  });
+
+  test("the drawer auto-closes when the viewport grows past md (no stuck scroll lock)", async ({
+    page,
+  }) => {
+    await page.goto("/POS");
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    await expect(page.getByRole("dialog", { name: "Navigation menu" })).toBeVisible();
+    await page.setViewportSize({ width: 800, height: 900 });
+    await expect(page.getByRole("dialog", { name: "Navigation menu" })).toHaveCount(0);
+    const bodyOverflow = await page.evaluate(() => document.body.style.overflow);
+    expect(bodyOverflow).not.toBe("hidden");
+  });
 });

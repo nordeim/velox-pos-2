@@ -1,12 +1,23 @@
 @import "tailwindcss";
+/* Session-3 (F-1): the Radix data-[state] animation family — animate-in/out,
+   fade-*, zoom-*, slide-in-from-* — is defined by tw-animate-css. Without this
+   import every dialog/select/alert-dialog animation class is dead CSS and the
+   surfaces pop with no motion (the reference's v3-era CSS animates). */
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+/* Session-3 (F-2, the family-standard un-wrap — live-proven in the neo-crm
+   sibling): v4 compiles every hover: utility inside @media (hover: hover),
+   which NO-OPS every hover affordance on touch devices (a POS runs on
+   tablets). The reference's v3-era stylesheet ships bare :hover selectors —
+   its hovers apply on touch exactly like desktop. Restoring v3 semantics. */
+@custom-variant hover (&:hover);
 
 /* ---------------------------------------------------------------------------
    VeloxPOS design system — Tailwind v4, CSS-first.
 
    THE DOCUMENTED v3→v4 TRAPS (docs/Tailwind-V4-Validation-Report.md +
-   web-application-engineering §3) — every pin below exists because a trap
+   skills/web-application §12) — every pin below exists because a trap
    shipped a parity bug. The POS-specific tokens + the measured glass system
    live in src/app/tokens.css (imported at the bottom of this file).
 
@@ -86,20 +97,20 @@
 
   --color-blue-50: #eff6ff;
   --color-blue-100: #dbeafe;
-  --color-blue-300: #93c5fd; /* S92/AS1: the assignments dark blue due pill — trap 2/10 (was unpinned) */
+  --color-blue-300: #93c5fd; /* the reference family's mid-blue accents — trap 2/10 (was unpinned) */
   --color-blue-400: #60a5fa;
   --color-blue-500: #3b82f6;
   --color-blue-600: #2563eb;
-  --color-blue-950: #172554; /* S92/AS1: the assignments dark blue due pill — trap 2/10 (was unpinned) */
+  --color-blue-950: #172554; /* the deep-blue dark accents — trap 2/10 (was unpinned) */
 
   --color-sky-50: #f0f9ff;
   --color-sky-100: #e0f2fe;
-  --color-sky-300: #7dd3fc; /* S80/AG4: the GradeTracker dark sky pill (trap 10 — pin asserted colors) */
+  --color-sky-300: #7dd3fc; /* the light-theme sky pill family (trap 10 — pin asserted colors) */
   --color-sky-400: #38bdf8;
   --color-sky-500: #0ea5e9;
   --color-sky-600: #0284c7;
   --color-sky-700: #0369a1;
-  --color-sky-950: #082f49; /* S80/AG4 */
+  --color-sky-950: #082f49; /* the deep sky accents (trap 10) */
 
   --color-cyan-50: #ecfeff;
   --color-cyan-100: #cffafe;
@@ -119,41 +130,41 @@
 
   --color-emerald-50: #ecfdf5;
   --color-emerald-100: #d1fae5;
-  --color-emerald-200: #a7f3d0; /* S81/AH3: the success toast's dark text — trap 10 */
+  --color-emerald-200: #a7f3d0; /* the success toast's dark text — trap 10 */
   --color-emerald-300: #6ee7b7;
   --color-emerald-400: #34d399;
   --color-emerald-500: #10b981;
   --color-emerald-600: #059669;
   --color-emerald-700: #047857;
   --color-emerald-900: #064e3b;
-  --color-emerald-950: #022c22; /* S80/AG4: the dark score pill — trap 10 */
+  --color-emerald-950: #022c22; /* the deep emerald dark pills — trap 10 */
 
-  /* green-100 is the reference's measured FOCUS TIME tint — #dcfce7, NOT
-     emerald-100 (S7 trap 12: same-hue families are not interchangeable). */
+  /* green-100 is the measured success-tint green — #dcfce7, NOT emerald-100
+     (trap: same-hue families are not interchangeable). */
   --color-green-100: #dcfce7;
   --color-green-500: #22c55e;
   --color-green-600: #16a34a;
 
   --color-amber-50: #fffbeb;
   --color-amber-100: #fef3c7;
-  --color-amber-200: #fde68a; /* S94/AU1 (was unpinned) — trap 10: the connectivity banner's light border / dark ink */
+  --color-amber-200: #fde68a; /* (was unpinned) — trap 10: the connectivity banner's light border / dark ink */
   --color-amber-300: #fcd34d;
   --color-amber-400: #fbbf24;
   --color-amber-500: #f59e0b;
   --color-amber-600: #d97706;
   --color-amber-700: #b45309;
-  --color-amber-800: #92400e; /* S94/AU1 (was unpinned) — the banner's light ink / the dark border's base */
+  --color-amber-800: #92400e; /* (was unpinned) — the banner's light ink / the dark border's base */
   --color-amber-900: #78350f;
-  --color-amber-950: #451a03; /* S80/AG4 */
+  --color-amber-950: #451a03; /* the deepest amber accents (trap 10) */
 
   --color-orange-50: #fff7ed;
   --color-orange-100: #ffedd5;
-  --color-orange-300: #fdba74; /* S92/AS1: the exams Tomorrow dark badge — trap 2/10 (was unpinned) */
+  --color-orange-300: #fdba74; /* the warm mid-orange badge family — trap 2/10 (was unpinned) */
   --color-orange-400: #fb923c;
   --color-orange-500: #f97316;
   --color-orange-600: #ea580c;
   --color-orange-700: #c2410c;
-  --color-orange-950: #431407; /* S92/AS1: the exams Tomorrow dark badge — trap 2/10 (was unpinned) */
+  --color-orange-950: #431407; /* the deep-orange dark badges — trap 2/10 (was unpinned) */
 
   --color-red-50: #fef2f2;
   --color-red-100: #fee2e2;
@@ -164,7 +175,7 @@
   --color-red-600: #dc2626;
   --color-red-700: #b91c1c;
   --color-red-900: #7f1d1d;
-  --color-red-950: #450a0a; /* S80/AG3: the dark AC key — trap 10 (the house dark-pill family renders the stable v3 hex now) */
+  --color-red-950: #450a0a; /* the darkest red key surfaces — trap 10 (the dark-pill family renders the stable v3 hex now) */
 
   --color-pink-50: #fdf2f8;
   --color-pink-100: #fce7f3;
@@ -183,15 +194,14 @@
 
   --color-yellow-50: #fefce8;
   --color-yellow-100: #fef9c3;
-  --color-yellow-300: #fde047; /* S92/AS1: the exams/flashcards/assignments dark yellow pills — trap 2/10 (was unpinned) */
+  --color-yellow-300: #fde047; /* the warm yellow pill family — trap 2/10 (was unpinned) */
   --color-yellow-500: #eab308;
   --color-yellow-700: #a16207;
   --color-yellow-950: #422006;
 
-  /* S76/AC6: the exam topics chips — the neutral family (measured
-   * bg #262626 / text #fafafa on the reference); unpinned these read
-   * back as lab() (trap 10). S77/AD: neutral-950 joins for the study-
-   * mode Exit/Wrong/Divider black buttons (measured rgb(10,10,10)). */
+  /* neutral is the chips family (dark surfaces render the stable v3 hexes —
+   * unpinned these read back as lab(); trap 10). neutral-950 joins for the
+   * darkest action surfaces. */
   --color-neutral-50: #fafafa;
   --color-neutral-100: #f5f5f5;
   --color-neutral-700: #404040;

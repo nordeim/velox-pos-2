@@ -86,3 +86,28 @@ test("the health endpoint reports db up", async ({ request }) => {
   expect(res.ok()).toBeTruthy();
   expect(await res.json()).toMatchObject({ status: "ok", db: "up", app: "veloxpos" });
 });
+
+// ---------------------------------------------------------------------------
+// Session-3 pins: the tw-animate family (Radix data-[state] animations must
+// be LIVE CSS — the import was once missing and every dialog popped with no
+// animation) and the cart panel's md-breakpoint tablet geometry (the
+// reference activates the 380px side panel at md, not lg).
+// ---------------------------------------------------------------------------
+
+test("Radix dialogs animate (the tw-animate data-[state] family is live)", async ({ page }) => {
+  await page.goto("/Registers");
+  await page.getByRole("button", { name: "New Register" }).click();
+  const dialog = page.getByRole("dialog", { name: "New Register" });
+  await expect(dialog).toBeVisible();
+  const animationName = await dialog.evaluate((el) => getComputedStyle(el).animationName);
+  expect(animationName).not.toBe("none");
+});
+
+test("the cart side panel activates at md (reference tablet geometry)", async ({ page }) => {
+  await page.setViewportSize({ width: 800, height: 900 });
+  await page.goto("/POS");
+  const cart = page.getByTestId("cart-panel");
+  await expect(cart).toBeVisible();
+  await expect(cart).toHaveCSS("width", "380px");
+  await expect(cart).toHaveCSS("border-left-width", "1px");
+});

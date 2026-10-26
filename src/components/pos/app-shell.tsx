@@ -28,6 +28,37 @@ import { BrandRow, NavItemLink } from "@/components/pos/nav-items";
 import { NAV_ITEMS } from "@/lib/router";
 import { usePosStore } from "@/lib/store";
 
+// Session-3 (F-3/F-4): the drawer's focus-management superset. role=dialog +
+// aria-modal demand that focus move INTO the dialog on open, Tab stay
+// contained, and focus return to the trigger on close — the neo-crm family
+// standard (Radix FocusScope semantics, hand-rolled to keep the e2e-pinned
+// conditional-mount drawer). The md-growth auto-close exists because an
+// invisible md:hidden drawer would otherwise hold the body scroll lock
+// (the pinned S8-P1 bug class).
+
+/** Tab/Shift+Tab wrap inside the drawer (the focus trap). */
+function trapDrawerTab(
+  e: React.KeyboardEvent<HTMLDivElement>,
+  drawerEl: HTMLDivElement | null,
+): void {
+  if (e.key !== "Tab" || !drawerEl) return;
+  const focusables = Array.from(
+    drawerEl.querySelectorAll<HTMLElement>("button, a[href]"),
+  ).filter((el) => !el.hasAttribute("disabled"));
+  if (focusables.length === 0) return;
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  const active = document.activeElement;
+  const inside = drawerEl.contains(active);
+  if (e.shiftKey && (!inside || active === first)) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && (!inside || active === last)) {
+    e.preventDefault();
+    first.focus();
+  }
+}
+
 function SidebarBody({
   collapsed,
   onNavigate,
@@ -42,13 +73,17 @@ function SidebarBody({
   return (
     <div className="flex h-full flex-col">
       {showBrand && (
-        <div className={collapsed ? "flex justify-center px-2 pt-5" : "px-3 pt-5"}>
+        <div
+          className={`flex items-center gap-3 border-b border-edge px-4 py-5 ${
+            collapsed ? "justify-start" : ""
+          }`}
+        >
           <BrandRow collapsed={collapsed} />
         </div>
       )}
       <nav
         aria-label="Main navigation"
-        className="vpx-scroll mt-6 flex flex-1 flex-col gap-1 overflow-y-auto px-3"
+        className="vpx-scroll flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-4"
       >
         {NAV_ITEMS.map((item) => (
           <NavItemLink
@@ -71,13 +106,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const toggleSidebar = usePosStore((s) => s.toggleSidebar);
   const mobileNavOpen = usePosStore((s) => s.mobileNavOpen);
   const setMobileNavOpen = usePosStore((s) => s.setMobileNavOpen);
+  const drawerRef = React.useRef<HTMLDivElement | null>(null);
+  const openTriggerRef = React.useRef<HTMLElement | null>(null);
 
   // Sync the active view with the real route (the reference's own paths).
   React.useEffect(() => {
     hydrateFromPath(pathname);
   }, [pathname, hydrateFromPath]);
 
-  // Escape closes; body scroll is locked while the drawer is open.
+  // Escape closes; body scroll is locked while the drawer is open. Focus
+  // moves into the dialog on open and returns to the trigger on close; the
+  // drawer auto-closes when the viewport grows past md (768px — the
+  // hamburger's own md:hidden range).
   React.useEffect(() => {
     if (!mobileNavOpen) return;
     const onKey = (e: KeyboardEvent): void => {
@@ -86,9 +126,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     document.addEventListener("keydown", onKey);
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
+    // Focus management (F-3): remember the trigger, then move focus to the
+    // drawer's first control (the labeled close button).
+    openTriggerRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const drawerEl = drawerRef.current;
+    if (drawerEl) {
+      const first = drawerEl.querySelector<HTMLElement>("button, a[href]");
+      first?.focus();
+    }
+    // The md-growth guard (F-4): resize/rotate from phone to tablet width
+    // closes the drawer BEFORE it becomes invisible under md:hidden —
+    // otherwise the scroll lock stays engaged with no way to release it.
+    const mql = window.matchMedia("(min-width: 768px)");
+    const onGrow = (e: MediaQueryListEvent): void => {
+      if (e.matches) setMobileNavOpen(false);
+    };
+    mql.addEventListener("change", onGrow);
+
     return () => {
       document.removeEventListener("keydown", onKey);
+      mql.removeEventListener("change", onGrow);
       document.body.style.overflow = previousOverflow;
+      openTriggerRef.current?.focus();
     };
   }, [mobileNavOpen, setMobileNavOpen]);
 
@@ -151,15 +212,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             type="button"
             aria-label="Close navigation menu"
             onClick={() => setMobileNavOpen(false)}
-            className="absolute inset-0 h-full w-full cursor-default bg-black/50 backdrop-blur-xs"
+            className="absolute inset-0 h-full w-full cursor-default bg-black/50 backdrop-blur-xs animate-in fade-in-0 duration-300"
           />
           <div
             id="vpx-mobile-drawer"
+            ref={drawerRef}
             role="dialog"
             aria-modal="true"
             aria-label="Navigation menu"
             data-state="open"
-            className="glass-dark absolute inset-y-0 left-0 flex w-72 flex-col border-r border-edge"
+            onKeyDown={(e) => trapDrawerTab(e, drawerRef.current)}
+            className="glass-dark absolute inset-y-0 left-0 flex w-72 flex-col border-r border-edge animate-in slide-in-from-left duration-300"
           >
             <div className="flex items-center justify-between px-4 pt-4">
               <BrandRow />

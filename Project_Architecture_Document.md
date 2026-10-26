@@ -1,4 +1,4 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.0
+# VeloxPOS — Master Project Architecture Document (PAD) v1.1
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
@@ -25,8 +25,9 @@ reports, validation) underneath **server-gated thin routes**, a **single Zustand
 (lint → typecheck → unit → build → e2e) is the only gate — there is no hosted CI — so every
 guardrail is enforced by tooling that runs in this checkout.
 
-**Scale & baselines (verified 2026-10-26):** 7 Prisma models · 22 API route files · 8 gated views
-+ login/reset/404 · 117 unit tests (12 files) · 39 e2e tests (2 browser projects) · standalone
+**Scale & baselines (verified 2026-10-26, Session-3 re-certification):** 7 Prisma models · 22 API
+route files · 8 gated views
++ login/reset/404 · 117 unit tests (12 files) · 45 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -108,7 +109,7 @@ implementation.
 keeps a 220px sidebar overlaying phone content with no dismissal — a genuine defect (measured at
 390×844: no hamburger, content clipped behind the cart panel). The clone keeps desktop parity
 pixel-faithful and replaces the broken mobile experience with the documented accessible pattern;
-the contract is pinned by `tests/e2e/mobile-navigation.spec.ts` (10 tests).
+the contract is pinned by `tests/e2e/mobile-navigation.spec.ts` (13 tests).
 
 ### ADR-005 — Plain-CSS custom classes (the Tailwind v4 cascade rule)
 **Decision:** The measured `glass-*` system, `brand-chip`, and focus utilities are plain CSS in
@@ -124,6 +125,19 @@ sRGB stops.
 control over the measured visual (grid dashes, tick labels, stroke), and the data transforms
 (bucketing, shares) are unit-pinned pure functions — chart libraries would add bundle weight for
 two plots and blur the parity contract.
+
+### ADR-008 — The Session-3 parity pins (tw-animate, hover unwrap, drawer focus superset)
+**Decision:** `globals.css` imports `tw-animate-css` (restoring the Radix `data-[state]`
+animation family — dialogs/selects/toasts animate like the reference's v3-era CSS) and declares
+`@custom-variant hover (&:hover);` (un-wrapping v4's `@media (hover: hover)` so hovers apply on
+touch devices, matching the reference — a POS runs on tablets). The mobile drawer gains the
+focus-management superset (focus moves to the close button on open, Tab wraps, focus restores to
+the hamburger on close, and the drawer auto-closes when the viewport grows past `md` — the
+neo-crm S8-P1 bug class). The cart side panel activates at `md` (the reference's own breakpoint).
+**Rationale:** all four are measured-parity deltas against the live reference or family-standard
+bug classes; each is e2e-pinned (the dialog animation-name pin, the three drawer focus pins, the
+md-growth pin, the cart-md geometry pin). The drawer keeps its instant exit (conditional unmount)
+so the e2e UNMOUNT pins stay deterministic.
 
 ### ADR-007 — The db-path resolution contract
 **Decision:** `src/lib/db-path.ts` resolves relative `file:` DATABASE_URLs against the first
@@ -229,14 +243,16 @@ lint → typecheck → unit → build → (smoke) → e2e
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 12 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 39/39):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 45/45):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
-   `navigation` (sidebar order/activation/collapse/persistence), `mobile-navigation` (the 10
-   drawer pins), `inventory` (CRUD + search + CSV-adjacent flows), `registers-shifts` (the
+   `navigation` (sidebar order/activation/collapse/persistence), `mobile-navigation` (the 13
+   drawer pins — including the Session-3 focus-trap/restore and md-growth auto-close),
+   `inventory` (CRUD + search + CSV-adjacent flows), `registers-shifts` (the
    lifecycle), `terminal` (cart math, cash checkout + change, ticket, receipt, stock decrement),
-   `surfaces` (Sales/Cashiers/Reports/Settings/404/health).
+   `surfaces` (Sales/Cashiers/Reports/Settings/404/health + the dialog-animation and
+   cart-md-geometry parity pins).
 3. **Field-tested e2e doctrine:** auth waits for the hydration-gated submit button (`toBeEnabled`)
    before filling; assertions use visibility (not DOM count) for `hidden md:*` elements; the
    scratch db is never replaced while the server lives (clients bind the inode; field-tested
@@ -284,4 +300,24 @@ lint → typecheck → unit → build → (smoke) → e2e
   field-tested (each traces to a live failure observed and fixed during Session-101 — see
   `worklog.md`).
 - Baselines at lock: lint 0 errors (1 documented warning) · typecheck clean · unit 117/117 ·
-  e2e 39/39 · standalone build green.
+  e2e 45/45 · standalone build green.
+
+## Revision Block — v1.1 (2026-10-26, Session-3)
+
+- **The audit-driven parity pass** (the full findings ledger lives in
+  `docs/remediation-plan-session-3.md`): ADR-008 records the four measured-parity decisions —
+  the `tw-animate-css` import (the Radix animation family was dead CSS), the `@custom-variant
+  hover (&:hover)` un-wrap (touch devices regained the reference's hover semantics), the drawer
+  focus-management superset (initial focus + Tab wrap + trigger restore + md-growth auto-close),
+  and the cart panel's `md:` breakpoint (the reference's own tablet geometry) + the brand row's
+  measured `px-4 py-5 border-b` frame.
+- Hygiene: five dead dependencies removed (`quill`, `web-vitals`, `tailwindcss-animate`,
+  `@radix-ui/react-radio-group`, `@radix-ui/react-scroll-area` — zero live imports); the
+  stale study-era palette comments in `globals.css` neutralized; `.env.example` rebranded from
+  StudyFlow and given the documented `COOKIE_SECURE` row; the stale recovered
+  `veloxpos_SKILL.md` replaced by the code-accurate `velox-pos_SKILL.md`.
+- Test baselines: unit **117/117** (unchanged — no pure seam was touched) · e2e **45/45**
+  (+6 Session-3 pins: dialog animation, cart-md geometry, drawer focus-in, Tab wrap, focus
+  restore, md-growth auto-close). No prior pin weakened; no guardrail loosened.
+- Baselines at lock: lint 0 errors (1 documented warning) · typecheck clean · unit 117/117 ·
+  e2e 45/45 · standalone build green.

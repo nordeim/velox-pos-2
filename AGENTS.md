@@ -63,7 +63,11 @@ sidebar on phones with no hamburger). The pins in `tests/e2e/mobile-navigation.s
 labeled hamburger ("Open navigation menu"), drawer `role="dialog"` with 8 labeled links,
 navigate ⇒ drawer UNMOUNTS, Escape closes, backdrop tap closes (click x>288 — the drawer is
 w-72), no horizontal overflow at 390px, icon-rail links KEEP accessible names when collapsed.
-`hidden md:flex` elements stay in the DOM below `md` — assert VISIBILITY, not count.
+`hidden md:flex` elements stay in the DOM below `md` — assert VISIBILITY, not count. Session-3
+additions: focus moves to the close button on open, Tab WRAPS inside the drawer, Escape restores
+focus to the hamburger, the drawer auto-closes when the viewport grows past `md` (768px), the
+drawer + backdrop `animate-in` (tw-animate-css), and Radix dialogs compute a live
+`animation-name` — every one of these is e2e-pinned.
 
 ## Environment & database contract
 

@@ -310,13 +310,13 @@ export function TerminalView() {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col lg:flex-row">
+    <div className="flex h-full min-h-0 flex-col md:flex-row">
       {/* Catalog column — the shift gate renders here when closed. */}
       {!activeShift ? (
         <ShiftGate />
       ) : (
         <>
-      <div className="vpx-scroll min-h-0 flex-1 overflow-y-auto p-4 lg:p-6">
+      <div className="vpx-scroll min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
         <div className="relative mb-4">
           <ScanLine
             className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40"
@@ -413,13 +413,14 @@ export function TerminalView() {
         </>
       )}
 
-      {/* Cart panel — the measured w-full lg:w-[380px] rail; the reference
+      {/* Cart panel — the measured w-full md:w-[380px] rail (Session-3 F-5:
+          the reference activates the side panel at md, not lg); the reference
           keeps it visible even with no active shift. */}
       <aside
         data-testid="cart-panel"
-        className="flex w-full shrink-0 flex-col border-t border-edge bg-panel p-4 min-h-0 lg:w-[380px] lg:border-l lg:border-t-0"
+        className="flex w-full shrink-0 flex-col border-t border-edge bg-panel p-4 min-h-0 md:w-[380px] md:border-l md:border-t-0"
       >
-        <h2 className="text-xs font-bold uppercase tracking-wider text-white/80">Cart</h2>
+        <h2 className="text-xs font-bold uppercase tracking-wide text-white/80">Cart</h2>
         {cart.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
             <ShoppingCart className="h-16 w-16 text-white/15" strokeWidth={1.5} aria-hidden="true" />

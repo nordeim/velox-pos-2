@@ -70,10 +70,12 @@ export function NavItemLink({
   );
 }
 
-/** The 32px gradient brand chip + wordmark (the measured logo row). */
+/** The 32px gradient brand chip + wordmark (the measured logo row — the
+ *  container in app-shell.tsx owns the reference's px-4 py-5 border-b frame,
+ *  so this row adds no padding of its own). */
 export function BrandRow({ collapsed }: { collapsed?: boolean }) {
   return (
-    <div className="flex items-center gap-3 px-1 py-1">
+    <div className="flex items-center gap-3">
       <div className="brand-chip flex h-8 w-8 shrink-0 items-center justify-center rounded-xl shadow-[0_4px_16px_rgba(124,58,237,0.45)]">
         <Zap className="h-[18px] w-[18px] text-white" strokeWidth={2.4} aria-hidden="true" />
       </div>

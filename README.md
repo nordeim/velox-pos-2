@@ -5,7 +5,7 @@
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6)
 ![Tests](https://img.shields.io/badge/unit%20tests-117%20%2F%20117-brightgreen)
-![E2E](https://img.shields.io/badge/e2e-39%20%2F%2039-brightgreen)
+![E2E](https://img.shields.io/badge/e2e-45%20%2F%2045-brightgreen)
 ![License](https://img.shields.io/badge/license-Proprietary-lightgrey)
 
 **A production-ready, enterprise-grade Point of Sale web application — a functional superset of
@@ -48,7 +48,7 @@ working mobile navigation drawer (the reference keeps a broken 220px overlay on 
 | 📈 Reports | 7/14/30/90-day period pills; total revenue, transactions, average ticket; daily-sales area chart; revenue by payment method |
 | ⚙️ Store Settings | Business information, branding colors, receipt footer, fiscal/tax data with receipt-visibility control, card payment provider, product categories |
 | 🔐 Auth | Email/password sign-in (scrypt + HMAC httpOnly cookies), registration, email verification, password reset, rate-limited public endpoints |
-| 📱 Mobile drawer | The documented a11y superset: labeled hamburger, slide-in drawer (role=dialog), backdrop/Escape/route-change close, zero horizontal overflow at 390px |
+| 📱 Mobile drawer | The documented a11y superset: labeled hamburger, slide-in drawer (role=dialog, focus-trapped, animated), backdrop/Escape/route-change close, focus restore to the trigger, md-growth auto-close, zero horizontal overflow at 390px |
 
 ## Quick Start
 
@@ -98,7 +98,7 @@ register, a closed shift, and a week of sales).
 | `bun run lint` | ESLint (flat config) |
 | `bun run typecheck` | `tsc --noEmit` (strict) |
 | `bun run test` | Vitest unit suite — the pure domain seams (117 tests / 12 files) |
-| `bun run test:e2e` | Playwright suite against the production standalone build (39 tests; desktop 1440×900 + mobile 390×844 projects) |
+| `bun run test:e2e` | Playwright suite against the production standalone build (45 tests; desktop 1440×900 + mobile 390×844 projects) |
 | `bun run db:push` | `prisma db push` against `db/custom.db` |
 | `bun run db:seed` | Idempotent owner + default store settings (`-- --demo` adds showcase data) |
 
@@ -187,7 +187,7 @@ All endpoints return domain JSON; errors use `{ error: string }` with the docume
 bun run test            # unit: 117 tests / 12 files — the pure seams (money, cart, shift,
                         # reports, inventory-status, currency, router, validation, auth,
                         # db-path, env-check, site)
-bun run test:e2e        # e2e: 39 tests — needs `bun run build` first (boots the standalone
+bun run test:e2e        # e2e: 45 tests — needs `bun run build` first (boots the standalone
                         # build on :3100 with its own scratch db, db/e2e.db)
 ```
 
@@ -213,7 +213,9 @@ The measured reference tokens (extracted live via computed styles — see
 
 Typography: the system stack (`ui-sans-serif, system-ui`) — no webfonts. The `glass-*` family is
 plain CSS in `src/app/tokens.css` (never `@layer utilities` — the documented Tailwind v4 cascade
-trap). The login route scopes `.theme-light` for its light card.
+trap). `tw-animate-css` powers the Radix `data-[state]` dialog animations, and
+`@custom-variant hover (&:hover)` restores the reference's touch-device hover semantics. The
+login route scopes `.theme-light` for its light card.
 
 ## Deployment
 
