@@ -1,0 +1,251 @@
+/* ---------------------------------------------------------------------------
+   VeloxPOS design tokens + the measured glass system.
+
+   THE DOCUMENTED v4 TRAPS (docs/Tailwind-V4-Validation-Report.md) — each rule
+   below exists because a trap ships a silent bug:
+
+   1. Custom classes (glass-*) are PLAIN CSS, never @layer utilities —
+      in v4, custom classes inside @layer utilities emit AFTER the generated
+      utilities and silently lose the cascade to arbitrary utilities on the
+      same element (the documented mobile-nav/drawer killer).
+   2. Exact sRGB gradients are classes here (trap 5: utility gradients
+      interpolate in oklab and drift from the measured 135deg stops).
+   3. Fonts are a literal system stack (trap 2: no var() font chains).
+   4. Shadcn tokens stay raw HSL triplets in :root, consumed as
+      hsl(var(--x)) inside @theme (trap 1: bare triplets → transparent).
+   5. The app shell is permanently dark (the reference has no theme toggle);
+      the login route scopes a .theme-light wrapper that re-points the
+      shadcn triplets — one mechanism, two surfaces.
+--------------------------------------------------------------------------- */
+
+@theme {
+  /* ---- shadcn token utilities route through runtime-resolvable vars ---- */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  /* ---- VeloxPOS canvas/panel/edge (measured live on the reference) ---- */
+  --color-ink: #080a14; /* body background rgb(8, 10, 20) */
+  --color-panel: #0d0f1a; /* sidebar + cart panel rgb(13, 15, 26) */
+  --color-panel-raised: #141626; /* cards on the canvas rgb(20, 22, 38) */
+  --color-edge: #1e2235; /* borders rgb(30, 34, 53) */
+  --color-edge-soft: #262a36; /* secondary borders rgb(38, 42, 54) */
+  --color-canvas-ink: #e7e9ef; /* primary text rgb(231, 233, 239) */
+
+  /* radius scale (v3-identical except rounded-sm → xs; trap 6) */
+  --radius-sm: 0.125rem;
+}
+
+/* ---- shadcn runtime triplets — DARK (the app shell's permanent theme) ---- */
+
+:root {
+  --background: 228 30% 6%; /* #080a14 */
+  --foreground: 221 28% 93%; /* #e7e9ef */
+  --card: 229 33% 10%; /* #0d0f1a */
+  --card-foreground: 221 28% 93%;
+  --popover: 230 32% 9%;
+  --popover-foreground: 221 28% 93%;
+  --primary: 251 91% 60%; /* violet-500 */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 231 26% 14%;
+  --secondary-foreground: 221 28% 93%;
+  --muted: 231 26% 14%;
+  --muted-foreground: 222 12% 62%;
+  --accent: 231 26% 16%;
+  --accent-foreground: 221 28% 93%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 231 27% 20%; /* #1e2235 */
+  --input: 231 27% 22%;
+  --ring: 251 91% 60%;
+  --radius: 0.5rem;
+}
+
+/* ---- .theme-light — the login surface's scoped light triplets ---- */
+
+.theme-light {
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 222 47% 11%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 222 47% 11%;
+}
+
+/* ---- the measured glass system (verbatim from the reference) ----
+   PLAIN CSS — see trap 1. Class names match the reference exactly. */
+
+.glass {
+  background: rgba(20, 22, 38, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.glass-dark {
+  background: rgba(13, 15, 26, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glass-button {
+  background: rgba(28, 31, 52, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: 0.15s;
+  color: rgba(200, 210, 255, 0.8);
+}
+.glass-button:hover {
+  background: rgba(42, 46, 78, 0.9);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+.glass-button:active {
+  transform: scale(0.97);
+}
+.glass-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.glass-button-primary {
+  background: linear-gradient(135deg, rgb(124, 58, 237), rgb(99, 102, 241));
+  border: 1px solid rgba(139, 92, 246, 0.45);
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+  color: rgb(255, 255, 255);
+  transition: 0.15s;
+}
+.glass-button-primary:hover {
+  background: linear-gradient(135deg, rgb(139, 92, 246), rgb(129, 140, 248));
+  box-shadow: 0 6px 28px rgba(124, 58, 237, 0.55);
+  transform: translateY(-1px);
+}
+.glass-button-primary:active {
+  transform: scale(0.97);
+}
+.glass-button-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.glass-button-success {
+  background: linear-gradient(135deg, rgb(5, 150, 105), rgb(16, 185, 129));
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35);
+  color: rgb(255, 255, 255);
+  transition: 0.15s;
+}
+.glass-button-success:hover {
+  background: linear-gradient(135deg, rgb(16, 185, 129), rgb(52, 211, 153));
+  box-shadow: 0 6px 28px rgba(16, 185, 129, 0.45);
+  transform: translateY(-1px);
+}
+.glass-button-success:active {
+  transform: scale(0.97);
+}
+.glass-button-success:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.glass-button-danger {
+  background: linear-gradient(135deg, rgb(220, 38, 38), rgb(239, 68, 68));
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+  color: rgb(255, 255, 255);
+  transition: 0.15s;
+}
+.glass-button-danger:hover {
+  background: linear-gradient(135deg, rgb(239, 68, 68), rgb(248, 113, 113));
+  transform: translateY(-1px);
+}
+.glass-button-danger:active {
+  transform: scale(0.97);
+}
+
+.glass-card {
+  background: rgba(16, 18, 32, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* The logo badge's exact gradient (measured: violet-500 → indigo-600). */
+.brand-chip {
+  background-image: linear-gradient(to right bottom, rgb(139, 92, 246), rgb(79, 70, 229));
+}
+
+/* The cart header's measured gradient pill. */
+.cart-head-gradient {
+  background-image: linear-gradient(to right, rgba(5, 150, 105, 0.8), rgba(13, 148, 136, 0.7));
+}
+
+/* The login page's light canvas (light gray, like the reference shell). */
+.login-canvas {
+  background: #f1f2f6;
+}
+
+/* ---- focus + scrollbar conventions ---- */
+
+.vpx-focus:focus-visible {
+  outline: 2px solid rgb(139, 92, 246);
+  outline-offset: 2px;
+}
+
+.vpx-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(51, 65, 85, 0.9) transparent;
+}
+.vpx-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.vpx-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(51, 65, 85, 0.9);
+  border-radius: 9999px;
+}
+
+/* The toast region's stacking (Radix viewport is fixed by the primitive). */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .receipt-print,
+  .receipt-print * {
+    visibility: visible;
+  }
+  .receipt-print {
+    position: fixed;
+    inset: 0;
+    background: #fff;
+    color: #000;
+  }
+}

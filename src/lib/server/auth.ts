@@ -33,9 +33,8 @@ const SESSION_USER_SELECT = {
   accentColor: true,
   avatarEmoji: true,
   notificationsEnabled: true,
-  schoolName: true,
-  gradeLevel: true,
-  studyGoalHours: true,
+  role: true,
+  active: true,
   emailVerified: true,
   createdAt: true,
   updatedAt: true,
@@ -49,9 +48,8 @@ export type SessionUser = {
   accentColor: string;
   avatarEmoji: string;
   notificationsEnabled: boolean;
-  schoolName: string;
-  gradeLevel: string;
-  studyGoalHours: number;
+  role: string;
+  active: boolean;
   emailVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -68,9 +66,8 @@ export function publicUser(user: SessionUser) {
     accentColor: user.accentColor,
     avatarEmoji: user.avatarEmoji,
     notificationsEnabled: user.notificationsEnabled,
-    schoolName: user.schoolName,
-    gradeLevel: user.gradeLevel,
-    studyGoalHours: user.studyGoalHours,
+    role: user.role,
+    active: user.active,
     emailVerified: user.emailVerified,
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
@@ -121,11 +118,21 @@ export function setSessionCookie(
   response.cookies.set(SESSION_COOKIE_NAME, createSessionToken(userId), {
     httpOnly: true,
     sameSite: "lax",
-    secure: options?.secure ?? process.env.NODE_ENV === "production",
+    secure: options?.secure ?? cookieSecureDefault(),
     maxAge: SESSION_TTL_SECONDS,
     path: "/",
   });
   return response;
+}
+
+/** The Secure default: on in production (HTTPS deployments), with an
+ *  explicit escape hatch — COOKIE_SECURE=false — for plain-HTTP productions
+ *  (http staging, local standalone smoke runs, and the e2e suite's
+ *  production server, whose headless shell refuses Secure cookies over
+ *  http://localhost). HTTPS production is unaffected. */
+export function cookieSecureDefault(): boolean {
+  if (process.env.COOKIE_SECURE === "false") return false;
+  return process.env.NODE_ENV === "production";
 }
 
 /** Clear the session cookie (logout + account deletion): maxAge 0 — the
@@ -134,7 +141,7 @@ export function clearSessionCookie(response: NextResponse): NextResponse {
   response.cookies.set(SESSION_COOKIE_NAME, "", {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecureDefault(),
     maxAge: 0,
     path: "/",
   });

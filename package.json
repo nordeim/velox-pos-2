@@ -1,7 +1,7 @@
 {
-  "name": "omni-study",
+  "name": "veloxpos",
   "version": "1.0.0",
-  "description": "StudyFlow — your study companion. A production-ready clone (functional superset) of omni-study1.base44.app built on Next.js 16 + React 19 + Prisma/SQLite.",
+  "description": "VeloxPOS (Point Of Sale) \u2014 a production-ready POS web app (functional superset of veloxposen.base44.app) on Next.js 16 + React 19 + Prisma/SQLite.",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",

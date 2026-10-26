@@ -1,228 +1,320 @@
 "use client";
 
 // ---------------------------------------------------------------------------
-// The app + theme Zustand stores (§6). No React Context anywhere — views
-// subscribe with selectors; the stores are the only mutation path.
+// The ONE VeloxPOS Zustand store (the family law: one store per application).
+// Collections (products/categories/registers/shifts/sales/settings/user),
+// the cart, and the chrome state (sidebar collapse, mobile drawer) all live
+// here; views subscribe with selectors — components never fetch on their own.
 //
-// useAppStore  — SPA view state + chrome (sidebar collapse, mobile drawer).
-// useThemeStore — mode/accent/avatar/identity applied to <html> as RGB
-//                 triplet CSS vars via accentCssVars (the COMPLETE set).
+// Contract notes:
+//  - All list mutations go through the api seam; failures surface as toasts
+//    at the call site (never thrown into the render tree).
+//  - The cart mutations delegate to the pure cart seam (src/lib/cart.ts) —
+//    the store holds state, the seam owns the math.
+//  - Sidebar collapse persists per-browser (localStorage), like the reference.
 // ---------------------------------------------------------------------------
 
 import { create } from "zustand";
 
 import {
-  accentCssVars,
-  isAccent,
-  isThemeMode,
-  resolveMode,
-  themeCachePayload,
-  THEME_CACHE_KEY,
-  type Accent,
-  type ThemeMode,
-} from "./theme";
-import { pathForView, viewFromPath, type ViewId } from "./router";
+  addToCart,
+  canCharge as cartCanCharge,
+  cartTotals,
+  clearCart,
+  removeFromCart,
+  setQty as cartSetQty,
+  type CartLine,
+} from "./cart";
+import { apiGet, apiSend } from "./api";
+import { viewFromPath, type ViewId } from "./router";
 
-const SIDEBAR_COLLAPSED_KEY = "sf-sidebar-collapsed";
+const SIDEBAR_COLLAPSED_KEY = "vpx-sidebar-collapsed";
 
-// ---- the authenticated user's /api/auth/me shape (camelCase User row) ------
+// ---- shapes (the camelCase rows the API returns) ----------------------------
 
 export type AppUser = {
   id: string;
   email: string;
-  /** The API's public field (publicUser() maps the DB's fullName → name). */
-  name: string;
-  avatarEmoji: string;
-  themeMode: string;
-  accentColor: string;
-  notificationsEnabled: boolean;
-  schoolName: string;
-  gradeLevel: string;
-  studyGoalHours: number;
+  fullName: string;
+  role: string;
+  active: boolean;
   emailVerified: boolean;
+};
+
+export type Product = {
+  id: string;
+  name: string;
+  barcode: string;
+  categoryId: string | null;
+  price: number;
+  cost: number | null;
+  stock: number;
+  minStock: number;
+  taxRate: number;
+  unit: string;
+  image: string | null;
+  active: boolean;
   createdAt: string;
-  updatedAt: string;
+  category?: { id: string; name: string; color: string } | null;
 };
 
-// ---- useAppStore ------------------------------------------------------------
+export type Category = { id: string; name: string; color: string; createdAt: string };
 
-type AppStore = {
-  view: ViewId;
+export type RegisterRow = {
+  id: string;
+  name: string;
+  location: string;
+  status: string;
+  createdAt: string;
+};
+
+export type Shift = {
+  id: string;
+  registerId: string;
+  cashierId: string;
+  status: "active" | "closed";
+  openingFloat: number;
+  countedCash: number | null;
+  expectedCash: number | null;
+  variance: number | null;
+  openedAt: string;
+  closedAt: string | null;
+  register?: { name: string; location: string };
+  cashier?: { fullName: string; email: string };
+};
+
+export type Sale = {
+  id: string;
+  ticket: string;
+  items: string;
+  subtotal: number;
+  taxTotal: number;
+  total: number;
+  paymentMethod: string;
+  amountPaid: number | null;
+  changeDue: number | null;
+  customer: string;
+  shiftId: string | null;
+  status: string;
+  createdAt: string;
+  cashier?: { fullName: string; email: string };
+  register?: { name: string };
+};
+
+export type StoreSettingsRow = {
+  storeName: string;
+  logoDataUrl: string | null;
+  address: string;
+  phone: string;
+  email: string;
+  taxId: string;
+  currency: string;
+  primaryColor: string;
+  secondaryColor: string;
+  receiptFooter: string;
+  hideFiscalOnReceipt: boolean;
+  fiscalRuc: string;
+  fiscalBusinessType: string;
+  fiscalAddress: string;
+  fiscalExpenseAccount: string;
+  cardProvider: string;
+  updatedAt?: string;
+};
+
+export type Cashier = {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+  active: boolean;
+  createdAt: string;
+};
+
+type Collections = {
+  products: Product[];
+  categories: Category[];
+  registers: RegisterRow[];
+  shifts: Shift[];
+  sales: Sale[];
+  cashiers: Cashier[];
+  settings: StoreSettingsRow | null;
+};
+
+// ---- the store -------------------------------------------------------------
+
+type PosStore = Collections & {
+  user: AppUser | null;
+  hydrated: boolean;
+  dataReady: boolean;
+  cart: CartLine[];
   sidebarCollapsed: boolean;
-  mobileMenuOpen: boolean;
-  /** SPA navigation: pushes the canonical PascalCase path + flips the view. */
-  navigate: (view: ViewId) => void;
-  setSidebarCollapsed: (collapsed: boolean) => void;
+  mobileNavOpen: boolean;
+  activeView: ViewId;
+
+  // hydration
+  setUser: (user: AppUser | null) => void;
+  hydrateFromPath: (pathname: string) => void;
+  loadAll: () => Promise<void>;
+  loadCore: () => Promise<void>;
+
+  // chrome
   toggleSidebar: () => void;
-  setMobileMenu: (open: boolean) => void;
-  /** Mount-time sync: read the URL + the persisted collapse preference. */
-  hydrate: () => void;
+  setMobileNavOpen: (open: boolean) => void;
+  setActiveView: (view: ViewId) => void;
+
+  // cart (delegates to the pure seam)
+  addProduct: (line: CartLine) => void;
+  changeQty: (productId: string, qty: number) => void;
+  removeLine: (productId: string) => void;
+  resetCart: () => void;
+
+  // collection mutations
+  upsertProduct: (row: Product) => void;
+  dropProduct: (id: string) => void;
+  upsertCategory: (row: Category) => void;
+  dropCategory: (id: string) => void;
+  upsertRegister: (row: RegisterRow) => void;
+  dropRegister: (id: string) => void;
+  setShifts: (rows: Shift[]) => void;
+  upsertShift: (row: Shift) => void;
+  addSale: (row: Sale) => void;
+  setSettings: (row: StoreSettingsRow) => void;
+  setCashiers: (rows: Cashier[]) => void;
+  upsertCashier: (row: Cashier) => void;
+  dropCashier: (id: string) => void;
 };
 
-let popstateBound = false;
+const readCollapsed = (): boolean => {
+  try {
+    return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
 
-export const useAppStore = create<AppStore>((set, get) => ({
-  view: "dashboard",
+const persistCollapsed = (collapsed: boolean): void => {
+  try {
+    if (collapsed) localStorage.setItem(SIDEBAR_COLLAPSED_KEY, "1");
+    else localStorage.removeItem(SIDEBAR_COLLAPSED_KEY);
+  } catch {
+    // storage unavailable (private mode) — collapse stays session-only
+  }
+};
+
+export const usePosStore = create<PosStore>((set, get) => ({
+  products: [],
+  categories: [],
+  registers: [],
+  shifts: [],
+  sales: [],
+  cashiers: [],
+  settings: null,
+  user: null,
+  hydrated: false,
+  dataReady: false,
+  cart: [],
   sidebarCollapsed: false,
-  mobileMenuOpen: false,
+  mobileNavOpen: false,
+  activeView: "terminal",
 
-  navigate: (view) => {
-    try {
-      window.history.pushState({}, "", pathForView(view));
-    } catch {
-      // history unavailable (SSR/tests) — the view flip still happens
+  setUser: (user) => set({ user, hydrated: true }),
+
+  hydrateFromPath: (pathname) => {
+    const view = viewFromPath(pathname);
+    if (view) set({ activeView: view });
+    if (typeof window !== "undefined") {
+      set({ sidebarCollapsed: readCollapsed() });
     }
-    set({ view, mobileMenuOpen: false });
   },
 
-  setSidebarCollapsed: (collapsed) => {
-    set({ sidebarCollapsed: collapsed });
-    try {
-      window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "true" : "false");
-    } catch {
-      // private mode — the preference just doesn't persist
-    }
+  loadAll: async () => {
+    const [products, categories, registers, shifts, sales] = await Promise.all([
+      apiGet<Product[]>("/api/products").catch(() => []),
+      apiGet<Category[]>("/api/categories").catch(() => []),
+      apiGet<RegisterRow[]>("/api/registers").catch(() => []),
+      apiGet<Shift[]>("/api/shifts").catch(() => []),
+      apiGet<Sale[]>("/api/sales").catch(() => []),
+    ]);
+    set({ products, categories, registers, shifts, sales, dataReady: true });
+  },
+
+  loadCore: async () => {
+    const [shifts, settings] = await Promise.all([
+      apiGet<Shift[]>("/api/shifts?status=active").catch(() => []),
+      apiGet<StoreSettingsRow>("/api/store-settings").catch(() => null),
+    ]);
+    set({ shifts, settings });
   },
 
   toggleSidebar: () => {
-    get().setSidebarCollapsed(!get().sidebarCollapsed);
+    const next = !get().sidebarCollapsed;
+    persistCollapsed(next);
+    set({ sidebarCollapsed: next });
   },
 
-  setMobileMenu: (open) => set({ mobileMenuOpen: open }),
+  setMobileNavOpen: (open) => set({ mobileNavOpen: open }),
+  setActiveView: (view) => set({ activeView: view }),
 
-  hydrate: () => {
-    set({ view: viewFromPath(window.location.pathname) });
-    try {
-      set({ sidebarCollapsed: window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true" });
-    } catch {
-      // ignore — default expanded
-    }
-    if (!popstateBound) {
-      popstateBound = true;
-      window.addEventListener("popstate", () => {
-        useAppStore.setState({ view: viewFromPath(window.location.pathname) });
-      });
-    }
-  },
-}));
+  addProduct: (line) => set({ cart: addToCart(get().cart, line) }),
+  changeQty: (productId, qty) => set({ cart: cartSetQty(get().cart, productId, qty) }),
+  removeLine: (productId) => set({ cart: removeFromCart(get().cart, productId) }),
+  resetCart: () => set({ cart: clearCart() }),
 
-// ---- useThemeStore ----------------------------------------------------------
-
-type ThemeStore = {
-  mode: ThemeMode;
-  accent: Accent;
-  avatar: string;
-  userName: string;
-  email: string;
-  setMode: (mode: ThemeMode) => void;
-  setAccent: (accent: Accent) => void;
-  setEmail: (email: string) => void;
-  setAvatar: (avatar: string) => void;
-  setUserName: (userName: string) => void;
-  /** Hydrate from the /api/auth/me user row, then apply to the document. */
-  loadFromUser: (user: AppUser) => void;
-  /** Stamp the --sf-* vars + dark class + theme-color meta + the cache. */
-  applyToDocument: () => void;
-  /** Re-apply on OS scheme changes while mode === "system". */
-  installSystemThemeTracking: () => void;
-  /** Sign-out: drop the localStorage cache (the boot script re-defaults). */
-  clearThemeCache: () => void;
-};
-
-function systemPrefersDark(): boolean {
-  return typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
-}
-
-function updateThemeColorMeta(dark: boolean): void {
-  const metas = document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]:not([media])');
-  const trailing = metas.length > 0 ? metas[metas.length - 1] : null;
-  const content = dark ? "#020617" : "#ffffff";
-  if (trailing) {
-    trailing.setAttribute("content", content);
-    return;
-  }
-  const meta = document.createElement("meta");
-  meta.name = "theme-color";
-  meta.content = content;
-  document.head.appendChild(meta);
-}
-
-let systemTrackingInstalled = false;
-
-export const useThemeStore = create<ThemeStore>((set, get) => ({
-  mode: "system",
-  accent: "violet",
-  avatar: "",
-  userName: "",
-  email: "",
-
-  setMode: (mode) => {
-    set({ mode });
-    get().applyToDocument();
-  },
-
-  setAccent: (accent) => {
-    set({ accent });
-    get().applyToDocument();
-  },
-
-  setEmail: (email) => set({ email }),
-  setAvatar: (avatar) => set({ avatar }),
-  setUserName: (userName) => set({ userName }),
-
-  loadFromUser: (user) => {
+  upsertProduct: (row) =>
     set({
-      mode: isThemeMode(user.themeMode) ? user.themeMode : "system",
-      accent: isAccent(user.accentColor) ? user.accentColor : "violet",
-      avatar: typeof user.avatarEmoji === "string" ? user.avatarEmoji : "",
-      userName: typeof user.name === "string" ? user.name : "",
-      email: typeof user.email === "string" ? user.email : "",
-    });
-    get().applyToDocument();
-  },
+      products: get().products.some((p) => p.id === row.id)
+        ? get().products.map((p) => (p.id === row.id ? row : p))
+        : [row, ...get().products],
+    }),
+  dropProduct: (id) => set({ products: get().products.filter((p) => p.id !== id) }),
 
-  applyToDocument: () => {
-    if (typeof document === "undefined") return;
-    const { mode, accent } = get();
-    const dark = resolveMode(mode, systemPrefersDark()) === "dark";
-    const root = document.documentElement;
-    root.classList.toggle("dark", dark);
-    // S81/AH9 (the audit-tools repair): restore the S27 doctrine attribute
-    // — ~16 standing accent sweeps read
-    // document.documentElement.dataset.accent as their mode proof, and a
-    // refactor that dropped it left every accent sweep failing its
-    // precondition (data-accent=undefined) silently.
-    root.dataset.accent = accent;
-    const style = root.style;
-    for (const [name, value] of Object.entries(accentCssVars(accent))) {
-      style.setProperty(name, value);
-    }
-    try {
-      window.localStorage.setItem(THEME_CACHE_KEY, themeCachePayload(mode, accent));
-    } catch {
-      // private mode — the cache just doesn't persist
-    }
-    updateThemeColorMeta(dark);
-  },
+  upsertCategory: (row) =>
+    set({
+      categories: get().categories.some((c) => c.id === row.id)
+        ? get().categories.map((c) => (c.id === row.id ? row : c))
+        : [...get().categories, row],
+    }),
+  dropCategory: (id) => set({ categories: get().categories.filter((c) => c.id !== id) }),
 
-  installSystemThemeTracking: () => {
-    if (typeof window === "undefined" || systemTrackingInstalled) return;
-    systemTrackingInstalled = true;
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    media.addEventListener("change", () => {
-      // Explicit light/dark are user intent — never OS-followed; system
-      // mode re-resolves (and re-applies) whenever the OS flips.
-      if (useThemeStore.getState().mode === "system") {
-        useThemeStore.getState().applyToDocument();
-      }
-    });
-  },
+  upsertRegister: (row) =>
+    set({
+      registers: get().registers.some((r) => r.id === row.id)
+        ? get().registers.map((r) => (r.id === row.id ? row : r))
+        : [...get().registers, row],
+    }),
+  dropRegister: (id) => set({ registers: get().registers.filter((r) => r.id !== id) }),
 
-  clearThemeCache: () => {
-    try {
-      window.localStorage.removeItem(THEME_CACHE_KEY);
-    } catch {
-      // ignore
-    }
-  },
+  setShifts: (rows) => set({ shifts: rows }),
+  upsertShift: (row) =>
+    set({
+      shifts: get().shifts.some((s) => s.id === row.id)
+        ? get().shifts.map((s) => (s.id === row.id ? row : s))
+        : [row, ...get().shifts],
+    }),
+
+  addSale: (row) => set({ sales: [row, ...get().sales] }),
+
+  setSettings: (row) => set({ settings: row }),
+
+  setCashiers: (rows) => set({ cashiers: rows }),
+  upsertCashier: (row) =>
+    set({
+      cashiers: get().cashiers.some((c) => c.id === row.id)
+        ? get().cashiers.map((c) => (c.id === row.id ? row : c))
+        : [row, ...get().cashiers],
+    }),
+  dropCashier: (id) => set({ cashiers: get().cashiers.filter((c) => c.id !== id) }),
 }));
+
+// ---- derived helpers (pure, store-independent) -------------------------------
+
+export function cartChargeEnabled(cart: CartLine[]): boolean {
+  return cartCanCharge(cart);
+}
+
+export function cartTotalDisplay(cart: CartLine[], currency: string): string {
+  return cartTotals(cart, currency).totalDisplay;
+}
+
+/** The api helper the store uses for mutations (re-exported for views). */
+export { apiGet, apiSend };

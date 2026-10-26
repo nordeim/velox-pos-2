@@ -1,249 +1,229 @@
 // ---------------------------------------------------------------------------
-// StudyFlow seed — idempotent demo data.
+// VeloxPOS seed — idempotent.
 //
-// Contract (AGENTS.md / omni-study_SKILL.md §7): early-returns when the demo
-// user already exists. Changing seed VALUES requires deleting the target db
-// (db/custom.db or db/e2e.db) first — the upsert will not refresh them.
-// Run via `bun run db:seed` (the script sets DATABASE_URL inline, schema-
-// anchored; this file resolves the same env var through src/lib/db.ts).
+// Creates the reference-matching owner account (sepnetflix2023@outlook.com /
+// $Abcd1234 — the credentials the reference site itself is logged into) with
+// the reference's DEFAULT Store Settings values, and an EMPTY store: the
+// reference demo account is write-restricted (every observed CREATE 403s), so
+// its surfaces render their empty states — the clone matches that by default
+// and fills everything through the real app (the superset requirement).
+//
+// `--demo` additionally populates a rich showcase dataset (categories,
+// products, a register, a closed shift and a week of sales) for demos.
+//
+// Run via `bun run db:seed` (the script pins DATABASE_URL inline,
+// schema-anchored; this file resolves the same env var through src/lib/db.ts).
 // ---------------------------------------------------------------------------
 import { hashPassword } from "../src/lib/auth";
 import { db } from "../src/lib/db";
 
-const DEMO_EMAIL = "demo@studyflow.app";
-const DEMO_PASSWORD = "Demo1234!";
+export const OWNER_EMAIL = "sepnetflix2023@outlook.com";
+const OWNER_PASSWORD = "$Abcd1234";
 
-function at(dayOffset: number, hour = 9, minute = 0): Date {
-  const d = new Date();
-  d.setDate(d.getDate() + dayOffset);
-  d.setHours(hour, minute, 0, 0);
-  return d;
+async function ensureOwner(): Promise<{ id: string }> {
+  const existing = await db.user.findUnique({ where: { email: OWNER_EMAIL } });
+  if (existing) return existing;
+  return db.user.create({
+    data: {
+      email: OWNER_EMAIL,
+      passwordHash: hashPassword(OWNER_PASSWORD),
+      fullName: "Store Owner",
+      role: "owner",
+      emailVerified: true,
+      themeMode: "dark",
+    },
+  });
 }
 
-async function main(): Promise<void> {
-  const existing = await db.user.findUnique({ where: { email: DEMO_EMAIL } });
-  if (existing) {
-    console.log(`Seed: demo user already exists (${DEMO_EMAIL}) — nothing to do.`);
+/** The reference Settings screen's own default values (measured live). */
+async function ensureStoreSettings(userId: string): Promise<void> {
+  const existing = await db.storeSettings.findUnique({ where: { userId } });
+  if (existing) return;
+  await db.storeSettings.create({
+    data: {
+      userId,
+      storeName: "My Store",
+      currency: "USD",
+      primaryColor: "#6366f1",
+      secondaryColor: "#8b5cf6",
+      receiptFooter: "Thank you for your purchase!",
+      cardProvider: "none",
+    },
+  });
+}
+
+// ---- the optional showcase dataset (--demo) ---------------------------------
+
+const DEMO_CATEGORIES: Array<{ name: string; color: string }> = [
+  { name: "Beverages", color: "#8b5cf6" },
+  { name: "Snacks", color: "#f59e0b" },
+  { name: "Groceries", color: "#10b981" },
+  { name: "Personal Care", color: "#3b82f6" },
+  { name: "Electronics", color: "#ef4444" },
+];
+
+const DEMO_PRODUCTS: Array<{
+  name: string;
+  barcode: string;
+  category: string;
+  price: number;
+  cost: number;
+  stock: number;
+  minStock: number;
+  unit: string;
+}> = [
+  { name: "Espresso Beans 250g", barcode: "7501234567811", category: "Groceries", price: 8.5, cost: 5.2, stock: 24, minStock: 5, unit: "Piece" },
+  { name: "Orange Juice 1L", barcode: "7501234567828", category: "Beverages", price: 3.4, cost: 2.1, stock: 40, minStock: 8, unit: "Piece" },
+  { name: "Mineral Water 600ml", barcode: "7501234567835", category: "Beverages", price: 1.0, cost: 0.4, stock: 120, minStock: 24, unit: "Piece" },
+  { name: "Cold Brew Can", barcode: "7501234567842", category: "Beverages", price: 2.75, cost: 1.5, stock: 6, minStock: 10, unit: "Piece" },
+  { name: "Sea Salt Chips 150g", barcode: "7501234567859", category: "Snacks", price: 2.2, cost: 1.1, stock: 35, minStock: 10, unit: "Pack" },
+  { name: "Dark Chocolate Bar", barcode: "7501234567866", category: "Snacks", price: 1.8, cost: 0.9, stock: 3, minStock: 6, unit: "Piece" },
+  { name: "Granola Bar", barcode: "7501234567873", category: "Snacks", price: 1.5, cost: 0.7, stock: 50, minStock: 12, unit: "Pack" },
+  { name: "Brown Rice 1kg", barcode: "7501234567880", category: "Groceries", price: 4.3, cost: 2.8, stock: 18, minStock: 5, unit: "Piece" },
+  { name: "Olive Oil 500ml", barcode: "7501234567897", category: "Groceries", price: 7.9, cost: 5.0, stock: 12, minStock: 4, unit: "Piece" },
+  { name: "Toothpaste Mint 100ml", barcode: "7501234567903", category: "Personal Care", price: 3.2, cost: 1.8, stock: 22, minStock: 6, unit: "Piece" },
+  { name: "Shampoo 400ml", barcode: "7501234567910", category: "Personal Care", price: 6.4, cost: 3.9, stock: 14, minStock: 5, unit: "Piece" },
+  { name: "Hand Soap Refill", barcode: "7501234567927", category: "Personal Care", price: 4.1, cost: 2.4, stock: 0, minStock: 5, unit: "Piece" },
+  { name: "USB-C Cable 1m", barcode: "7501234567934", category: "Electronics", price: 9.9, cost: 5.5, stock: 16, minStock: 4, unit: "Piece" },
+  { name: "Phone Stand", barcode: "7501234567941", category: "Electronics", price: 12.5, cost: 7.0, stock: 9, minStock: 3, unit: "Piece" },
+  { name: "Wireless Earbuds", barcode: "7501234567958", category: "Electronics", price: 29.0, cost: 18.0, stock: 5, minStock: 2, unit: "Box" },
+];
+
+function hoursAgo(hours: number): Date {
+  return new Date(Date.now() - hours * 3600_000);
+}
+
+async function seedDemo(userId: string): Promise<void> {
+  const already = await db.product.count({ where: { userId } });
+  if (already > 0) {
+    console.log("Seed: store already has products — demo dataset skipped.");
     return;
   }
 
-  const user = await db.user.create({
-    data: {
-      email: DEMO_EMAIL,
-      passwordHash: hashPassword(DEMO_PASSWORD),
-      fullName: "Demo Student",
-      themeMode: "light",
-      accentColor: "violet",
-      avatarEmoji: "", // reference default state — initial-letter avatar
-      emailVerified: true,
-      schoolName: "Lincoln High",
-      gradeLevel: "9th Grade",
-      studyGoalHours: 4,
-    },
-  });
-
-  const subjects = await Promise.all(
-    [
-      { name: "Mathematics", color: "#8b5cf6" },
-      { name: "Physics", color: "#3b82f6" },
-      { name: "Chemistry", color: "#10b981" },
-      { name: "History", color: "#f59e0b" },
-      { name: "English", color: "#ec4899" },
-      { name: "Biology", color: "#ef4444" },
-    ].map((s) => db.subject.create({ data: { ...s, userId: user.id } })),
+  const categories = await Promise.all(
+    DEMO_CATEGORIES.map((c) => db.category.create({ data: { ...c, userId } })),
   );
-  const [math, physics, chemistry, history, english, biology] = subjects;
+  const byName = new Map(categories.map((c) => [c.name, c.id]));
 
-  const lists = await Promise.all(
-    ["My Tasks", "Homework", "Errands"].map((name) =>
-      db.taskList.create({ data: { name, userId: user.id } }),
+  const products = await Promise.all(
+    DEMO_PRODUCTS.map((p) =>
+      db.product.create({
+        data: {
+          userId,
+          name: p.name,
+          barcode: p.barcode,
+          categoryId: byName.get(p.category) ?? null,
+          price: p.price,
+          cost: p.cost,
+          stock: p.stock,
+          minStock: p.minStock,
+          taxRate: 16,
+          unit: p.unit,
+          active: true,
+        },
+      }),
     ),
   );
-  const [myTasks, homework, errands] = lists;
 
-  // Tasks — includes the overdue row behind the dashboard overdue banner
-  // ("Return library books") and a today/+1 spread for the KPI cards.
-  const taskDefs = [
-    { title: "Return library books", listId: errands.id, dueDate: at(-2, 17), priority: "medium" },
-    { title: "Finish calculus problem set", listId: homework.id, subjectId: math.id, dueDate: at(0, 20), priority: "high", myDay: true },
-    { title: "Read chapter 4 — vectors", listId: homework.id, subjectId: math.id, dueDate: at(0, 22), priority: "high", important: true, myDay: true },
-    { title: "Outline history essay", listId: homework.id, subjectId: history.id, dueDate: at(1, 18), priority: "low" },
-    { title: "Weekly vocabulary review", listId: homework.id, subjectId: english.id, repeat: "weekly" },
-    { title: "Annotate Keats ode", listId: homework.id, subjectId: english.id, dueDate: at(2, 18), priority: "low" },
-    { title: "Lab report: pendulum experiment", listId: homework.id, subjectId: physics.id, dueDate: at(3, 17), priority: "medium" },
-    { title: "Lab report draft", listId: homework.id, subjectId: physics.id, dueDate: at(3, 17), priority: "medium" },
-    { title: "Practice French vocabulary", listId: myTasks.id, repeat: "daily", myDay: true },
-    { title: "Book dentist appointment", listId: errands.id },
-    { title: "Set up study group chat", listId: myTasks.id, completed: true },
-    { title: "Submit scholarship form", listId: myTasks.id, completed: true, dueDate: at(-1, 12) },
-  ];
-  for (const t of taskDefs) {
-    await db.task.create({ data: { ...t, userId: user.id } });
-  }
+  const register = await db.register.create({
+    data: { userId, name: "Register 1", location: "Main entrance", status: "closed" },
+  });
 
-  const assignmentDefs = [
-    { title: "Problem set 7 — integrals", subjectId: math.id, type: "homework", progress: 80, priority: "high", dueDate: at(2, 17) },
-    { title: "Problem set 6", subjectId: math.id, type: "worksheet", progress: 40, priority: "high", dueDate: at(5, 17) },
-    { title: "Kinetics lab write-up", subjectId: chemistry.id, type: "lab", progress: 45, priority: "urgent", dueDate: at(4, 17) },
-    { title: "Romeo & Juliet analysis", subjectId: english.id, type: "essay", progress: 25, priority: "medium", dueDate: at(6, 17) },
-    { title: "Cold War timeline", subjectId: history.id, type: "project", progress: 60, priority: "medium", dueDate: at(8, 17) },
-    { title: "Physics reading — ch. 12", subjectId: physics.id, type: "reading", progress: 0, priority: "low", dueDate: at(1, 17) },
-  ];
-  for (const a of assignmentDefs) {
-    await db.assignment.create({ data: { ...a, userId: user.id } });
-  }
-
-  const examDefs = [
-    { title: "Calculus II Midterm", subjectId: math.id, date: at(1, 9), type: "midterm", duration: 90, topics: JSON.stringify(["Integration by parts", "Series"]) },
-    { title: "Quiz — Integration", subjectId: math.id, date: at(4, 9), type: "quiz", duration: 45, topics: JSON.stringify(["u-substitution"]) },
-    { title: "Chemistry Quiz 5", subjectId: chemistry.id, date: at(3, 10), type: "quiz", duration: 30, topics: JSON.stringify(["Equilibrium"]) },
-    // S76/AC5: one seeded location so the 📍 card row renders on a
-    // populated account (the FIRST card keeps no location — the S8 pin's
-    // no-map-pin assertion stays valid for it).
-    { title: "Physics Final", subjectId: physics.id, date: at(12, 9), type: "final", duration: 120, topics: JSON.stringify(["Mechanics", "Thermo"]), location: "Examination Hall A" },
-  ];
-  for (const e of examDefs) {
-    await db.exam.create({ data: { ...e, userId: user.id } });
-  }
-
-  const eventDefs = [
-    { title: "Study group — calculus", startDate: at(0, 16), endDate: at(0, 17, 30), location: "Library room 2B", repeat: "weekly", reminders: "[15,60]" },
-    { title: "Advisor meeting", startDate: at(2, 13), endDate: at(2, 13, 30), location: "Room 210" },
-    { title: "Chemistry lab session", startDate: at(4, 14), endDate: at(4, 16), location: "Science hall", repeat: "weekly" },
-  ];
-  for (const ev of eventDefs) {
-    await db.event.create({ data: { ...ev, userId: user.id } });
-  }
-
-  const classDefs = [
-    { name: "Calculus II", dayOfWeek: 0, startTime: "9:00", endTime: "10:30", subjectId: math.id, room: "M201" },
-    { name: "Physics", dayOfWeek: 1, startTime: "11:00", endTime: "12:30", subjectId: physics.id, room: "P105", weekType: "A" },
-    { name: "World History", dayOfWeek: 2, startTime: "9:00", endTime: "10:30", subjectId: history.id, room: "H14" },
-    { name: "English Literature", dayOfWeek: 3, startTime: "13:00", endTime: "14:30", subjectId: english.id, room: "E3" },
-    { name: "Chemistry Lab", dayOfWeek: 4, startTime: "14:00", endTime: "16:00", subjectId: chemistry.id, room: "Sci 2", weekType: "B" },
-  ];
-  for (const c of classDefs) {
-    await db.timetableClass.create({ data: { ...c, userId: user.id } });
-  }
-
-  const notebooks = await Promise.all(
-    ["Lecture Notes", "Reading Journal"].map((name) =>
-      db.notebook.create({ data: { name, userId: user.id } }),
-    ),
-  );
-  const noteDefs = [
-    { title: "Dot product intuition", content: "The dot product measures alignment: positive when vectors point the same way, zero when perpendicular.", notebookId: notebooks[0].id, subjectId: math.id, tags: '["calculus"]' },
-    { title: "Integration techniques", content: "# Integration\n\n- substitution\n- by parts: ∫u dv = uv − ∫v du\n- partial fractions for rational functions", notebookId: notebooks[0].id, subjectId: math.id, tags: '["calculus","exam-prep"]' },
-    { title: "Kinetics summary", content: "Rate laws: zero/first/second order.\nArrhenius: k = A·e^(−Ea/RT).", notebookId: notebooks[0].id, subjectId: chemistry.id },
-    { title: "Essay sources", content: "Primary: letters collection.\nSecondary: two journal articles (2009, 2015).", notebookId: notebooks[1].id, subjectId: history.id, tags: '["research"]' },
-  ];
-  for (const n of noteDefs) {
-    await db.note.create({ data: { ...n, userId: user.id } });
-  }
-
-  const decks = await Promise.all(
-    [
-      { name: "Integration rules", description: "Derivatives and antiderivatives", color: "#8b5cf6", subjectId: math.id },
-      { name: "Biology Chapter 5", description: "Cell energy and enzymes", color: "#10b981", subjectId: biology.id },
-      { name: "Spanish Vocabulary", description: "Unit 4 — travel", color: "#3b82f6", subjectId: null },
-    ].map((d) => db.flashcardDeck.create({ data: { ...d, userId: user.id } })),
-  );
-  const cardDefs = [
-    { deckId: decks[0].id, front: "Chain rule", back: "Differentiate the outer function and multiply by the inner derivative — e.g. d/dx sin(x^2) = 2x cos(x)", difficulty: "medium" },
-    { deckId: decks[0].id, front: "What does ATP stand for?", back: "Adenosine triphosphate", difficulty: "easy" },
-    { deckId: decks[0].id, front: "Enzyme function definition", back: "A biological catalyst that lowers activation energy", difficulty: "medium" },
-    { deckId: decks[0].id, front: "Krebs cycle location", back: "Mitochondrial matrix", difficulty: "hard" },
-    { deckId: decks[1].id, front: "the airport", back: "el aeropuerto", difficulty: "easy" },
-    { deckId: decks[1].id, front: "to travel", back: "viajar", difficulty: "medium" },
-  ];
-  for (const c of cardDefs) {
-    await db.flashcard.create({ data: c });
-  }
-
-  await db.practiceTest.create({
+  // A closed shift yesterday with a realistic cash count.
+  const closedShift = await db.cashierShift.create({
     data: {
-      userId: user.id,
-      title: "Vectors practice set",
-      durationMinutes: 30,
-      questions: JSON.stringify([
-        { question: "What is the dot product of two orthogonal vectors?", type: "short_answer" },
-        { question: "The magnitude of a vector is always positive.", type: "true_false" },
-      ]),
-      subjectId: math.id,
+      userId,
+      registerId: register.id,
+      cashierId: userId,
+      openedAt: hoursAgo(30),
+      closedAt: hoursAgo(6),
+      openingFloat: 100,
+      status: "closed",
     },
   });
 
-  await db.practiceTest.create({
-    data: {
-      userId: user.id,
-      title: "Biology Review",
-      durationMinutes: 45,
-      questions: JSON.stringify([
-        { question: "What is DNA?", type: "short_answer" },
-        { question: "Mitochondria are the powerhouse of the cell.", type: "true_false" },
-        { question: "Which organelle synthesizes proteins?", type: "multiple_choice" },
-      ]),
-      subjectId: biology.id,
-    },
-  });
-
-  await db.studyGroup.create({
-    data: {
-      userId: user.id,
-      name: "Calc Crew",
-      subjectId: math.id,
-      members: JSON.stringify([
-        { name: "Ari", email: "ari@example.com" },
-        { name: "Sam", email: "sam@example.com" },
-      ]),
-    },
-  });
-
-  const gradeDefs = [
-    { title: "Problem set 6", score: 92, maxScore: 100, weight: 1, subjectId: math.id },
-    { title: "Quiz 4", score: 85, maxScore: 100, weight: 0.5, subjectId: math.id },
-    { title: "Kinetics quiz", score: 78, maxScore: 100, weight: 1, subjectId: chemistry.id },
-    { title: "Midterm essay", score: 88, maxScore: 100, weight: 2, subjectId: english.id },
-    { title: "Lab practical", score: 95, maxScore: 100, weight: 1, subjectId: physics.id },
-  ];
-  for (const g of gradeDefs) {
-    await db.grade.create({ data: { ...g, userId: user.id } });
+  // A week of sales: 3-7 tickets per day, cash/card mix, real product lines.
+  const methods = ["cash", "card"] as const;
+  let ticketNo = 1;
+  for (let day = 6; day >= 0; day -= 1) {
+    const perDay = 3 + ((day * 7) % 5);
+    for (let n = 0; n < perDay; n += 1) {
+      const lines = products
+        .filter((_, i) => (i + day + n) % 4 === 0)
+        .slice(0, 1 + ((day + n) % 3))
+        .map((p) => ({
+          productId: p.id,
+          name: p.name,
+          price: p.price,
+          qty: 1 + ((day + n) % 2),
+          taxRate: p.taxRate,
+        }));
+      if (lines.length === 0) continue;
+      const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0);
+      const taxTotal = lines.reduce((s, l) => s + l.price * l.qty * (l.taxRate / 100), 0);
+      const total = subtotal + taxTotal;
+      const paymentMethod = methods[(day + n) % 2];
+      const amountPaid = paymentMethod === "cash" ? Math.ceil(total / 5) * 5 : null;
+      await db.sale.create({
+        data: {
+          userId,
+          ticket: `T-${String(ticketNo).padStart(6, "0")}`,
+          items: JSON.stringify(lines),
+          subtotal: Math.round(subtotal * 100) / 100,
+          taxTotal: Math.round(taxTotal * 100) / 100,
+          total: Math.round(total * 100) / 100,
+          paymentMethod,
+          amountPaid,
+          changeDue: amountPaid ? Math.round((amountPaid - total) * 100) / 100 : null,
+          cashierId: userId,
+          registerId: register.id,
+          shiftId: closedShift.id,
+          createdAt: hoursAgo(day * 24 + (20 - n * 2)),
+          status: "completed",
+        },
+      });
+      ticketNo += 1;
+    }
   }
 
-  // Focus sessions across the last 7 days (the Analytics charts' data).
-  const focusDefs = [
-    { dayOffset: 0, durationSeconds: 1500 },
-    { dayOffset: 1, durationSeconds: 3000 },
-    { dayOffset: 2, durationSeconds: 4500 },
-    { dayOffset: 3, durationSeconds: 1500 },
-    { dayOffset: 4, durationSeconds: 6000 },
-    { dayOffset: 5, durationSeconds: 3000 },
-    { dayOffset: 6, durationSeconds: 4500 },
-  ];
-  for (const f of focusDefs) {
-    await db.focusSession.create({
-      data: {
-        userId: user.id,
-        startedAt: at(-f.dayOffset, 15),
-        durationSeconds: f.durationSeconds,
-        mode: "focus",
-        completed: true,
-      },
-    });
-  }
-
-  await db.holiday.createMany({
-    data: [
-      { userId: user.id, name: "Fall break", date: at(21, 0) },
-      { userId: user.id, name: "Thanksgiving", date: at(38, 0) },
-    ],
+  // Close the shift honestly: expected = float + cash sales.
+  const cashSales = await db.sale.aggregate({
+    where: { shiftId: closedShift.id, paymentMethod: "cash" },
+    _sum: { total: true },
+    _count: true,
   });
-
-  console.log("Seed: demo account ready — demo@studyflow.app / Demo1234!");
-  await db.$disconnect();
+  const expected = 100 + (cashSales._sum.total ?? 0);
+  const counted = Math.round((expected + 0.35) * 100) / 100;
+  await db.cashierShift.update({
+    where: { id: closedShift.id },
+    data: {
+      expectedCash: Math.round(expected * 100) / 100,
+      countedCash: counted,
+      variance: Math.round((counted - expected) * 100) / 100,
+      status: "closed",
+    },
+  });
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+async function main(): Promise<void> {
+  const demo = process.argv.includes("--demo");
+  const user = await ensureOwner();
+  await ensureStoreSettings(user.id);
+  if (demo) await seedDemo(user.id);
+  const counts = {
+    products: await db.product.count({ where: { userId: user.id } }),
+    categories: await db.category.count({ where: { userId: user.id } }),
+    registers: await db.register.count({ where: { userId: user.id } }),
+    sales: await db.sale.count({ where: { userId: user.id } }),
+  };
+  console.log(
+    `Seed: owner ${OWNER_EMAIL} ready (${JSON.stringify(counts)}${demo ? ", demo dataset" : ""}).`,
+  );
+}
+
+main()
+  .catch((err: unknown) => {
+    console.error(err);
+    process.exit(1);
+  })
+  .finally(() => db.$disconnect());
