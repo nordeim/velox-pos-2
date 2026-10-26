@@ -400,3 +400,78 @@ NONE identified. Baselines: unit **123/123**, e2e **78/78**. The Session-6 lesso
 codified in AGENTS/CLAUDE/PAD/skill: re-measure the reference's chrome each cycle (it
 drifts), pin computed ALPHAs not strings, poll every raw computed read — and the e2e
 oracle must exercise the DATA state, not only the empty state.
+
+---
+
+## Session-7 — the pin-race hardening pass (velox-pos-2)
+
+**Received state**: `88dae55` (Session-6's tree `1ecc333` + the session-log doc commits).
+**Directive**: the standing audit→remediate→push cycle — fresh-workspace gate
+re-verification, re-measure the live reference (it drifts), audit the recent changes,
+fix what's broken TDD-style, keep the docs in lockstep, push via the SSH wrapper.
+
+**Environment:** the workspace survived intact (bun, node_modules, Playwright chromium
+1243, Prisma client, `db/custom.db` with the demo dataset all present) — bootstrap was a
+no-op; the local tree was 1 commit behind (fast-forward to `88dae55`, the raw
+Session-6 transcript the operator committed as `docs/session_8.md`).
+
+**Gate on the received tree:** lint 0 errors (1 documented warning) · tsc clean · unit
+**123/123** · build green · e2e **77/78** — ONE red pin: the mobile spec's "no stuck
+scroll lock" (drawer auto-close on md growth). Reproduced in isolation (13/14) — NOT a
+flake. **Root cause was in the pin, not the product**: an instrumented diagnostic (a
+temporary spec with a MutationObserver on `body[style]`) proved the drawer's effect
+cleanup restores `overflow` ~46ms after the md-growth close — the pin's raw
+`page.evaluate` read raced the window between React's DOM commit (`toHaveCount(0)`
+passing) and the passive-effect flush, and this sandbox's timing hits that window
+reliably. The exact Session-6 doctrine ("raw evaluate reads do NOT retry — always
+expect.poll") — applied to the Session-6 pins but never swept back over the
+Session-3-era ones. **F-51** filed; both unpinned raw reads in `mobile-navigation.spec.ts`
+(the scroll-lock release + the 390px horizontal-overflow measurement) hardened to
+`expect.poll`. No product code touched; no assertion weakened.
+
+**The reference re-measured live end-to-end — NO drift this cycle** (first drift-free
+cycle since the parity work began): sidebar nav (40/42px pills, border/shadow pair, 16px
+icons, ChartColumnIncreasing, 14px wordmark, p-3 footer), Settings (fiscal labels, H1
+24px, section h3 16px/700, the six per-section-colored 20px icons, the header Add chip
+34px/8px, the New Category dialog geometry, Save Changes 54px), Inventory (36px gradient
+chips, 42px New Product), Reports (14px uppercase white/60 h2s, the 32px pills +
+rgba(28,31,52,0.85) container), Dashboard (Title Case stats, weekday chart labels, nice
+ticks), the POS gate (p-8, /30 64px icon, white/35 copy, strong white/60 emphasis, CHARGE
+70/20/900), the Spanish copy (Historial de Ventas / Cajeros / Turnos Recientes), the
+login internals (48px slate inputs, white/95 shadow-2xl card, 96px logo, 54px SSO, 500
+sign-in), and the reference's OWN mobile defect still present at 390×844 (220px z-50
+overlay, no hamburger) — the clone's drawer-superset posture remains correct.
+
+**The Session-6 change audit** (commit `1ecc333`): all clean — nav-items, app-shell
+footer, the SectionCard headers, the category dialog restructure (click-handler state
+resets, key-based lists, no setState-in-effect), the Inventory chips, the ShiftGate, the
+button hygiene, the niceTicks seam + both charts. The static v4-trap sweep: no
+`@layer utilities` custom classes, `@theme inline` intact, `@custom-variant hover`
+present, `tw-animate-css` imported, no tailwind.config, no space-y + mt/mb in the nav
+chrome. Tree hygiene clean.
+
+**Stability proof for the F-51 fix:** the mobile spec passed 3/3 consecutive full runs
+(14/14 each) after the hardening; the full suite green at 78/78.
+
+**Live re-verification on the rebuilt standalone (:3400, `scripts/capture-s7-evidence.mjs`
+— the script owns the server lifecycle; the sandbox reaps detached daemons): 7/7 checks** —
+login round-trip, the drawer dialog + 8 links, the scroll lock ENGAGED while open, the
+F-51 path live (md-growth → dialog unmounts → lock RELEASES, polled), the Session-6 nav
+chrome (42/40px, 1px violet-500/30 border — oklab-serialized, alpha-pinned), Save Changes
+54px, and the chart at data scale (0/25/50/75/100 + Tue..Mon). The VLM sweep re-caught a
+capture-discipline gap: the first drawer screenshot was taken mid-entrance-animation and
+read as a clipped drawer — settle-wait ~600ms before capturing animated surfaces (now
+trap 16 in the skill, alongside the F-51 pin-race law).
+
+**Docs lockstep:** AGENTS.md + CLAUDE.md (the poll-doctrine completion + the
+sweep-the-suite meta-lesson); velox-pos_SKILL.md v2.3.1 (trap 16 + the Session-7
+addendum); PAD v1.5 revision block; the remediation plan
+(`docs/remediation-plan-session-7.md`) with its execution record; five fresh screenshots
+(32–36) from the production standalone; .env.example re-verified against every
+`process.env` read (all four vars covered, unchanged); this worklog entry; the session
+narration (`docs/session_9.md`, following the one-ahead numbering).
+
+**Stage summary.** The clone's parity is drift-free and fully green again — the only
+defect this cycle was a test-suite race, fixed at the doctrine level (every raw computed
+read in the suite now polls). Standing debt: NONE identified. Baselines: unit
+**123/123**, e2e **78/78**.

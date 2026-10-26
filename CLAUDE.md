@@ -109,7 +109,12 @@ is the only gate.
 - **oklab/alpha pin rule**: fractional-alpha utilities serialize as `oklab(…
   / 0.4)` (the reference emits rgba — same color). Pin the ALPHA with
   `expect.poll` + regex; raw `evaluate` computed reads do NOT retry (a mid-load
-  race flaked a pin once).
+  race flaked a pin once). **Session-7 closed the doctrine's blind spot
+  (F-51):** the two Session-3-era raw reads in `mobile-navigation.spec.ts`
+  (scroll-lock release, 390px horizontal overflow) raced React's
+  passive-effect flush after `toHaveCount(0)` and failed the gate reliably —
+  both now poll. When a pin doctrine lands, sweep the ENTIRE suite for the
+  old pattern; covering only new pins leaves the old ones red.
 - **The 10 documented v4 traps** live in the `globals.css` header; the mobile-nav-critical ones
   are repeated in `AGENTS.md`.
 

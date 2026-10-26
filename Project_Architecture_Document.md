@@ -490,3 +490,33 @@ exist while the suite's store was the only oracle.
 documented, unit-tested seam; the empty-store e2e blind spot is now covered by a data-state
 pin. The per-unit grid pattern is recorded as a trap in the skill (v2.3.0) — a "correct at
 demo scale" implementation is a latent bug at production scale.
+
+## Revision Block — v1.5 (2026-10-26, Session-7)
+
+**Scope:** the standing audit→remediate→push cycle on the Session-6 tree (HEAD `88dae55`;
+the ledger is `docs/remediation-plan-session-7.md`). One finding (F-51), zero product-code
+changes, zero architecture changes — this block records the test-infrastructure hardening
+and the drift-free reference re-measurement.
+
+- **The received-tree gate re-verification surfaced one red pin**: the mobile spec's
+  "no stuck scroll lock" failed reliably (full suite AND isolated — not a flake).
+  Instrumented root-cause proof (MutationObserver on `body[style]`): the drawer's effect
+  cleanup DOES restore `overflow` (~46ms after the md-growth close) — the pin's raw
+  `evaluate` read raced the window between React's DOM commit (`toHaveCount(0)` passing)
+  and the passive-effect flush.
+- **F-51 (test infrastructure)**: the two Session-3-era unpinned raw reads in
+  `mobile-navigation.spec.ts` (the scroll-lock release + the 390px horizontal-overflow
+  measurement) hardened to `expect.poll` — identical assertions, identical protection,
+  retried through the async window. The poll doctrine (Session-6) now covers EVERY raw
+  computed read in the suite. No pin weakened; no product code touched.
+- **The reference re-measured live — NO drift this cycle** (unlike Sessions 4 and 6):
+  every Session-4/5/6 pin re-verified byte-exact (nav 40/42px pills + border pair, section
+  icons, the category dialog, Save 54px, chips 36px, gate p-8 + /30 + white/35, CHARGE
+  70px, Reports pills, login internals, Spanish copy, the reference's own mobile defect
+  still present at 390×844 — the clone's drawer superset remains the correct posture).
+- **Capture discipline** (the VLM sweep's catch): screenshot animated surfaces only after
+  a ~600ms settle-wait — a mid-entrance-animation drawer frame reads as a broken drawer.
+  Recorded as part of trap 16 in the skill (v2.3.1).
+- Baselines at lock (unchanged): lint 0 errors (1 documented warning) · typecheck clean ·
+  unit **123/123** · e2e **78/78** (the mobile spec re-proven stable across 3 consecutive
+  full runs) · standalone build green.

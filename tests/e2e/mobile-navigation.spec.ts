@@ -33,10 +33,16 @@ test.describe("mobile navigation (the drawer superset)", () => {
     page,
   }) => {
     await page.goto("/Dashboard");
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    );
-    expect(overflow).toBeLessThanOrEqual(0);
+    // Session-7 (F-51 sibling): polled for the same reason — a raw evaluate
+    // read is a single sample that races hydration; expect.poll retries
+    // through it (same assertion: the document never scrolls horizontally).
+    await expect
+      .poll(async () =>
+        page.evaluate(
+          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        ),
+      )
+      .toBeLessThanOrEqual(0);
   });
 
   test("the drawer opens with role=dialog, 8 labeled links, and the brand", async ({
@@ -159,7 +165,13 @@ test.describe("mobile navigation (the drawer superset)", () => {
     await expect(page.getByRole("dialog", { name: "Navigation menu" })).toBeVisible();
     await page.setViewportSize({ width: 800, height: 900 });
     await expect(page.getByRole("dialog", { name: "Navigation menu" })).toHaveCount(0);
-    const bodyOverflow = await page.evaluate(() => document.body.style.overflow);
-    expect(bodyOverflow).not.toBe("hidden");
+    // Session-7 (F-51): POLL the overflow restore — the dialog node unmounts
+    // in React's commit, but the passive-effect cleanup that restores
+    // body overflow flushes after it; a raw evaluate read raced that window
+    // and failed the pin reliably (the doctrine: raw computed reads do NOT
+    // retry like toHaveCSS — expect.poll every one of them).
+    await expect
+      .poll(async () => page.evaluate(() => document.body.style.overflow))
+      .not.toBe("hidden");
   });
 });

@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.3.0
+version: 2.3.1
 last_updated: 2026-10-26
 ---
 
@@ -239,6 +239,16 @@ is a loss machine.
     `border`/`color`/`background` always win over same-element utilities, so
     `border-0`/`text-*` on a glass button compute NOTHING (the reference ships such
     inert classes verbatim). Never "fix" what the glass class already owns.
+16. **(Session-7) Pin races vs React's passive-effect flush (F-51)** — `toHaveCount(0)`
+    passes the instant the commit removes a node, but the `useEffect` cleanup that
+    restores side-effects (e.g. the drawer's `body.style.overflow` scroll lock)
+    flushes AFTER it; an unpollled raw `evaluate` read lands in that window and fails
+    reliably. Every raw computed read in the suite now polls (`expect.poll`). The
+    meta-lesson: when a doctrine lands, SWEEP the suite for the old pattern — the
+    Session-6 poll hardening covered only the new pins and left two Session-3-era
+    reads to fail a later gate. Related capture discipline: settle-wait ~600ms before
+    screenshotting animated surfaces (a mid-slide drawer frame reads as a clipped
+    drawer to a VLM — the Session-7 screenshot catch).
 
 ## 8. Component architecture & the React patterns that are law
 
@@ -507,3 +517,28 @@ Two pin-doctrine additions: (1) v4's fractional-alpha utilities serialize as okl
 Base44 emits rgba — pin the ALPHA (`/0.4)`), never the string; (2) raw `evaluate` computed
 reads do not retry — one mid-load style race flaked a passing pin before everything moved
 to `expect.poll`. Unit 117→123 (the niceTicks seam), e2e 68→78, all prior pins intact.
+
+## Session history addendum — Session-7
+
+The standing audit→remediate→push cycle on the Session-6 tree (HEAD `88dae55`). The
+fresh-clone gate re-verification surfaced ONE red pin: the mobile spec's "no stuck scroll
+lock" failed reliably (77/78 full suite AND isolated — not a flake). Root cause was IN
+THE PIN, not the product: instrumented proof (a MutationObserver on `body[style]`) showed
+the drawer's effect cleanup restoring overflow ~46ms after the md-growth close — the pin's
+raw `evaluate` read raced React's passive-effect flush between the DOM commit
+(`toHaveCount(0)` passing) and the cleanup. **F-51**: the two Session-3-era raw reads in
+`mobile-navigation.spec.ts` predated the Session-6 poll doctrine; both hardened to
+`expect.poll` (same assertions, same protection, retried). No product code touched.
+
+The full reference re-measurement (nav, settings, category dialog, inventory chips,
+reports, dashboard chart, POS gate, copy, login internals, mobile state) found **NO drift
+this cycle** — every Session-4/5/6 pin re-measured byte-exact on the live site. The
+Session-6 chrome audit re-verified clean (the category dialog restructure, the niceTicks
+seam, the nav chrome). The VLM sweep re-caught a capture-discipline gap: a screenshot
+taken mid-entrance-animation reads as a broken drawer — settle-wait ~600ms before
+capturing animated surfaces (now part of trap 16).
+
+Gate: lint 0 errors (1 documented warning) · tsc clean · unit **123/123** · build green ·
+e2e **78/78** (the mobile spec re-proven stable across 3 consecutive full runs). The F-51
+path verified LIVE (lock engages → releases on growth) plus the Session-6 chrome
+spot-checked on the rebuilt standalone. Five fresh screenshots (32–36). Skill v2.3.1.

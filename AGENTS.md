@@ -145,7 +145,11 @@ bite hardest here:
   …) serialize as `oklab(… / 0.4)` while the reference (Base44) emits `rgba(…, 0.4)` —
   same color. Pin the ALPHA (the `/0.4)`) via `expect.poll` + regex; raw `evaluate` reads
   do NOT retry like `toHaveCSS` (a mid-load style race flaked a pin once — always
-  `expect.poll` raw computed reads).
+  `expect.poll` raw computed reads). **Session-7 (F-51) completed the doctrine**: every
+  raw computed read in the suite now polls — the two Session-3-era unpinned reads
+  (`mobile-navigation.spec.ts`'s scroll-lock + horizontal-overflow checks) raced React's
+  passive-effect flush and failed the gate reliably. The lesson: when a pin doctrine
+  lands, SWEEP the whole suite for the old pattern, not just the new pins.
 
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
