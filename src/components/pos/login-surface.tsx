@@ -10,7 +10,7 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { Apple, Facebook, Lock, Mail, UserRound, Zap } from "lucide-react";
+import { Apple, Facebook, Lock, Mail, UserRound } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -146,11 +146,26 @@ export function LoginSurface() {
 
   return (
     <main className="login-canvas theme-light flex min-h-dvh items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white px-8 py-10 shadow-[0_20px_60px_rgba(15,23,42,0.12)]">
+      {/* Session-5 (measured live): the reference's card — bg-white/95 +
+          backdrop-blur + shadow-2xl + overflow-hidden + a 4px top gradient
+          strip, with the content padding on an inner wrapper
+          (p-8 sm:p-10 md:pt-12 md:pb-10 md:px-10). */}
+      <div className="relative w-full max-w-md overflow-hidden rounded-2xl border-0 bg-white/95 shadow-2xl backdrop-blur-sm">
+        <div
+          aria-hidden="true"
+          className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200"
+        />
+        <div className="p-8 sm:p-10 md:px-10 md:pb-10 md:pt-12">
         <div className="flex flex-col items-center text-center">
-          <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#1e1b3a]">
-            <Zap className="h-9 w-9 text-white" strokeWidth={1.8} aria-hidden="true" />
-          </div>
+          {/* The reference renders its logo image (96x96, the hexagonal
+              crystal asset) — vendored at public/veloxpos-logo.png. */}
+          <img
+            src="/veloxpos-logo.png"
+            alt="VeloxPOS (Point Of Sale) logo"
+            width={96}
+            height={96}
+            className="h-24 w-24"
+          />
           <h1 className="mt-5 text-3xl font-bold leading-tight text-slate-900">
             Welcome to VeloxPOS (Point Of Sale)
           </h1>
@@ -168,7 +183,7 @@ export function LoginSurface() {
                   "Single sign-on is configured on the hosted platform. Use your email and password here.",
                 )
               }
-              className="vpx-focus flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              className="vpx-focus flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-3.5 font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:shadow"
             >
               {p.icon}
               {p.label}
@@ -213,7 +228,7 @@ export function LoginSurface() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Your name"
-                  className="pl-9"
+                  className="h-11 border-slate-200 bg-slate-50/50 pl-10 placeholder:text-slate-600 focus:border-slate-400 focus:ring-slate-400 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:h-12"
                 />
               </div>
             </div>
@@ -235,7 +250,7 @@ export function LoginSurface() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="pl-9"
+                className="h-11 border-slate-200 bg-slate-50/50 pl-10 placeholder:text-slate-600 focus:border-slate-400 focus:ring-slate-400 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:h-12"
               />
             </div>
           </div>
@@ -257,7 +272,7 @@ export function LoginSurface() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="pl-9"
+                  className="h-11 border-slate-200 bg-slate-50/50 pl-10 placeholder:text-slate-600 focus:border-slate-400 focus:ring-slate-400 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 sm:h-12"
                 />
               </div>
             </div>
@@ -266,7 +281,7 @@ export function LoginSurface() {
             type="submit"
             disabled={busy || !mounted}
             data-testid="login-submit"
-            className="vpx-focus w-full rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white transition-colors hover:bg-slate-800 disabled:opacity-60"
+            className="vpx-focus w-full rounded-xl bg-slate-900 px-4 py-3 font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-60"
           >
             {busy
               ? "Please wait…"
@@ -321,6 +336,7 @@ export function LoginSurface() {
               Back to sign in
             </button>
           )}
+        </div>
         </div>
       </div>
     </main>

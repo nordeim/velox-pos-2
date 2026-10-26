@@ -58,6 +58,11 @@ is the only gate.
 - **Plain-CSS custom classes** (`glass-*`, `brand-chip`, `vpx-focus` in `src/app/tokens.css`) —
   never `@layer utilities` (Tailwind v4 cascade trap), never `tailwind.config.js`, exact
   gradients as classes (oklab drift trap).
+- **`@theme inline` is LOAD-BEARING** (Session-5, F-28): non-inline `@theme` bakes
+  `hsl(var(--x))` into `--color-x` AT `:root`, so the `.theme-light` scope's triplet re-pointing
+  never reaches themed utilities (the login inputs rendered dark borders on the light card for
+  four sessions). Inline emits `hsl(var(--x))` directly in each utility — verified in the built
+  CSS (`.border-input{border-color:hsl(var(--input))}`).
 - **`tw-animate-css` is imported in `globals.css`** — the Radix `data-[state]` animation family
   depends on it (e2e pins a live `animation-name` on open dialogs). Removing the import silently
   kills every dialog/select/toast animation (the Session-3 F-1 bug).
@@ -76,6 +81,16 @@ is the only gate.
   direction). Label pair: "Hidden on receipt" ⇄ "Visible on receipt" — never "Shown".
 - **The cart "Added" banner** auto-collapses via a timer set in the click handler (no
   setState-in-effect); the e2e pin asserts visible → collapsed, not the duration.
+- **Form controls own their parity in the base components** (Session-5): Input/Select/Textarea
+  compute `rounded-xl` (12px) + `border-input` (#262a36) + transparent bg + `#707a8f`
+  placeholders + ring-1 focus; the Button default size is `px-4 py-2.5` (42px, no fixed h-9);
+  CHARGE is `py-5` (70px). NEVER add per-field `border-edge bg-white/5` overrides — the token
+  contract (`--input`/`--border` `225 18% 18%`, `--muted-foreground` `220 12% 50%`, `--ring`
+  `252 87% 67%`) computes the reference values.
+- **The login surface uses DIRECT slate classes** (`h-11 sm:h-12 bg-slate-50/50
+  border-slate-200 rounded-xl pl-10`), never themed utilities — the reference's login form has
+  its own base; the card is `bg-white/95 backdrop-blur-sm shadow-2xl` + a 4px top gradient
+  strip + the vendored logo `public/veloxpos-logo.png`.
 - **Key-based modal resets** (`key={editing?.id ?? "new"}`) — no setState-in-effect dialog resets
   (React 19 lint rule `react-hooks/set-state-in-effect`).
 - **Toasts via `useToast()`** → `toast.success/error/info(message)` — never `alert()`.
@@ -89,10 +104,11 @@ is the only gate.
   117 tests / 12 files.
 - **E2E** (`tests/e2e/**`, Playwright, production standalone on :3100): user journeys through the
   real UI. Two projects — `chromium` (1440×900) and `mobile` (390×844; runs only
-  `mobile-navigation.spec.ts`). Auth once via `auth.setup.ts` + storageState (the rate limiter is
-  10/IP/15 min). The scratch db (`db/e2e.db`) is provisioned by the webServer command
-  (kill-port → provision → boot) and never replaced while the server lives — replacing it after
-  boot desynchronizes the login and page-render clients (field-tested failure).
+  `mobile-navigation.spec.ts`). **Baseline: 68 tests.** Auth once via `auth.setup.ts` +
+  storageState (the rate limiter is 10/IP/15 min). The scratch db (`db/e2e.db`) is provisioned
+  by the webServer command (kill-port → provision → boot) and never replaced while the server
+  lives — replacing it after boot desynchronizes the login and page-render clients
+  (field-tested failure).
 - Parity assertions use computed styles/geometry (`toHaveCSS`, `boundingBox` semantics) and
   visibility (`not.toBeVisible` for `hidden md:*` elements — they stay in the DOM), never class
   lists.

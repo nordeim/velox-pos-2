@@ -100,7 +100,7 @@ export function SalesView() {
       <div className="mt-5 max-w-md">
         <div className="relative">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30"
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
             aria-hidden="true"
           />
           <Input
@@ -108,7 +108,7 @@ export function SalesView() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por ticket, cliente o cajero..."
             aria-label="Buscar por ticket, cliente o cajero"
-            className="border-edge bg-panel pl-9 text-white placeholder:text-white/30"
+            className="pl-10 text-white"
           />
         </div>
       </div>

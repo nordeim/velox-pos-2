@@ -180,7 +180,7 @@ function ProductModal({
               id="p-name"
               value={draft.name}
               onChange={(e) => set({ name: e.target.value })}
-              className="border-edge bg-white/5 text-white"
+              className="text-white"
               autoFocus
             />
           </div>
@@ -193,7 +193,7 @@ function ProductModal({
                 id="p-barcode"
                 value={draft.barcode}
                 onChange={(e) => set({ barcode: e.target.value })}
-                className="border-edge bg-white/5 text-white"
+                className="text-white"
               />
             </div>
             <div className="grid gap-2">
@@ -202,7 +202,7 @@ function ProductModal({
                 value={draft.categoryId || "none"}
                 onValueChange={(v) => set({ categoryId: v === "none" ? "" : v })}
               >
-                <SelectTrigger className="border-edge bg-white/5 text-white" aria-label="Category">
+                <SelectTrigger className="text-white" aria-label="Category">
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent className="glass-dark border-edge">
@@ -226,7 +226,7 @@ function ProductModal({
                 step="0.01"
                 value={draft.price}
                 onChange={(e) => set({ price: e.target.value })}
-                className="border-edge bg-white/5 text-white"
+                className="text-white"
               />
             </div>
             <div className="grid gap-2">
@@ -240,7 +240,7 @@ function ProductModal({
                 step="0.01"
                 value={draft.cost}
                 onChange={(e) => set({ cost: e.target.value })}
-                className="border-edge bg-white/5 text-white"
+                className="text-white"
               />
             </div>
             <div className="grid gap-2">
@@ -254,7 +254,7 @@ function ProductModal({
                 step="1"
                 value={draft.stock}
                 onChange={(e) => set({ stock: e.target.value })}
-                className="border-edge bg-white/5 text-white"
+                className="text-white"
               />
             </div>
             <div className="grid gap-2">
@@ -268,7 +268,7 @@ function ProductModal({
                 step="1"
                 value={draft.minStock}
                 onChange={(e) => set({ minStock: e.target.value })}
-                className="border-edge bg-white/5 text-white"
+                className="text-white"
               />
             </div>
             <div className="grid gap-2">
@@ -283,13 +283,13 @@ function ProductModal({
                 step="0.5"
                 value={draft.taxRate}
                 onChange={(e) => set({ taxRate: e.target.value })}
-                className="border-edge bg-white/5 text-white"
+                className="text-white"
               />
             </div>
             <div className="grid gap-2">
               <Label className="text-white/70">Unit</Label>
               <Select value={draft.unit} onValueChange={(v) => set({ unit: v })}>
-                <SelectTrigger className="border-edge bg-white/5 text-white" aria-label="Unit">
+                <SelectTrigger className="text-white" aria-label="Unit">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="glass-dark border-edge">
@@ -317,7 +317,7 @@ function ProductModal({
                 reader.onload = () => set({ image: String(reader.result ?? "") });
                 reader.readAsDataURL(file);
               }}
-              className="border-edge bg-white/5 text-white/70"
+              className="text-white/70"
             />
           </div>
           <label className="flex items-center gap-3 text-sm text-white/70">
@@ -486,7 +486,7 @@ export function InventoryView() {
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <div className="relative min-w-[240px] flex-1">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30"
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
             aria-hidden="true"
           />
           <Input
@@ -494,7 +494,7 @@ export function InventoryView() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name or code..."
             aria-label="Search by name or code"
-            className="border-edge bg-panel pl-9 text-white placeholder:text-white/30"
+            className="pl-10 text-white"
           />
         </div>
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by category">

@@ -223,3 +223,82 @@ rename + toggle contract, the heading scale, the Added banner, the login canvas)
 the readable-color a11y superset where the reference's own styling defeats it. Standing debt:
 NONE identified. Baselines: unit **117/117**, e2e **55/55**. The reference-drift lesson is
 codified in AGENTS/CLAUDE: the measured spec is a snapshot; the live site is the contract.
+
+---
+
+## Session-5 — the form-control parity pass + the @theme inline bug (velox-pos-2)
+
+**Received state**: `dab7f4f` (Session-4's tree + the session log doc commit). **Directive**:
+the standing audit→remediate→push cycle — re-verify the gate, re-measure the live reference,
+fix what drifted (the mobile-nav/Tailwind v4 bug class called out explicitly), keep TDD and
+the docs in lockstep, push via the SSH wrapper.
+
+**Environment:** deps + Prisma client pre-installed; `db/custom.db` + `db/e2e.db` present;
+Playwright browsers present. **Gate on the received tree: lint 0 errors (1 documented
+warning) · tsc clean · unit 117/117 · build green · e2e 55/55** — the Session-4 baselines
+hold.
+
+**Audit (the full ledger is `docs/remediation-plan-session-5.md`):** the reference re-measured
+live at a depth the earlier sessions never pinned — a computed-style **census of every form
+control, button, pill, and the login form internals** (13 verification checks, V1–V18). All
+Session-4 pins re-verified holding (fiscal labels/toggle/help, heading scale, Title Case,
+Added banner classes, login canvas gradient, the reference's own mobile defect). **Thirteen
+new findings — the headline: the Tailwind v4 theme-switching bug (F-28)**: non-inline
+`@theme` bakes `hsl(var(--input))` into `--color-input` AT `:root`, so the `.theme-light`
+login scope's triplet re-pointing could NEVER reach themed utilities — live-proven
+(`--color-input` read the dark value inside the light wrapper; the login inputs rendered
+dark borders on the light card since Session-101, visible in the old screenshots, never
+measured). Plus a SYSTEMATIC form-control drift (F-27): every reference Input/Select/Textarea
+computes 12px radius + #262a36 border-input + transparent bg + #707a8f placeholders, while
+the clone shipped 6px radius + border-edge overrides + white/5 fills (34 per-field overrides).
+And: the Button default padding (F-34, py-2.5/42px vs h-9/36px), CHARGE py (F-35, 70 vs 58px),
+the receipt-footer TEXTAREA (F-26), the Reports period-pill geometry (F-36), the login form
+internals (F-29/30/31/32/33/38: 48px slate-filled inputs, the shadow-2xl card + 4px gradient
+strip, the vendored logo image, 54px SSO buttons, font-medium sign-in), and the color-swatch
+frames (F-37). Verified NOT findings: the glass dialog frames (visually equivalent),
+glass-button gradient stops (an intermediate "drift" reading was a hover-state artifact —
+re-measured clean), label-to-input spacing (8px both sides).
+
+**TDD execution (red before green — 13 new e2e pins written first, verified failing, then
+fixed; 2 pin bugs fixed during GREEN — the SSO line-height (text-base, not text-sm) and the
+v4 oklab serialization of bg-slate-50/50, pinned alpha-tolerant like the white/60 pin):**
+settings/dialog/search input geometry, the receipt-footer textarea, the Reports pills + 
+container, the New Product button, the CHARGE button, the select trigger, the login inputs,
+the login card shadow + strip, the logo img, the sign-in button, the SSO buttons.
+
+**Implemented:** `tokens.css` `@theme` → **`@theme inline`** (verified in the built CSS:
+`.border-input{border-color:hsl(var(--input))}` — per-element resolution); `:root` tokens →
+the reference's app-scoped values (`--input`/`--border` `225 18% 18%` = #262a36,
+`--muted-foreground` `220 12% 50%` = #707a8f, `--ring` `252 87% 67%`); Input/Select/Textarea
+bases → rounded-xl + ring-1 focus + text-base md:text-sm + shadow-sm; 34 per-field
+`border-edge bg-white/5` overrides stripped; the search inputs → transparent + pl-10 +
+slate-400 icons; Button default size → `px-4 py-2.5` (padding-driven); CHARGE → `py-5`; the
+receipt footer → `Textarea rows={2}`; the Reports pills → the reference's geometry; the
+login surface → the reference's form internals (direct slate classes, the card frame, the
+vendored `public/veloxpos-logo.png`, 54px SSO); the color swatches → bare.
+
+**Re-certification (all on the final tree):** lint ✓ (0 errors, 1 documented warning) · tsc ✓
+· unit **117/117** · build ✓ · e2e **68/68** (all 55 prior pins green, none weakened). Live
+agent-browser re-verification: login inputs 48px/slate-200/slate-50-50/12px, the card
+shadow-2xl + 4px strip + logo 96px, SSO 54px; settings inputs 12px/#262a36/transparent,
+footer TEXTAREA rows=2 min-h-60 resize-vertical, select triggers 12px/#262a36; dialog inputs
+12px; New Product 42px/10-16; CHARGE 70px/20-32; Reports container 16px/rgba(28,31,52,0.85),
+pills 12px/12px-font/white-40-inactive; the F-28 mechanism probe (the built CSS emits
+`hsl(var(--input))` inline). The mobile drawer re-verified live at 390×844 (hamburger,
+288px dialog, 8 links, `animation-name: enter`, focus on close, no overflow) — the mobile-nav
+bug class stays fixed.
+
+**Docs lockstep:** README badges + counts (e2e 55→68); AGENTS.md — the `@theme inline` law +
+the Session-5 form-control/button/login contracts; CLAUDE.md — the same laws + the 68-test
+baseline; PAD v1.3 revision block + ADR-010; velox-pos_SKILL.md v2.2.0 (trap 13 + the
+Session-5 contracts + the session addendum); this remediation plan's checkboxes ticked; six
+fresh screenshots (19–24) in `docs/screenshots/` captured from the production standalone
+build.
+
+**Stage summary.** The clone now tracks the reference at the form-control depth — every
+input, select, textarea, button, and pill computes the reference's measured geometry, the
+login form renders the reference's light internals (and the theme-switching mechanism that
+silently defeated it is fixed at the root). Standing debt: NONE identified. Baselines:
+unit **117/117**, e2e **68/68**. The @theme inline lesson is codified in
+AGENTS/CLAUDE/PAD/skill: measure the MECHANISM, not just the surface — a bug that ships
+invisible for four sessions is a measurement gap, not just a styling one.

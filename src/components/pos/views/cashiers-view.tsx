@@ -79,7 +79,7 @@ function AddCashierDialog({ open, onClose }: { open: boolean; onClose: () => voi
               id="c-name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="border-edge bg-white/5 text-white"
+              className="text-white"
               autoFocus
             />
           </div>
@@ -92,7 +92,7 @@ function AddCashierDialog({ open, onClose }: { open: boolean; onClose: () => voi
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="border-edge bg-white/5 text-white"
+              className="text-white"
             />
           </div>
           <div className="grid gap-2">
@@ -104,7 +104,7 @@ function AddCashierDialog({ open, onClose }: { open: boolean; onClose: () => voi
               type="text"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="border-edge bg-white/5 text-white"
+              className="text-white"
             />
           </div>
         </div>

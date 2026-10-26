@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { PageHeader } from "@/components/pos/shared";
 import { apiSend, usePosStore, type Category, type StoreSettingsRow } from "@/lib/store";
@@ -182,7 +183,7 @@ export function StoreSettingsView() {
                 id="set-name"
                 value={form.storeName}
                 onChange={(e) => set({ storeName: e.target.value })}
-                className="border-edge bg-white/5 text-white"
+                className="text-white"
               />
             </div>
             <div className="grid gap-2">
@@ -213,7 +214,7 @@ export function StoreSettingsView() {
                 id="set-address"
                 value={form.address}
                 onChange={(e) => set({ address: e.target.value })}
-                className="border-edge bg-white/5 text-white"
+                className="text-white"
               />
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -225,7 +226,7 @@ export function StoreSettingsView() {
                   id="set-phone"
                   value={form.phone}
                   onChange={(e) => set({ phone: e.target.value })}
-                  className="border-edge bg-white/5 text-white"
+                  className="text-white"
                 />
               </div>
               <div className="grid gap-2">
@@ -237,7 +238,7 @@ export function StoreSettingsView() {
                   type="email"
                   value={form.email}
                   onChange={(e) => set({ email: e.target.value })}
-                  className="border-edge bg-white/5 text-white"
+                  className="text-white"
                 />
               </div>
               <div className="grid gap-2">
@@ -248,13 +249,13 @@ export function StoreSettingsView() {
                   id="set-taxid"
                   value={form.taxId}
                   onChange={(e) => set({ taxId: e.target.value })}
-                  className="border-edge bg-white/5 text-white"
+                  className="text-white"
                 />
               </div>
               <div className="grid gap-2">
                 <Label className="text-white/70">Currency</Label>
                 <Select value={form.currency} onValueChange={(v) => set({ currency: v })}>
-                  <SelectTrigger className="border-edge bg-white/5 text-white" aria-label="Currency">
+                  <SelectTrigger className="text-white" aria-label="Currency">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="glass-dark border-edge">
@@ -276,19 +277,19 @@ export function StoreSettingsView() {
               <Label htmlFor="set-primary" className="text-white/70">
                 Primary color
               </Label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <input
                   type="color"
                   id="set-primary"
                   value={form.primaryColor}
                   onChange={(e) => set({ primaryColor: e.target.value })}
                   aria-label="Primary color"
-                  className="h-10 w-12 cursor-pointer rounded-lg border border-edge bg-panel p-1"
+                  className="h-10 w-10 cursor-pointer rounded-lg"
                 />
                 <Input
                   value={form.primaryColor}
                   onChange={(e) => set({ primaryColor: e.target.value })}
-                  className="border-edge bg-white/5 font-mono text-white"
+                  className="font-mono text-white"
                 />
               </div>
             </div>
@@ -296,19 +297,19 @@ export function StoreSettingsView() {
               <Label htmlFor="set-secondary" className="text-white/70">
                 Secondary color
               </Label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <input
                   type="color"
                   id="set-secondary"
                   value={form.secondaryColor}
                   onChange={(e) => set({ secondaryColor: e.target.value })}
                   aria-label="Secondary color"
-                  className="h-10 w-12 cursor-pointer rounded-lg border border-edge bg-panel p-1"
+                  className="h-10 w-10 cursor-pointer rounded-lg"
                 />
                 <Input
                   value={form.secondaryColor}
                   onChange={(e) => set({ secondaryColor: e.target.value })}
-                  className="border-edge bg-white/5 font-mono text-white"
+                  className="font-mono text-white"
                 />
               </div>
             </div>
@@ -320,11 +321,14 @@ export function StoreSettingsView() {
             <Label htmlFor="set-footer" className="text-white/70">
               Receipt footer
             </Label>
-            <Input
+            {/* Session-5 (measured live): the reference renders a TEXTAREA
+                (rows=2, min-h-60px, resize vertical) — multi-line footers. */}
+            <Textarea
               id="set-footer"
+              rows={2}
               value={form.receiptFooter}
               onChange={(e) => set({ receiptFooter: e.target.value })}
-              className="border-edge bg-white/5 text-white"
+              className="text-white"
             />
           </div>
         </SectionCard>
@@ -362,7 +366,7 @@ export function StoreSettingsView() {
                   value={form.fiscalRuc}
                   onChange={(e) => set({ fiscalRuc: e.target.value })}
                   placeholder="e.g. 12-3456789"
-                  className="border-edge bg-white/5 text-white placeholder:text-white/30"
+                  className="text-white"
                 />
               </div>
               <div className="grid gap-2">
@@ -374,7 +378,7 @@ export function StoreSettingsView() {
                   value={form.fiscalBusinessType}
                   onChange={(e) => set({ fiscalBusinessType: e.target.value })}
                   placeholder="e.g. S-Corp, LLC"
-                  className="border-edge bg-white/5 text-white placeholder:text-white/30"
+                  className="text-white"
                 />
               </div>
               <div className="grid gap-2">
@@ -386,7 +390,7 @@ export function StoreSettingsView() {
                   value={form.fiscalAddress}
                   onChange={(e) => set({ fiscalAddress: e.target.value })}
                   placeholder="Street, city, state, ZIP"
-                  className="border-edge bg-white/5 text-white placeholder:text-white/30"
+                  className="text-white"
                 />
               </div>
               <div className="grid gap-2">
@@ -398,7 +402,7 @@ export function StoreSettingsView() {
                   value={form.fiscalExpenseAccount}
                   onChange={(e) => set({ fiscalExpenseAccount: e.target.value })}
                   placeholder="e.g. G03 - General expenses"
-                  className="border-edge bg-white/5 text-white placeholder:text-white/30"
+                  className="text-white"
                 />
               </div>
             </div>
@@ -409,7 +413,7 @@ export function StoreSettingsView() {
           <div className="grid max-w-xs gap-2">
             <Label className="text-white/70">Provider</Label>
             <Select value={form.cardProvider} onValueChange={(v) => set({ cardProvider: v })}>
-              <SelectTrigger className="border-edge bg-white/5 text-white" aria-label="Card payment provider">
+              <SelectTrigger className="text-white" aria-label="Card payment provider">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="glass-dark border-edge">
@@ -449,7 +453,7 @@ export function StoreSettingsView() {
                 onChange={(e) => setNewCategory(e.target.value)}
                 placeholder="New category name"
                 aria-label="New category name"
-                className="border-edge bg-white/5 text-white placeholder:text-white/30"
+                className="text-white"
               />
               <Button
                 variant="ghost"

@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.1.0
+version: 2.2.0
 last_updated: 2026-10-26
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-4 lock: unit **117/117** (12 files) · e2e **55/55**
-(41 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-5 lock: unit **117/117** (12 files) · e2e **68/68**
+(54 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -153,8 +153,10 @@ is a loss machine.
   `-success`, `-danger`, `glass-card`) is **plain CSS in `src/app/tokens.css`** —
   class names verbatim from the reference stylesheet.
 - Shadcn tokens are raw HSL triplets in `:root`, consumed as `hsl(var(--x))`
-  inside `@theme` (the trap-1 routing); `.theme-light` re-points them for the
-  login card only. The app shell is permanently dark.
+  inside **`@theme inline`** (the trap-1 routing); `.theme-light` re-points them
+  for the login card only. The app shell is permanently dark. **The `inline`
+  keyword is load-bearing** (Session-5 trap 13): non-inline `@theme` bakes the
+  var substitution at `:root` and scoped re-pointing never reaches utilities.
 - Sidebar geometry (measured): brand row `px-4 py-5 border-b` (73px), logo chip
   32×32 radius 12, nav `px-2 py-4` with 42px items (radius 12, 14px/500),
   collapse chevron at the bottom (220px ⇄ 68px, persisted in the store).
@@ -173,6 +175,24 @@ is a loss machine.
 - The cart "Added" banner: collapsed `max-h-0 opacity-0` strip that expands on
   add (emerald chip, circle-check, "ADDED" + product name) and auto-collapses
   (~2.5s; timer in the click handler — no setState-in-effect).
+- **Form controls (Session-5, e2e-pinned)**: Input/Select/Textarea compute
+  `rounded-xl` (12px) + `border-input` (#262a36) + transparent bg + `#707a8f`
+  placeholders + ring-1 focus — the BASE components own this (never per-field
+  `border-edge bg-white/5` overrides). Token contract: `--input`/`--border`
+  `225 18% 18%`, `--muted-foreground` `220 12% 50%`, `--ring` `252 87% 67%`.
+- **Buttons (Session-5)**: default size `px-4 py-2.5` (padding-driven 42px, no
+  fixed h-9); CHARGE `py-5` (70px); Reports period pills `px-4 py-2 rounded-xl
+  text-xs font-bold` in a `rounded-2xl` `rgba(28,31,52,0.85)` white/7-bordered
+  container (inactive white/40, active violet-600 + shadow-lg).
+- **The receipt footer is a TEXTAREA** (`rows=2`, min-h 60px — multi-line).
+- Login (Session-5): the reference's card `bg-white/95 backdrop-blur-sm
+  shadow-2xl overflow-hidden` + a 4px top gradient strip (slate-200→300→200) +
+  the content padding on an inner wrapper (`p-8 sm:p-10 md:pt-12 md:pb-10
+  md:px-10`); inputs `h-11 sm:h-12 bg-slate-50/50 border-slate-200 rounded-xl
+  placeholder:text-slate-600 pl-10` (DIRECT slate classes — the reference's
+  login form has its own base, never themed utilities); the logo is the
+  vendored `public/veloxpos-logo.png` (96×96 img); SSO buttons `px-5 py-3.5`
+  (54px, text-base).
 - Login canvas: `to right bottom #f8fafc → #f1f5f9` gradient (`.login-canvas`),
   single-phrase slate-500 "Need an account? Sign up" button.
 - **The reference DRIFTS between sessions** — live computed styles are the
@@ -205,6 +225,11 @@ is a loss machine.
 12. **(Session-3) v4 wraps `hover:` in `@media (hover: hover)`** — every hover
     affordance no-ops on touch devices. `@custom-variant hover (&:hover);`
     restores the reference's v3 semantics (hovers apply on touch).
+13. **(Session-5) Non-inline `@theme` bakes `hsl(var(--x))` into `--color-x` AT
+    `:root`** — scoped triplet re-pointing (`.theme-light`) can never reach the
+    utilities; the login inputs rendered dark borders on the light card for four
+    sessions. `@theme inline` emits `hsl(var(--x))` directly in each utility
+    rule (per-element resolution — verified in the built CSS).
 
 ## 8. Component architecture & the React patterns that are law
 
@@ -288,7 +313,7 @@ SUPERSET instead:
 
 1. **Unit (Vitest, 117/117, 12 files)** — the pure seams only. New `src/lib`
    seam ⇒ new `tests/unit` file (red → green). UI components get no unit tests.
-2. **E2E (Playwright, 55/55)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 68/68)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -424,3 +449,19 @@ verify → shred).
   single-phrase signup button; Title Case copy pins (`exact: true` —
   Playwright's substring match is case-INsensitive). 10 new e2e pins,
   45→55. Ledger: `docs/remediation-plan-session-4.md`.
+
+## Session history addendum — Session-5
+
+**The form-control parity pass + the @theme inline bug.** A computed-style census
+at the depth earlier sessions never measured (inputs, buttons, pills, the login
+form internals) found 13 deltas — the headline being the **Tailwind v4
+theme-switching bug**: non-inline `@theme` baked `hsl(var(--input))` at `:root`,
+so `.theme-light`'s re-pointing never reached the utilities (the login inputs
+rendered dark borders on the light card since Session-101 — visible in the old
+screenshots, never measured until now). Fixed at the root (`@theme inline`) AND
+at the surface (the reference's direct slate classes). The systematic sweep:
+every form control to 12px radius + #262a36 border-input + transparent bg; the
+Button default to py-2.5 (42px); CHARGE to py-5 (70px); the receipt footer to a
+TEXTAREA; the Reports pills to the reference's geometry; the login card frame
+(shadow-2xl + the 4px strip + the vendored logo + 54px SSO buttons). 13 new
+e2e pins, red → green; unit untouched at 117/117.

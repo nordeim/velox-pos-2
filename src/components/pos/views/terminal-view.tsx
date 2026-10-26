@@ -155,7 +155,7 @@ function ChargeDialog({ open, onOpenChange, total, currency, onComplete }: Charg
               value={amountPaid}
               onChange={(e) => setAmountPaid(e.target.value)}
               placeholder={total.toFixed(2)}
-              className="border-edge bg-white/5 text-white"
+              className="text-white"
             />
             {amountPaid !== "" && (
               <p className={`text-sm ${change > 0 ? "text-emerald-400" : "text-white/50"}`} data-testid="change-due">
@@ -173,7 +173,7 @@ function ChargeDialog({ open, onOpenChange, total, currency, onComplete }: Charg
             value={customer}
             onChange={(e) => setCustomer(e.target.value)}
             placeholder="Walk-in customer"
-            className="border-edge bg-white/5 text-white"
+            className="text-white"
           />
         </div>
         <DialogFooter>
@@ -334,7 +334,7 @@ export function TerminalView() {
       <div className="vpx-scroll min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
         <div className="relative mb-4">
           <ScanLine
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40"
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
             aria-hidden="true"
           />
           <Input
@@ -342,7 +342,7 @@ export function TerminalView() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Scan barcode or search products…"
             aria-label="Scan barcode or search products"
-            className="border-edge bg-panel pl-9 text-white placeholder:text-white/30"
+            className="pl-10 text-white"
           />
         </div>
         <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Category filter">
@@ -527,7 +527,7 @@ export function TerminalView() {
           onClick={() => setChargeOpen(true)}
           disabled={!totals.itemCount || totals.total <= 0}
           data-testid="charge-button"
-          className="glass-button-success mt-3 flex w-full items-center justify-center gap-2 rounded-2xl px-8 py-3.5 text-xl font-black"
+          className="glass-button-success mt-3 flex w-full items-center justify-center gap-2 rounded-2xl px-8 py-5 text-xl font-black"
         >
           <ShoppingCart className="h-5 w-5" aria-hidden="true" />
           CHARGE {totals.totalDisplay}

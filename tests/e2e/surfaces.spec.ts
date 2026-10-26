@@ -223,3 +223,107 @@ test("the fiscal toggle defaults OFF=hidden with the reference's copy and help t
   await fiscalSwitch.click();
   await expect(fiscal.getByText("Visible on receipt")).toBeVisible();
 });
+
+// ---------------------------------------------------------------------------
+// Session-5 pins: the form-control / button / pill parity contracts, all
+// measured live on the reference (2026-10-26 evening). The reference's
+// Input/Select/Textarea base computes 12px radius + #262a36 border-input +
+// transparent bg everywhere (settings, dialogs, search); its standard buttons
+// are py-2.5 (42px); its CHARGE is py-5 (70px); its Reports period pills are
+// text-xs bold in a 16px-radius container; its receipt footer is a TEXTAREA.
+// ---------------------------------------------------------------------------
+
+test("settings inputs compute the reference's 12px radius, #262a36 border, transparent bg", async ({
+  page,
+}) => {
+  await page.goto("/StoreSettings");
+  const name = page.getByLabel("Store name *");
+  await expect(name).toBeVisible();
+  await expect(name).toHaveCSS("border-radius", "12px");
+  await expect(name).toHaveCSS("border-color", "rgb(38, 42, 54)");
+  await expect(name).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+});
+
+test("dialog inputs compute the reference's 12px radius", async ({ page }) => {
+  await page.goto("/Inventory");
+  await page.getByRole("button", { name: "New Product" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  const input = dialog.getByLabel("Name");
+  await expect(input).toBeVisible();
+  await expect(input).toHaveCSS("border-radius", "12px");
+});
+
+test("the search inputs compute the reference's geometry and placeholder", async ({ page }) => {
+  await page.goto("/Inventory");
+  const search = page.getByPlaceholder("Search by name or code...");
+  await expect(search).toBeVisible();
+  await expect(search).toHaveCSS("border-radius", "12px");
+  await expect(search).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  // The reference's placeholder: --muted-foreground 220 12% 50% = rgb(112,122,143).
+  const ph = await search.evaluate((el) =>
+    getComputedStyle(el, "::placeholder").color,
+  );
+  expect(ph).toBe("rgb(112, 122, 143)");
+});
+
+test("the receipt footer is the reference's TEXTAREA (rows=2, min-height 60px)", async ({
+  page,
+}) => {
+  await page.goto("/StoreSettings");
+  const footer = page.getByLabel("Receipt footer");
+  await expect(footer).toBeVisible();
+  await expect(footer.evaluate((el) => el.tagName)).resolves.toBe("TEXTAREA");
+  await expect(footer).toHaveAttribute("rows", "2");
+  await expect(footer).toHaveCSS("min-height", "60px");
+});
+
+test("Reports period pills compute the reference's container + pill geometry", async ({
+  page,
+}) => {
+  await page.goto("/Reports");
+  const group = page.getByRole("group", { name: "Report period" });
+  await expect(group).toBeVisible();
+  await expect(group).toHaveCSS("border-radius", "16px");
+  // The container's measured bg: rgba(28, 31, 52, 0.85).
+  await expect(group).toHaveCSS("background-color", "rgba(28, 31, 52, 0.85)");
+
+  const active = group.getByRole("button", { name: "30 days" });
+  await expect(active).toHaveCSS("border-radius", "12px");
+  await expect(active).toHaveCSS("font-size", "12px");
+  await expect(active).toHaveCSS("font-weight", "700");
+  // The active pill carries the reference's shadow-lg.
+  const shadow = await active.evaluate((el) => getComputedStyle(el).boxShadow);
+  expect(shadow).not.toBe("none");
+
+  const inactive = group.getByRole("button", { name: "7 days" });
+  // Inactive copy: text-white/40 — v4 serializes as oklab with /0.4.
+  const color = await inactive.evaluate((el) => getComputedStyle(el).color);
+  expect(color).toMatch(/(?:\/\s*0\.4\)|,\s*0\.4\))/);
+});
+
+test("standard action buttons compute the reference's py-2.5 (42px)", async ({ page }) => {
+  await page.goto("/Inventory");
+  const newProduct = page.getByRole("button", { name: "New Product" });
+  await expect(newProduct).toBeVisible();
+  await expect(newProduct).toHaveCSS("height", "42px");
+  await expect(newProduct).toHaveCSS("padding", "10px 16px");
+});
+
+test("the CHARGE button computes the reference's py-5 (70px)", async ({ page }) => {
+  await page.goto("/POS");
+  const charge = page.getByTestId("charge-button");
+  await expect(charge).toBeVisible();
+  await expect(charge).toHaveCSS("height", "70px");
+});
+
+test("select triggers compute the reference's 12px radius + #262a36 border", async ({
+  page,
+}) => {
+  await page.goto("/StoreSettings");
+  const currency = page.getByRole("combobox", { name: "Currency" });
+  await expect(currency).toBeVisible();
+  await expect(currency).toHaveCSS("border-radius", "12px");
+  await expect(currency).toHaveCSS("border-color", "rgb(38, 42, 54)");
+  await expect(currency).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+});

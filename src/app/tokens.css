@@ -18,7 +18,13 @@
       shadcn triplets — one mechanism, two surfaces.
 --------------------------------------------------------------------------- */
 
-@theme {
+/* INLINE is load-bearing (Session-5, the F-28 bug): non-inline @theme bakes
+   `hsl(var(--input))` into --color-input AT :ROOT — the .theme-light scope's
+   re-pointing could never reach the utilities (live-proven: login inputs
+   rendered dark borders on the light card). Inline emits hsl(var(--input))
+   directly in each utility rule, resolving per-element against the cascaded
+   triplet. Verified: no direct var(--color-*) consumers exist. */
+@theme inline {
   /* ---- shadcn token utilities route through runtime-resolvable vars ---- */
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -66,14 +72,19 @@
   --secondary: 231 26% 14%;
   --secondary-foreground: 221 28% 93%;
   --muted: 231 26% 14%;
-  --muted-foreground: 222 12% 62%;
+  --muted-foreground: 220 12% 50%; /* #707a8f — measured on the reference's placeholders */
   --accent: 231 26% 16%;
   --accent-foreground: 221 28% 93%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 231 27% 20%; /* #1e2235 */
-  --input: 231 27% 22%;
-  --ring: 251 91% 60%;
+  /* Session-5 (measured live on the reference's app shell): the reference
+     re-points --input/--border to `225 18% 18%` (#262a36) at its app wrapper,
+     --muted-foreground to `220 12% 50%` (#707a8f — the placeholder color),
+     --ring to `252 87% 67%`. The clone's app is permanently dark, so the
+     scoped values are baked into :root directly. */
+  --border: 225 18% 18%; /* #262a36 — the reference's rendered input/dialog border */
+  --input: 225 18% 18%; /* #262a36 */
+  --ring: 252 87% 67%;
   --radius: 0.5rem;
 }
 

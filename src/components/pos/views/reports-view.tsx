@@ -34,8 +34,13 @@ export function ReportsView() {
         title="Reports"
         subtitle="Sales & revenue analytics"
         actions={
+          // Session-5 (measured live): the reference's period selector —
+          // container `flex gap-2 p-1 rounded-2xl` with a white/7 border and
+          // a rgba(28,31,52,0.85) fill; pills `px-4 py-2 rounded-xl text-xs
+          // font-bold` (inactive white/40, hover white/70, active violet-600
+          // + shadow-lg).
           <div
-            className="flex rounded-xl border border-edge bg-panel p-1"
+            className="flex gap-2 rounded-2xl border border-white/[0.07] bg-[rgba(28,31,52,0.85)] p-1"
             role="group"
             aria-label="Report period"
           >
@@ -45,8 +50,10 @@ export function ReportsView() {
                 type="button"
                 onClick={() => setDays(p)}
                 aria-pressed={days === p}
-                className={`vpx-focus rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-                  days === p ? "bg-violet-600 text-white" : "text-white/60 hover:text-white"
+                className={`vpx-focus rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                  days === p
+                    ? "bg-violet-600 text-white shadow-lg"
+                    : "text-white/40 hover:text-white/70"
                 }`}
               >
                 {p} days

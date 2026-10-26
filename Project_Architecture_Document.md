@@ -27,7 +27,7 @@ guardrail is enforced by tooling that runs in this checkout.
 
 **Scale & baselines (verified 2026-10-26, Session-3 re-certification):** 7 Prisma models · 22 API
 route files · 8 gated views
-+ login/reset/404 · 117 unit tests (12 files) · 55 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 117 unit tests (12 files) · 68 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -125,6 +125,33 @@ sRGB stops.
 control over the measured visual (grid dashes, tick labels, stroke), and the data transforms
 (bucketing, shares) are unit-pinned pure functions — chart libraries would add bundle weight for
 two plots and blur the parity contract.
+
+### ADR-010 — The Session-5 parity pins (the @theme inline fix + the form-control/button contracts)
+**Decision:** (1) `tokens.css` switches `@theme` → **`@theme inline`**: the non-inline form bakes
+`hsl(var(--input))` into `--color-input` AT `:root`, so the `.theme-light` login scope's triplet
+re-pointing could never reach themed utilities (live-proven: `--color-input` read the dark
+value inside the light wrapper; the login inputs rendered dark borders on the light card).
+Inline emits `hsl(var(--input))` directly in each utility rule (verified in the built CSS:
+`.border-input{border-color:hsl(var(--input))}`). (2) The form-control contract moves into the
+base components: Input/Select/Textarea compute `rounded-xl` (12px) + `border-input` (#262a36) +
+transparent bg + `#707a8f` placeholders + ring-1 focus — 34 per-field `border-edge bg-white/5`
+compensating overrides were stripped; the `:root` tokens adopt the reference's app-scoped
+values (`--input`/`--border` `225 18% 18%`, `--muted-foreground` `220 12% 50%`, `--ring`
+`252 87% 67%`). (3) The Button default size is `px-4 py-2.5` (padding-driven 42px — no fixed
+h-9); CHARGE is `py-5` (70px). (4) The receipt footer is a TEXTAREA (rows=2, multi-line
+footers — a functional superset of the single-line input it replaces). (5) The login surface
+adopts the reference's form internals: 48px slate-filled inputs (DIRECT slate classes, not
+themed utilities), the bg-white/95 + shadow-2xl card with the 4px top gradient strip, the
+vendored logo image (`public/veloxpos-logo.png`, 96×96), 54px SSO buttons, font-medium
+sign-in. (6) The Reports period pills adopt the reference's geometry (rounded-2xl container,
+rgba(28,31,52,0.85) fill, text-xs bold pills, shadow-lg active state).
+**Rationale:** a computed-style census at the form-control depth the earlier sessions never
+measured (the full ledger is `docs/remediation-plan-session-5.md`). Every item is
+user-visible parity; each is e2e-pinned (13 new pins: settings/dialog/search input geometry,
+textarea, pills, buttons ×2, select trigger, login inputs/card strip/logo/sign-in/SSO). The
+login inputs use direct slate classes AND the theme mechanism was fixed at the root — the
+symptom fix and the mechanism fix are both shipped (skill doctrine: fix the cause, not the
+symptom).
 
 ### ADR-009 — The Session-4 parity pins (heading scale, fiscal rename + inverted toggle, Added banner)
 **Decision:** (1) Heading sizes align to the reference's computed styles: page H1s `text-2xl`
@@ -264,7 +291,7 @@ lint → typecheck → unit → build → (smoke) → e2e
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 12 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 55/55):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 68/68):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
@@ -369,3 +396,28 @@ lint → typecheck → unit → build → (smoke) → e2e
   signup button). No prior pin weakened; no guardrail loosened.
 - Baselines at lock: lint 0 errors (1 documented warning) · typecheck clean · unit 117/117 ·
   e2e 55/55 · standalone build green.
+
+## Revision Block — v1.3 (2026-10-26, Session-5)
+
+**Scope:** the form-control/button/login-form parity pass + the Tailwind v4 theme-switching
+bug (the audit ledger is `docs/remediation-plan-session-5.md`). Thirteen findings, all
+e2e-pinned red → green (13 new pins; e2e 55→68, unit 117/117 unchanged).
+
+- **The F-28 mechanism fix (`@theme inline`)**: non-inline `@theme` baked `hsl(var(--input))`
+  into `--color-input` at `:root`, so the `.theme-light` scope never reached themed utilities.
+  The login inputs now render light (48px, slate-200 borders, slate-50/50 fill) via the
+  reference's direct slate classes, AND the theme mechanism resolves per-element for any
+  future scoped usage.
+- **The form-control contract**: Input/Select/Textarea compute 12px radius + #262a36
+  border-input + transparent bg + #707a8f placeholders + ring-1 focus (34 per-field overrides
+  stripped); `:root` tokens adopt the reference's app-scoped values.
+- **Buttons**: default size `px-4 py-2.5` (42px, padding-driven); CHARGE `py-5` (70px);
+  Reports period pills (rounded-2xl container + text-xs bold pills + shadow-lg active).
+- **The receipt footer is a TEXTAREA** (rows=2 — multi-line footers, a functional superset).
+- **The login surface**: the reference's card frame (bg-white/95 + backdrop-blur + shadow-2xl
+  + the 4px top gradient strip + inner content paddings), the vendored logo image, 54px SSO
+  buttons, font-medium sign-in.
+- Test baselines: unit **117/117** (no pure seam touched) · e2e **68/68** (+13 Session-5
+  pins). No prior pin weakened; no guardrail loosened.
+- Baselines at lock: lint 0 errors (1 documented warning) · typecheck clean · unit 117/117 ·
+  e2e 68/68 · standalone build green.

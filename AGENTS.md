@@ -55,8 +55,14 @@ bite hardest here:
   to-teal-600/70` — reproducing its implementation, not a brand surface.)
 - **Nav lists are `flex flex-col gap-*`** — never `space-y-*` with `mt-*`/`mb-*` children (v4's
   `:where()` rewrite flips specificity).
-- Shadcn tokens are raw HSL triplets in `:root` routed through `hsl(var(--x))` inside `@theme`;
-  `.theme-light` re-points them for the login card only. The app shell is permanently dark.
+- Shadcn tokens are raw HSL triplets in `:root` routed through `hsl(var(--x))` inside
+  **`@theme inline`**; `.theme-light` re-points them for the login card only. The app shell is
+  permanently dark.
+- **`@theme` MUST stay `inline`** (Session-5, the F-28 bug): non-inline `@theme` bakes
+  `hsl(var(--input))` into `--color-input` AT `:root`, so scoped re-pointing (`.theme-light`)
+  can never reach the utilities — the login inputs rendered dark borders on the light card for
+  four sessions before anyone measured it. Inline emits `hsl(var(--input))` directly in each
+  utility rule (verified in the built CSS: `.border-input{border-color:hsl(var(--input))}`).
 - **The reference DRIFTS — re-measure before trusting the spec docs.** Session-4 caught the live
   reference having renamed its fiscal field labels since Session-101's measurement (RUC/NIT →
   "Tax ID / EIN", etc.). The measured spec in `docs/veloxpos-implementation-plan.md` §0 is a
@@ -79,6 +85,27 @@ bite hardest here:
   strip in the cart panel that expands on add (emerald chip, circle-check, "ADDED" + product
   name, `transition-all duration-300`) and auto-collapses after ~2.5s. The timer state lives in
   the click handler (no setState-in-effect); the ref only carries unmount cleanup.
+
+## The form-control + button parity contracts (Session-5 pins)
+
+- **Every Input/Select/Textarea computes 12px radius (`rounded-xl`), `border-input` = `#262a36`,
+  transparent bg, `#707a8f` placeholders, ring-1 focus** — measured on the reference across
+  settings/dialogs/search. The base components own this; do NOT add per-field `border-edge
+  bg-white/5` overrides (Session-5 stripped 34 of them). The token contract: `:root`
+  `--input`/`--border` = `225 18% 18%` (#262a36), `--muted-foreground` = `220 12% 50%`,
+  `--ring` = `252 87% 67%`.
+- **Standard buttons are `px-4 py-2.5` (padding-driven 42px)** — the Button default size has NO
+  fixed height. The CHARGE button is `py-5` (70px). The Reports period pills are `px-4 py-2
+  rounded-xl text-xs font-bold` (inactive white/40, active violet-600 + shadow-lg) in a
+  `rounded-2xl` white/7-bordered `rgba(28,31,52,0.85)` container.
+- **The receipt footer is a TEXTAREA** (`rows=2`, min-h 60px, resize vertical).
+- **The login surface**: inputs are `h-11 sm:h-12 bg-slate-50/50 border-slate-200 rounded-xl
+  placeholder:text-slate-600 pl-10` (DIRECT slate classes — never themed utilities); the card is
+  `bg-white/95 backdrop-blur-sm shadow-2xl overflow-hidden` with a 4px top gradient strip
+  (slate-200→300→200) and the content padding on an inner wrapper (`p-8 sm:p-10 md:pt-12
+  md:pb-10 md:px-10`); the logo is the vendored `public/veloxpos-logo.png` (96×96 img); SSO
+  buttons are `px-5 py-3.5` (54px, text-base); sign-in is `font-medium`. E2E-pinned in
+  `tests/e2e/auth.spec.ts`.
 
 ## The mobile drawer contract (e2e-pinned — do not regress)
 

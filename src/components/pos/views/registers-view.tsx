@@ -105,7 +105,7 @@ function RegisterModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Register 1"
-              className="border-edge bg-white/5 text-white placeholder:text-white/30"
+              className="text-white"
               autoFocus
             />
           </div>
@@ -118,7 +118,7 @@ function RegisterModal({
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="e.g. Main entrance"
-              className="border-edge bg-white/5 text-white placeholder:text-white/30"
+              className="text-white"
             />
           </div>
         </div>
@@ -201,7 +201,7 @@ function OpenShiftDialog({
             step="0.01"
             value={openingFloat}
             onChange={(e) => setOpeningFloat(e.target.value)}
-            className="border-edge bg-white/5 text-white"
+            className="text-white"
             autoFocus
           />
         </div>
@@ -313,7 +313,7 @@ function CloseShiftDialog({
             step="0.01"
             value={counted}
             onChange={(e) => setCounted(e.target.value)}
-            className="border-edge bg-white/5 text-white"
+            className="text-white"
             autoFocus
           />
           {counted !== "" && (
