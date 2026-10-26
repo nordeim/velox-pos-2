@@ -1,4 +1,4 @@
-export const DEMO_EMAIL = "demo@studyflow.app";
+export const DEMO_EMAIL = "demo@veloxpos.app";
 export const DEMO_PASSWORD = "Demo1234!";
 
 /**
