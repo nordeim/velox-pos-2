@@ -81,18 +81,21 @@ export function DashboardView() {
 
       <div className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
         <section className="glass-card rounded-2xl p-5" aria-labelledby="dash-sales-week">
-          <h2 id="dash-sales-week" className="text-base font-bold text-white/70">
+          {/* Session-9 (F-57): h3 — the reference renders its section headings
+              as level-3 (measured live); the clone's h2 had identical computed
+              styles but a different document outline. */}
+          <h3 id="dash-sales-week" className="text-base font-bold text-white/70">
             Sales — Last 7 days
-          </h2>
+          </h3>
           <div className="mt-3">
             <LineChart data={series} ariaLabel="Sales over the last 7 days" />
           </div>
         </section>
 
         <section className="glass-card rounded-2xl p-5" aria-labelledby="dash-categories">
-          <h2 id="dash-categories" className="text-base font-bold text-white/70">
+          <h3 id="dash-categories" className="text-base font-bold text-white/70">
             Products by Category
-          </h2>
+          </h3>
           <CategoryBreakdown />
         </section>
       </div>

@@ -80,7 +80,10 @@ bite hardest here:
 ## Heading sizes + the fiscal toggle contract (Session-4 pins)
 
 - **Page H1s are `text-2xl` (24px), section headings `text-base` (16px), Reports section
-  headings `text-sm` (14px) uppercase** — measured on the reference; e2e-pinned. The reference
+  headings `text-sm` (14px) uppercase** — measured on the reference; e2e-pinned. The section
+  headings are `<h3>` elements (Session-9, F-57 — the reference's measured tag; the clone's
+  h2s had identical computed styles but a different document outline; level-pinned). Reports
+  section headings stay `<h2>` (the reference's own choice). The reference
   renders its headings in slate-700/800 on dark glass (near-invisible — its own defect); the
   clone keeps readable white/violet colors (the a11y-superset doctrine, same posture as the
   mobile drawer).
@@ -122,8 +125,14 @@ bite hardest here:
   fixed height) + `font-medium` + 16px icons (`w-4 h-4`) + inactive `text-white/40
   hover:text-white/80` + `transition-all duration-150`. The ACTIVE pill ADDS
   `border border-violet-500/30 shadow-sm shadow-violet-500/10` (→ 42px with the border).
-  The Reports nav glyph is `ChartColumnIncreasing` (the reference swapped it live —
-  Session-101's FileText reading is stale). The wordmark is `text-sm font-bold
+  The Reports nav glyph is **`FileChartColumnIncreasing`** — the reference's measured class
+  is `lucide-file-chart-column-increasing`, the FILE variant (a document with increasing
+  bars). Session-9 (F-56) corrected Session-6's misreading of that class as
+  "ChartColumnIncreasing" (the bare-bars export — a visibly different glyph); e2e-pinned.
+  Buttons compute `cursor: pointer` (Session-9, F-58 — v4's preflight dropped v3's
+  button-cursor rule; the base-layer cure lives in `tokens.css`, `:not([disabled])` keeps
+  the disabled `not-allowed` contract); e2e-pinned on the chevron.
+  The wordmark is `text-sm font-bold
   tracking-wide text-white/90` (14px); the chip Zap + footer chevron are `w-4 h-4` in a
   `p-3` cell.
 - **Settings section headers**: BARE `w-5 h-5` icons in per-section colors — Store

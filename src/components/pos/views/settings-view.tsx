@@ -52,16 +52,17 @@ function SectionCard({
           per-section color (gap-2), no chip wrapper. The heading keeps the
           clone's readable color (the reference's text-slate-700 on dark
           glass is its own near-invisible defect — the documented a11y
-          superset posture). */}
+          superset posture). Session-9 (F-57): h3 — the reference renders its
+          six section headings as level-3 (measured live). */}
       <div className="mb-4 flex items-center justify-between">
-        <h2
+        <h3
           className={`flex items-center gap-2 text-base font-bold ${
             tone === "green" ? "text-emerald-300/80" : "text-violet-300/80"
           }`}
         >
           {icon}
           {title}
-        </h2>
+        </h3>
         {headerAction}
       </div>
       <div>{children}</div>

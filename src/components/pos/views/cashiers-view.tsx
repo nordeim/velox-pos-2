@@ -210,9 +210,11 @@ export function CashiersView() {
       )}
 
       <section className="glass-card mt-6 rounded-2xl p-5" aria-labelledby="turnos-title">
-        <h2 id="turnos-title" className="text-base font-bold text-white/60">
+        {/* Session-9 (F-57): h3 — the reference renders "Turnos Recientes"
+            as level-3 (measured live). */}
+        <h3 id="turnos-title" className="text-base font-bold text-white/60">
           Turnos Recientes
-        </h2>
+        </h3>
         <div className="vpx-scroll mt-3 overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead>

@@ -155,3 +155,42 @@ test("nav icons, the wordmark, and the footer chevron compute the reference's 16
   const chevronBox = await chevron.boundingBox();
   expect(chevronBox?.width).toBe(16);
 });
+
+// ---------------------------------------------------------------------------
+// Session-9 pins (F-56/F-58) — two chrome contracts the earlier sessions
+// missed because neither had a pin:
+//   F-56: the Reports glyph is the FILE variant (a document with increasing
+//         bars — class lucide-file-chart-column-increasing, the lucide
+//         export FileChartColumnIncreasing). Session-6's F-47 fix misread
+//         the class→export mapping and shipped ChartColumnIncreasing (bars
+//         only) — a visibly different glyph that survived three sessions
+//         because no pin asserted the class.
+//   F-58: v4's preflight (unlike v3's) sets NO cursor:pointer on buttons —
+//         every button on the clone computed cursor:default while the
+//         reference (v3-era CSS) computes pointer. The base-layer rule in
+//         tokens.css is the cure; this pin is the protection.
+// ---------------------------------------------------------------------------
+
+test("the Reports nav glyph is the reference's file-chart-column-increasing (the FILE variant)", async ({
+  page,
+}) => {
+  await page.goto("/Dashboard");
+  const sidebar = page.getByTestId("app-sidebar");
+  const reportsIcon = sidebar.getByRole("link", { name: "Reports" }).locator("svg");
+  await expect(reportsIcon).toBeVisible();
+  // Measured live on the reference: class="lucide lucide-file-chart-column-increasing
+  // w-4 h-4 flex-shrink-0" — the DOCUMENT variant, not the bare bars.
+  await expect(reportsIcon).toHaveClass(/lucide-file-chart-column-increasing/);
+});
+
+test("buttons compute cursor:pointer (the v3-era preflight contract v4 dropped)", async ({
+  page,
+}) => {
+  await page.goto("/Dashboard");
+  const sidebar = page.getByTestId("app-sidebar");
+  // The chevron: a plain button (no glass class) — the barest expression of
+  // the base-layer rule. The reference measures cursor:pointer on it.
+  const collapse = sidebar.getByRole("button", { name: "Collapse sidebar" });
+  await expect(collapse).toBeVisible();
+  await expect(collapse).toHaveCSS("cursor", "pointer");
+});

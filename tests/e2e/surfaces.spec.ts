@@ -130,33 +130,33 @@ test("page H1s compute the reference's 24px (not text-3xl)", async ({ page }) =>
   }
 });
 
-test("section headings compute the reference's 16px (Dashboard/Cashiers/Settings)", async ({
+test("section headings compute the reference's 16px as level-3 (Dashboard/Cashiers/Settings)", async ({
   page,
 }) => {
+  // Session-9 (F-57): the reference renders these section headings as <h3>
+  // (16px/700) — the clone shipped <h2> with identical computed styles. The
+  // level pin locks the document-outline contract too (role+level lookups
+  // fail against h2s).
   await page.goto("/Dashboard");
-  const dash = page.getByRole("heading", { name: "Sales — Last 7 days" });
+  const dash = page.getByRole("heading", { name: "Sales — Last 7 days", level: 3 });
   await expect(dash).toBeVisible();
   await expect(dash).toHaveCSS("font-size", "16px");
-  await expect(page.getByRole("heading", { name: "Products by Category" })).toHaveCSS(
-    "font-size",
-    "16px",
-  );
+  await expect(
+    page.getByRole("heading", { name: "Products by Category", level: 3 }),
+  ).toHaveCSS("font-size", "16px");
 
   await page.goto("/Cashiers");
-  await expect(page.getByRole("heading", { name: "Turnos Recientes" })).toHaveCSS(
-    "font-size",
-    "16px",
-  );
+  await expect(
+    page.getByRole("heading", { name: "Turnos Recientes", level: 3 }),
+  ).toHaveCSS("font-size", "16px");
 
   await page.goto("/StoreSettings");
-  await expect(page.getByRole("heading", { name: "Business Information" })).toHaveCSS(
-    "font-size",
-    "16px",
-  );
-  await expect(page.getByRole("heading", { name: "Fiscal / Tax Data" })).toHaveCSS(
-    "font-size",
-    "16px",
-  );
+  await expect(
+    page.getByRole("heading", { name: "Business Information", level: 3 }),
+  ).toHaveCSS("font-size", "16px");
+  await expect(
+    page.getByRole("heading", { name: "Fiscal / Tax Data", level: 3 }),
+  ).toHaveCSS("font-size", "16px");
 });
 
 test("Reports headings compute the reference's 14px uppercase white/60", async ({ page }) => {
@@ -364,7 +364,9 @@ test("section headers carry the reference's bare 20px icons in per-section color
   ];
   for (const [title, color] of sections) {
     const section = page.locator(`section[aria-label="${title}"]`);
-    const icon = section.locator("h2 svg");
+    // Session-9 (F-57): the section headings are h3 (the reference's tag) —
+    // the icons live under h3 now.
+    const icon = section.locator("h3 svg");
     await expect(icon).toBeVisible();
     await expect(icon).toHaveCSS("color", color);
     const box = await icon.boundingBox();

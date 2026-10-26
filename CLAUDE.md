@@ -74,8 +74,9 @@ No hosted CI exists; the local gate is the only gate.
 - **The drawer focus contract** (app-shell): focus → close button on open, Tab wraps inside the
   drawer, Escape restores the hamburger's focus, viewport growth past `md` auto-closes — all
   e2e-pinned in `tests/e2e/mobile-navigation.spec.ts`.
-- **Heading sizes are parity-pinned**: H1 `text-2xl` (24px), sections `text-base` (16px), Reports
-  sections `text-sm` (14px) — the reference's computed sizes (its own headings render in
+- **Heading sizes are parity-pinned**: H1 `text-2xl` (24px), sections `text-base` (16px) as
+  **`<h3>`** (Session-9, F-57 — the reference's measured tag, level-pinned), Reports sections
+  `text-sm` (14px) as `<h2>` — the reference's computed sizes (its own headings render in
   near-invisible slate on dark; we keep readable colors — the superset posture).
 - **The fiscal toggle is wired INVERTED on purpose**: the column is `hideFiscalOnReceipt`
   (`@default(true)` — hidden, per the reference's default) but the switch renders
@@ -104,7 +105,10 @@ No hosted CI exists; the local gate is the only gate.
   dates (11px) + `$` y ticks.
 - **The Session-6 chrome contracts are e2e-pinned**: padding-driven 40px nav
   items (active pill + violet border/shadow → 42px, 16px icons,
-  ChartColumnIncreasing for Reports, 14px wordmark); bare per-section-colored
+  FileChartColumnIncreasing for Reports — Session-9/F-56 corrected the glyph to the
+  FILE variant the reference's class string actually names, 14px wordmark);
+  buttons compute `cursor: pointer` (Session-9/F-58 — the v4-preflight cure in
+  `tokens.css`); bare per-section-colored
   section-header icons; the category DIALOG flow (header Add → New Category →
   Cancel/Create 42px); Save Changes py-3.5 (54px); the 36px Inventory chips
   (glass-button-primary active); the POS gate p-8 + /30 icon + white/35 copy.
@@ -130,7 +134,7 @@ No hosted CI exists; the local gate is the only gate.
   (the gate fails until you do; history blocks keep their historical numbers by design).
 - **E2E** (`tests/e2e/**`, Playwright, production standalone on :3100): user journeys through the
   real UI. Two projects — `chromium` (1440×900) and `mobile` (390×844; runs only
-  `mobile-navigation.spec.ts`). **Baseline: 78 tests.** Auth once via `auth.setup.ts` +
+  `mobile-navigation.spec.ts`). **Baseline: 80 tests.** Auth once via `auth.setup.ts` +
   storageState (the rate limiter is 10/IP/15 min). The scratch db (`db/e2e.db`) is provisioned
   by the webServer command (kill-port → provision → boot) and never replaced while the server
   lives — replacing it after boot desynchronizes the login and page-render clients

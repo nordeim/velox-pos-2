@@ -565,3 +565,88 @@ gate), the tier-3 smoke ladder polices the API surface + the boot gate + the art
 hygiene on every run, the deployable artifact no longer ships the dev secret + dev
 database, and the checkout's transaction now matches its own documentation. Standing
 debt: NONE identified. Baselines: unit **133/133**, e2e **78/78**, smoke **13/13**.
+
+---
+
+## Session-9 — the glyph/cursor/tag parity pass (velox-pos-2)
+
+**Received state**: `16a0442` (Session-8's tree `c306c95` + the operator's session-log
+commit). **Directive**: the standing audit→remediate→push cycle — workspace refresh,
+doc re-internalization, the skills-led code audit, the live reference re-measurement,
+the TDD remediation, the docs lockstep, and the SSH-wrapper push.
+
+**Environment:** the workspace had been RESET — fresh `git clone` +
+`cp .env.example .env` (AUTH_SECRET generated; `DATABASE_URL="file:../db/custom.db"`
+per the contract) + `bun install` + `db:push` + `db:seed -- --demo` (15 products /
+5 categories / 1 register / 33 sales) + `bunx playwright install chromium` (the
+environment cache held chromium-1200 from a Python install; the lockfile's Playwright
+1.63.0 requires 1243 — the first e2e run failed until provisioned). **Gate on the
+received tree: GREEN on first run** — lint 0 errors (1 documented warning) · tsc clean
+· unit 133/133 · build green (hygiene-clean) · smoke 13/13 · e2e 78/78.
+
+**The reference re-measured live end-to-end — NO drift for the THIRD consecutive
+cycle** (every Session-4/5/6/8 pin byte-exact: the sidebar chrome 40/42px + the violet
+border pair + the 14px wordmark; the POS gate p-8/64px /30/white-35/CHARGE
+70/20/900; the Dashboard Title-Case stats + weekday axes; the Inventory 36px gradient
+chips; the Reports 14px uppercase + the 32px pills in the rgba(28,31,52,0.85)
+container; the Settings fiscal labels + Save 54px + the 34px Add chip; the Spanish
+copy; the login internals 48px/96px/54px/500; the reference's OWN mobile defect still
+present at 390×844). With the style surface stable, this cycle's audit went one layer
+DEEPER than computed styles — the DOM tag census + the button cursor semantics — and
+caught what the style-only audits had missed for three sessions.
+
+**Three findings (the ledger is `docs/remediation-plan-session-9.md`):**
+- **F-56 (MEDIUM, visual parity)**: the Reports nav glyph — the reference's measured
+  class `lucide-file-chart-column-increasing` names the lucide export
+  `FileChartColumnIncreasing` (a document with increasing bars); Session-6's F-47 fix
+  had misread the class string as "ChartColumnIncreasing" (bare bars — a visibly
+  different glyph) and codified the misreading into the AGENTS/CLAUDE/SKILL chrome
+  contracts. It survived three sessions because NO pin asserted the glyph class. The
+  fix: the import swap + the corrected contracts + the missing pin
+  (`toHaveClass(/lucide-file-chart-column-increasing/)`). SKILL trap #18: a measured
+  CSS class string is not an icon name — map it through the library's export table
+  and pin the class.
+- **F-58 (MEDIUM, UX parity — the §12 v4 preflight trap)**: Tailwind v4's preflight,
+  unlike v3's, sets no `cursor: pointer` on buttons — every button on the clone
+  computed `cursor: default` while the reference (v3-era CSS) measures `pointer`
+  (measured on the SSO buttons, forgot-password, the hamburger, the chevron). The
+  base-layer cure (`button:not([disabled]), [role="button"]:not([disabled])` in
+  `tokens.css` — the guard keeps the `.glass-button*:disabled` not-allowed contract
+  winning). Pinned on the chevron. SKILL trap #17.
+- **F-57 (LOW, semantic parity)**: the reference renders its section headings as
+  `<h3>` (Dashboard ×2, Settings ×6, Cashiers "Turnos Recientes"); the clone's h2s
+  had identical computed styles (16px/700) but a different document outline. Nine
+  tags swapped (classNames byte-identical); the heading pins extended with `level: 3`;
+  one tag-specific locator rode the change (`h2 svg` → `h3 svg`) — the full-suite run
+  caught it, the Session-7 sweep lesson verified no others.
+
+**TDD execution:** all three fixes red-first (the glyph + cursor pins and the
+level-extended heading pins failed against the pre-fix tree), then green. The
+mobile-drawer contract re-verified live in the audit (burger, dialog, 8 labeled
+links, scroll lock, navigate-close, no overflow at 390×844 — the user's called-out
+mobile-nav surface works; the static v4 trap sweep is clean, `@theme inline` intact).
+
+**Re-certification (all on the final tree):** lint ✓ (0 errors, 1 documented warning)
+· tsc ✓ · unit **133/133** (13 files) · build ✓ (hygiene-clean) · smoke **13/13** ·
+e2e **80/80** (+2: the glyph + cursor pins; no prior pin weakened). Live evidence on
+the rebuilt standalone (`scripts/capture-s9-evidence.mjs`, **14/14**): the three fixes
+measured live (the FILE glyph on desktop AND in the drawer, pointer on
+SSO/chevron/hamburger, the h3 censuses), the checkout journey (ticket T-000035), the
+shift lifecycle, and the drawer contract. VLM sweep of screenshots 43–48: **6/6
+effective** — the three initial flags were prompt-expectation bugs, each disproven by
+re-measurement (including re-reading the REFERENCE's login body: it computes white —
+the light canvas IS the contract; my first VLM prompt wrongly said "dark canvas").
+
+**Docs lockstep:** README (the 80-test sites); AGENTS.md (the corrected glyph
+contract + the cursor rule + the h3 contract); CLAUDE.md (the same); PAD v1.7 (the
+revision block + the stale v1.1 header bumped + the counts); velox-pos_SKILL.md
+v2.5.0 (traps 17/18 + the Session-9 addendum + the counts); the docs-counts constants
+re-anchored (E2E=80, "Session-9 lock", "66 desktop + 13 mobile + 1 setup"); the
+remediation plan's execution record; this worklog entry; the session narration
+(`docs/session_13.md`, following the one-ahead numbering).
+
+**Stage summary.** The parity surface is stable (three consecutive drift-free
+reference cycles) and the chrome contracts are now pinned at the depth the reference
+actually ships: the glyph class, the button cursor, and the heading tags all match
+the measured reference, each protected by an e2e pin. Standing debt: NONE
+identified. Baselines: unit **133/133**, e2e **80/80**, smoke **13/13**.

@@ -112,6 +112,19 @@
   --ring: 222 47% 11%;
 }
 
+/* ---- button cursor (Session-9, F-58 — the §12 v4 preflight trap) -------
+   Tailwind v3's preflight set `button, [role="button"] { cursor: pointer }`;
+   v4's preflight DROPPED it, so every button on the clone computed
+   cursor: default while the reference (v3-era CSS) measures pointer
+   (verified live: the SSO buttons, forgot-password, the hamburger, the
+   sidebar chevron). :not([disabled]) keeps the disabled contract intact —
+   the .glass-button*:disabled rules below (cursor: not-allowed) and the UA
+   default for unclassed disabled buttons both keep winning over this rule. */
+button:not([disabled]),
+[role="button"]:not([disabled]) {
+  cursor: pointer;
+}
+
 /* ---- the measured glass system (verbatim from the reference) ----
    PLAIN CSS — see trap 1. Class names match the reference exactly. */
 

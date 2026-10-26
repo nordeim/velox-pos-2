@@ -1,4 +1,4 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.1
+# VeloxPOS — Master Project Architecture Document (PAD) v1.7
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
@@ -25,9 +25,9 @@ reports, validation) underneath **server-gated thin routes**, a **single Zustand
 (lint → typecheck → unit → build → e2e) is the only gate — there is no hosted CI — so every
 guardrail is enforced by tooling that runs in this checkout.
 
-**Scale & baselines (verified 2026-10-26, Session-8 re-certification):** 9 Prisma models · 26 API
+**Scale & baselines (verified 2026-10-26, Session-9 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views
-+ login/reset/404 · 133 unit tests (13 files) · 78 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 133 unit tests (13 files) · 80 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -294,7 +294,7 @@ lint → typecheck → unit → build → smoke → e2e
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 13 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 78/78):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 80/80):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
@@ -597,3 +597,47 @@ re-measured byte-exact, including the reference's own mobile defect at 390×844)
 - Test baselines: unit **133/133** (13 files; +10 the docs-counts gate) · e2e **78/78**
   (unchanged — no pin weakened) · smoke **13/13** (the new tier). The gate is now
   `lint → typecheck → test → build → smoke → e2e` (`bun run gate`).
+
+## Revision Block — v1.7 (2026-10-26, Session-9)
+
+**Scope:** the standing audit→remediate→push cycle on the Session-8 tree (HEAD `16a0442`;
+the ledger is `docs/remediation-plan-session-9.md`). Three findings, all chrome-level —
+the reference did NOT drift for the THIRD consecutive cycle (every pinned surface
+re-measured byte-exact), but this cycle's parity audit extended one layer deeper than
+computed styles (the DOM tag census + button cursor semantics) and caught what the
+style-only audits had missed for three sessions.
+
+- **F-56 (visual parity — the Reports nav glyph)**: the reference's measured glyph class
+  is `lucide-file-chart-column-increasing` — the lucide export `FileChartColumnIncreasing`
+  (a document with increasing bars). Session-6's F-47 fix had misread that class string as
+  "ChartColumnIncreasing" (the bare-bars export — a visibly different glyph) and codified
+  the misreading into the AGENTS/CLAUDE/SKILL chrome contracts. Fixed via the import swap
+  + the corrected contracts; protected by a new e2e pin asserting the class
+  (`toHaveClass(/lucide-file-chart-column-increasing/)`) — the pin that was missing is why
+  it survived. The SKILL's trap catalog grows #18: a measured CSS class string is not an
+  icon name — map it through the library's export table and pin the class.
+- **F-58 (UX parity — the v4 preflight cursor trap)**: Tailwind v4's preflight, unlike
+  v3's, sets no `cursor: pointer` on buttons — every button on the clone computed
+  `cursor: default` while the reference (v3-era CSS) measures `pointer` (verified on the
+  SSO buttons, forgot-password, the hamburger, the chevron). The base-layer cure
+  (`button:not([disabled]), [role="button"]:not([disabled]) { cursor: pointer }`) lives in
+  `tokens.css`; the `:not([disabled])` guard keeps the `.glass-button*:disabled`
+  not-allowed contract winning (the disabled CHARGE still computes not-allowed).
+  E2e-pinned on the chevron. Trap #17.
+- **F-57 (semantic parity — the section-heading tags)**: the reference renders its
+  section headings as `<h3>` (Dashboard's two, Settings' six, Cashiers' "Turnos
+  Recientes"); the clone's `<h2>`s carried identical computed styles (16px/700) but a
+  different document outline. Nine tags swapped (the classNames stay byte-identical);
+  the heading pins extended with `level: 3`; one tag-specific locator rode the change
+  (`h2 svg` → `h3 svg` in the section-icon census — assertion strength unchanged).
+- **Live evidence** (`scripts/capture-s9-evidence.mjs`, **14/14** checks): the three
+  fixes measured live on the rebuilt standalone (the FILE glyph on desktop AND inside
+  the drawer, cursor:pointer on SSO/chevron/hamburger, the h3 censuses on all three
+  views), the full checkout journey (ticket T-000035), the shift lifecycle, and the
+  drawer contract at 390×844 (dialog, 8 labeled links, no overflow). VLM sweep of
+  screenshots 43–48: 6/6 effective (three initial flags were prompt-expectation bugs,
+  each disproven by re-measurement — the login canvas is legitimately light per
+  Session-4's measured gradient).
+- Test baselines: unit **133/133** (13 files) · e2e **80/80** (+2: the glyph + cursor
+  pins; no prior pin weakened) · smoke **13/13**. The gate order is unchanged
+  (`lint → typecheck → test → build → smoke → e2e`, `bun run gate`).

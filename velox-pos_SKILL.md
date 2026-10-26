@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.4.0
+version: 2.5.0
 last_updated: 2026-10-26
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-8 lock: unit **133/133** (13 files) · e2e **78/78**
-(64 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-9 lock: unit **133/133** (13 files) · e2e **80/80**
+(66 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -68,7 +68,7 @@ bun run lint                   # eslint flat config — 0 errors, 1 documented w
 bun run typecheck              # tsc --noEmit — strict
 bun run test                   # vitest — tests/unit/** (133)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               # playwright (78) — NEEDS the build first (:3100)
+bun run test:e2e               # playwright (80) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -257,6 +257,21 @@ is a loss machine.
     reads to fail a later gate. Related capture discipline: settle-wait ~600ms before
     screenshotting animated surfaces (a mid-slide drawer frame reads as a clipped
     drawer to a VLM — the Session-7 screenshot catch).
+17. **(Session-9) v4's preflight sets NO `cursor: pointer` on buttons (F-58)** — v3's
+    preflight carried `button, [role="button"] { cursor: pointer }`; v4 dropped it, so
+    every button computes `cursor: default` while the reference (v3-era CSS) measures
+    `pointer`. The cure is the base-layer rule in `tokens.css`
+    (`button:not([disabled]), [role="button"]:not([disabled]) { cursor: pointer }` —
+    the `:not([disabled])` guard keeps the `.glass-button*:disabled` not-allowed
+    contract winning). E2e-pinned on the sidebar chevron.
+18. **(Session-9) A measured CSS class string is not an icon name (F-56)** — the
+    reference's Reports glyph class `lucide-file-chart-column-increasing` names the
+    lucide export `FileChartColumnIncreasing` (the FILE variant), but Session-6 read
+    it as "ChartColumnIncreasing" (the bare-bars export — a visibly different glyph
+    that survived three sessions because nothing pinned the class). Lesson: when a
+    measurement produces a class string, map it through the library's actual export
+    table, and PIN the class (`toHaveClass(/lucide-file-chart-column-increasing/)`) so
+    the mapping cannot silently rot.
 
 ## 8. Component architecture & the React patterns that are law
 
@@ -341,7 +356,7 @@ SUPERSET instead:
 1. **Unit (Vitest, 133/133, 13 files)** — the pure seams only (plus the docs-counts
    lockstep gate). New `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 78/78)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 80/80)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -590,3 +605,52 @@ Gate: lint 0 errors (1 documented warning) · tsc clean · unit **133/133** (13 
 +10 the docs-counts gate) · build green (hygiene-clean) · e2e **78/78** · smoke
 **13/13**. Live evidence 8/8 (the cleaned artifact serves login, checkout, every view,
 and the mobile drawer contract) + a 6/6 VLM sweep of screenshots 37–42. Skill v2.4.0.
+
+## Session history addendum — Session-9
+
+**The third consecutive drift-free reference cycle; the audit went one layer
+deeper (tag census + cursor semantics) and found three chrome-level gaps.**
+
+The received tree gated green on first run (133/133 · 78/78 · 13/13 — after
+provisioning the environment's chromium-1243 for the lockfile's Playwright
+1.63.0). The live reference re-measured byte-exact at every pinned depth for
+the THIRD consecutive cycle (sidebar, POS gate, Dashboard, Inventory, Reports,
+Settings, Spanish copy, login internals, the mobile defect) — and this cycle's
+parity audit extended beyond computed styles to the DOM tag census and button
+cursor semantics, which surfaced what the style-only audits had missed:
+
+- **F-56 (MEDIUM)**: the Reports nav glyph — the reference's measured class
+  `lucide-file-chart-column-increasing` names the export
+  `FileChartColumnIncreasing` (a document with increasing bars); Session-6's
+  F-47 fix had misread the class string as "ChartColumnIncreasing" (bare bars)
+  and codified the misreading into the AGENTS/CLAUDE/SKILL chrome contracts.
+  It survived three sessions because NO pin asserted the glyph class. Fixed
+  (the import swap + the corrected contracts) and pinned
+  (`toHaveClass(/lucide-file-chart-column-increasing/)`). Trap 18.
+- **F-58 (MEDIUM)**: buttons computed `cursor: default` (v4's preflight
+  dropped v3's `cursor: pointer`) while the reference measures `pointer` —
+  the family skill's §12 trap, never swept here. The base-layer cure landed
+  in `tokens.css` with the `:not([disabled])` guard (the disabled
+  `not-allowed` contract keeps winning). Pinned on the chevron. Trap 17.
+- **F-57 (LOW)**: the reference renders its section headings as `<h3>`
+  (Dashboard ×2, Settings ×6, Cashiers "Turnos Recientes") — the clone's h2s
+  had identical computed styles (16px/700) but a different document outline.
+  Nine tags swapped; the heading pins extended with `level: 3`.
+
+TDD: all three fixes went red-first (the new glyph + cursor pins and the
+level-extended heading pins failed against the pre-fix tree), then green. One
+existing locator rode the intentional h3 change (`section.locator("h2 svg")`
+→ `"h3 svg"` in the section-icon census — assertion strength unchanged; the
+Session-7 sweep lesson found no other tag-specific locators).
+
+Gate: lint 0 errors (1 documented warning) · tsc clean · unit **133/133**
+(13 files) · build green (hygiene-clean) · e2e **80/80** (+2: the glyph +
+cursor pins) · smoke **13/13**. Live evidence on the standalone
+(`scripts/capture-s9-evidence.mjs`): **14/14** — the three fixes measured
+live (the FILE glyph on desktop + in the drawer, pointer on SSO/chevron/
+hamburger, the h3 censuses), the checkout journey (ticket T-000035), the
+shift lifecycle, and the drawer contract at 390×844. VLM sweep of screenshots
+43–48: 6/6 effective (three initial flags were prompt-expectation bugs — the
+login canvas IS light per Session-4's measured gradient; Dashboard was the
+legitimately active pill; a 900px viewport shows the first three Settings
+sections). Skill v2.5.0.

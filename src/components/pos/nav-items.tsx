@@ -3,17 +3,20 @@
 // ---------------------------------------------------------------------------
 // The nav link + the icon map (the reference's own icon choices, read off the
 // live sidebar: ShoppingCart/BarChart3/Package/History/Monitor/Users/
-// ChartColumnIncreasing/Settings — Session-6 re-measurement: the reference
-// swapped its Reports glyph to lucide-file-chart-column-increasing). The
-// active state is the measured one: violet-600/20 wash + violet-300 text +
-// border-violet-500/30 + shadow-violet-500/10 on a 12px-radius pill.
+// FileChartColumnIncreasing/Settings — the class measured live is
+// lucide-file-chart-column-increasing, i.e. the FILE variant, the lucide
+// export FileChartColumnIncreasing. Session-9 (F-56) corrected the mapping:
+// Session-6 had read that class string as "ChartColumnIncreasing" (bars only,
+// no document) — a visibly different glyph). The active state is the measured
+// one: violet-600/20 wash + violet-300 text + border-violet-500/30 +
+// shadow-violet-500/10 on a 12px-radius pill.
 // ---------------------------------------------------------------------------
 
 import Link from "next/link";
 
 import {
   BarChart3,
-  ChartColumnIncreasing,
+  FileChartColumnIncreasing,
   History,
   Monitor,
   Package,
@@ -34,7 +37,7 @@ export const NAV_ICONS: Record<ViewId, LucideIcon> = {
   sales: History,
   registers: Monitor,
   cashiers: Users,
-  reports: ChartColumnIncreasing,
+  reports: FileChartColumnIncreasing,
   settings: Settings,
 };
 
