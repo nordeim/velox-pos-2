@@ -92,8 +92,25 @@ No hosted CI exists; the local gate is the only gate.
   `252 87% 67%`) computes the reference values.
 - **The login surface uses DIRECT slate classes** (`h-11 sm:h-12 bg-slate-50/50
   border-slate-200 rounded-xl pl-10`), never themed utilities — the reference's login form has
-  its own base; the card is `bg-white/95 backdrop-blur-sm shadow-2xl` + a 4px top gradient
-  strip + the vendored logo `public/veloxpos-logo.png`.
+  its own base; the card is `bg-white/95 shadow-2xl` + `backdrop-blur-xs` (Session-10, F-59:
+  the reference's v3 `backdrop-blur-sm` = 4px = v4's `-xs` after the blur-scale rename, trap
+  #8) + a 4px top gradient strip + the vendored logo `public/veloxpos-logo.png`. The
+  post-login landing is `/` (F-60 — the reference's root-path landing; the root page serves
+  the same terminal as `/POS`).
+- **The TWO stat families are never shared** (Session-10, F-61/F-62): Dashboard =
+  solid-gradient chips (the `.stat-grad-*` exact-rgb CSS classes — the `.brand-chip` oklab
+  doctrine) with white icons + gradient opacity-20 corner blobs + `font-semibold
+  text-slate-500` labels + `font-bold mt-1` values (value COLOR keeps the readable
+  `text-white/90` — the reference's slate-800 values are its VLM-confirmed near-invisible
+  defect); Reports = horizontal cards with 48px `rounded-2xl` `/15`+`/30`-border chips on the
+  LEFT, `h-6 w-6` tone-400 icons, 400 white/35 labels, `font-black` white values, no blob
+  (`ReportsStat` in reports-view.tsx). The muted tones are VERBATIM (subtitles
+  `text-slate-500` — Reports' own subtitle is its `text-white/35` exception; empty states
+  slate-400/500 + `w-16 text-slate-200` stroke-2 icons + `py-12` rhythms; the cart copy
+  `text-white/25`) — never substitute white/xx for the reference's slate design language.
+- **Unpinned palette values serialize as `lab(...)`** (F-62): v4's defaults are oklab-defined —
+  pin the hex in `globals.css`'s `@theme` when a computed pin expects the reference's
+  `rgb(...)` (indigo-400 `#818cf8` was the Session-10 catch).
 - **Key-based modal resets** (`key={editing?.id ?? "new"}`) — no setState-in-effect dialog resets
   (React 19 lint rule `react-hooks/set-state-in-effect`).
 - **Toasts via `useToast()`** → `toast.success/error/info(message)` — never `alert()`.
@@ -134,7 +151,7 @@ No hosted CI exists; the local gate is the only gate.
   (the gate fails until you do; history blocks keep their historical numbers by design).
 - **E2E** (`tests/e2e/**`, Playwright, production standalone on :3100): user journeys through the
   real UI. Two projects — `chromium` (1440×900) and `mobile` (390×844; runs only
-  `mobile-navigation.spec.ts`). **Baseline: 80 tests.** Auth once via `auth.setup.ts` +
+  `mobile-navigation.spec.ts`). **Baseline: 84 tests.** Auth once via `auth.setup.ts` +
   storageState (the rate limiter is 10/IP/15 min). The scratch db (`db/e2e.db`) is provisioned
   by the webServer command (kill-port → provision → boot) and never replaced while the server
   lives — replacing it after boot desynchronizes the login and page-render clients

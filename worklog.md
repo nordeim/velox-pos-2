@@ -650,3 +650,104 @@ reference cycles) and the chrome contracts are now pinned at the depth the refer
 actually ships: the glyph class, the button cursor, and the heading tags all match
 the measured reference, each protected by an e2e pin. Standing debt: NONE
 identified. Baselines: unit **133/133**, e2e **80/80**, smoke **13/13**.
+
+---
+
+## Session-10 — the stat-family + muted-tone parity pass (velox-pos-2)
+
+**Received state**: `daa74af` (Session-9's tree `9cc8b24` + the operator's session-log
+commit). **Directive**: the standing audit→remediate→push cycle — workspace refresh,
+doc re-internalization, the skills-led code audit, the live reference re-measurement,
+the TDD remediation, the docs lockstep, and the SSH-wrapper push.
+
+**Environment:** the workspace had been RESET — fresh `git clone` + `cp .env.example
+.env` (AUTH_SECRET generated; `DATABASE_URL="file:../db/custom.db"` per the contract) +
+`bun install` + `db:push` + `db:seed -- --demo` (15 products / 5 categories / 1 register
+/ 33 sales) + `bunx playwright install chromium` (1243). **Gate on the received tree:
+GREEN on first run** — lint 0 errors (1 documented warning) · tsc clean · unit 133/133 ·
+build green (hygiene-clean) · smoke 13/13 · e2e 80/80.
+
+**The reference re-measured live end-to-end — NO drift for the FOURTH consecutive
+cycle** (every Session-4/5/6/8/9 pin byte-exact, plus the first nav-href census: the
+reference's 8 hrefs are the clone's exact paths). With the style surface stable four
+cycles running, this cycle's audit went to a NEW depth — whole-DOM dumps of the
+stat-card families, the empty-state census, and the muted-tone sweep — surfaces every
+prior session had only ever copy-pinned.
+
+**Five findings (the ledger is `docs/remediation-plan-session-10.md`):**
+- **F-59 (MEDIUM, visual parity)**: the login card's `backdrop-blur-sm` computed 8px —
+  Tailwind v4 RENAMED the blur scale (v3's 4px `backdrop-blur-sm` is v4's
+  `backdrop-blur-xs`), and the documented trap #8 had been applied to the drawer
+  backdrop but missed on the login card; nothing pinned the computed filter. Cured with
+  the class swap; pinned on `blur(4px)`. SKILL trap #19: a documented trap can land and
+  still be missed elsewhere — grep every use of the renamed family and pin one computed
+  value per family.
+- **F-60 (LOW, functional parity)**: the reference lands on `/` after login (measured
+  live through the real UI); the clone landed on `/POS`. The redirect now defaults to
+  `/` + a new `(app)/page.tsx` serves the terminal at the root (the router already
+  mapped `/` → terminal, but no Next route existed — the build table now carries
+  `ƒ /`). Pinned with pathname predicates (the en-route lesson: `toHaveURL` regexes
+  match the FULL url string, not the path — the first `^\/` pin timed out on a page
+  that had landed).
+- **F-61 (MEDIUM, visual parity)**: the Dashboard stat family — the reference ships
+  SOLID-GRADIENT 40px chips (`p-2.5 rounded-xl`, from-X-400 to-Y-500) with WHITE w-5
+  icons, gradient opacity-20 corner blobs at -top-6/-right-6, `font-semibold
+  text-slate-500` labels, `font-bold mt-1` values. The clone's flat /20 chips with
+  colored icons had survived nine sessions (the copy was pinned; the treatments were
+  not). The exact gradients live as `.stat-grad-*` CSS classes — v4's utility
+  gradients serialize `lab()` stops (the `.brand-chip` doctrine, re-caught live). The
+  VALUE COLOR keeps the readable `text-white/90` (the reference's slate-800 values are
+  its VLM-confirmed near-invisible defect — the headings doctrine).
+- **F-62 (MEDIUM, visual parity)**: the Reports stat family is a DIFFERENT family on
+  the reference — horizontal cards, 48px `rounded-2xl` `/15`+`/30`-border chips on the
+  LEFT, `w-6 h-6` tone-400 icons, 400 `text-white/35` labels, `font-black` white
+  values, no corner blob, tones indigo/emerald/violet. The dedicated `ReportsStat`
+  component now serves it (Reports stops using the shared StatCard). Also surfaced the
+  unpinned-palette lesson (SKILL trap #20): v4's default palette is oklab-defined —
+  `text-indigo-400` computed `lab(...)` until `--color-indigo-400: #818cf8` was pinned
+  in the `@theme` block.
+- **F-63 (LOW-MEDIUM, the systematic muted-tone substitution)**: the reference's muted
+  design language (slate-500 subtitles, slate-400 empty copy, 64px slate-200 stroke-2
+  empty-state icons, white/25 cart copy, `py-12` rhythms) had been substituted with
+  white/xx + 56px stroke-1.5 variants across seven views in the initial build. Matched
+  verbatim site-by-site (the `subtitleClassName` prop carries Reports' own white/35
+  exception — its subtitle is the reference's ONE deviation). SKILL trap #21: copy pins
+  are not style pins — a surface is not pinned until its computed geometry/colors are
+  asserted.
+
+**TDD execution:** all five fixes red-first (the blur 8px≠4px, the landing /POS≠/, the
+chips 44px≠40px/48px, the subtitle white/50≠slate-500), then green. Two en-route
+catches: the spec-authoring duplicate-binding parse error (caught by the parser), and
+the F-63 Registers empty-card pins' ORDER DEPENDENCE (the full-suite run failed where
+the isolated run passed — registers-shifts.spec creates Register 1 before surfaces.spec
+runs; the pins moved to registers-shifts' first test where the empty state is
+guaranteed, and the surfaces F-63 test kept the order-independent sites).
+
+**Re-certification (all on the final tree):** lint ✓ (0 errors, 1 documented warning)
+· tsc ✓ · unit **133/133** (13 files) · build ✓ (hygiene-clean; `ƒ /` in the route
+table) · smoke **13/13** · e2e **84/84** (+4: the blur pin, the two stat-family pins,
+the muted-tone pin; the F-60 landing assertions extended the existing sign-in test and
+the F-63 registers pins extended the registers-shifts first test — no prior pin
+weakened). Live evidence on the rebuilt standalone (`scripts/capture-s10-evidence.mjs`,
+**12/12**): all five fixes measured live, the checkout journey (shift opened, gate
+passed), and the mobile drawer contract (dialog, 8 labeled links, no overflow at
+390×844 — the user's called-out mobile-nav surface works; the static v4 trap sweep is
+clean, `@theme inline` intact). VLM sweep of screenshots 49–54: **6/6 effective** (the
+one initial flag — "no visible blur" on the login card — was the prompt's expectation
+bug: the reference's canvas is a plain gradient with nothing behind the card to blur;
+the 4px value is a computed contract, verified by measurement on both sides).
+
+**Docs lockstep:** README (the 84 sites); AGENTS.md (the corrected login contract + the
+new stat-card/muted-tone contracts section + the unpinned-palette lesson); CLAUDE.md
+(the same); PAD v1.8 (the header bump + the revision block + the 9-route-spellings
+scale line); velox-pos_SKILL.md v2.6.0 (traps 19/20/21 + the Session-10 addendum + the
+counts); the docs-counts constants re-anchored (E2E=84, "Session-10 lock", "70 desktop
++ 13 mobile + 1 setup"); the remediation plan's execution record; this worklog entry;
+the session narration (`docs/session_15.md`, following the one-ahead numbering).
+
+**Stage summary.** The parity surface is stable (four consecutive drift-free reference
+cycles) and the pin doctrine now covers the layer the reference actually styles: the
+stat-card families (two, never shared), the muted-tone design language, the login
+card's translated blur, and the reference's root-path landing are all measured, pinned,
+and documented. Standing debt: NONE identified. Baselines: unit **133/133**, e2e
+**84/84**, smoke **13/13**.

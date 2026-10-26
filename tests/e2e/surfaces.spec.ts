@@ -478,3 +478,116 @@ test("the POS shift gate computes the reference's card + icon + copy treatment",
     .toMatch(/(?:\/\s*0\.6\)|,\s*0\.6\))/);
   await expect(emphasis).toHaveCSS("text-decoration-line", "none");
 });
+
+// ---------------------------------------------------------------------------
+// Session-10 pins: the stat-card families + the muted-tone family, measured
+// live on the reference (2026-10-27, full-DOM dumps). The reference ships TWO
+// stat families — Dashboard (40px SOLID-GRADIENT chips, white icons, gradient
+// opacity-20 corner blobs, semibold slate-500 labels, bold values) and Reports
+// (48px rounded-2xl /15 flat chips with /30 borders on the LEFT, w-6 tone-400
+// icons, 400 white/35 labels, font-black white values, no blob) — plus a
+// muted-tone design language (slate-500 subtitles, slate-400 empty text, 64px
+// slate-200 stroke-2 empty icons) the initial build substituted with white/xx.
+// ---------------------------------------------------------------------------
+
+test("Dashboard stat chips are the reference's solid-gradient family (F-61)", async ({
+  page,
+}) => {
+  await page.goto("/Dashboard");
+  // The "Today's Sales" card: the label p sits three divs deep (wrapper →
+  // flex row → card — the reference's own structure, mirrored in both the
+  // old and the fixed tree). The chip is the svg's parent; the blob is the
+  // card's aria-hidden corner div.
+  const label = page.getByText("Today's Sales", { exact: true });
+  const card = label.locator("..").locator("..").locator("..");
+  const chip = card.locator("svg").first().locator("..");
+  await expect(chip).toBeVisible();
+  await expect(chip).toHaveCSS("height", "40px");
+  await expect(chip).toHaveCSS("width", "40px");
+  const chipBg = await chip.evaluate((el) => getComputedStyle(el).backgroundImage);
+  // The reference's own utility gradient (v3-era rgba stops, verbatim — the
+  // Added-banner posture): green-400 → emerald-500.
+  expect(chipBg).toContain("linear-gradient");
+  expect(chipBg).toContain("74, 222, 128");
+  expect(chipBg).toContain("16, 185, 129");
+  const icon = chip.locator("svg");
+  await expect(icon).toHaveCSS("color", "rgb(255, 255, 255)");
+  // The corner blob: gradient + opacity-20 (the reference's -top-6 -right-6).
+  const blob = card.locator("div[aria-hidden='true']").first();
+  const blobBg = await blob.evaluate((el) => getComputedStyle(el).backgroundImage);
+  expect(blobBg).toContain("linear-gradient");
+  await expect(blob).toHaveCSS("opacity", "0.2");
+  // The label: font-semibold (600) + slate-500 — the reference's muted tone,
+  // matched verbatim (the slate ramp serializes as rgb in v4's pins).
+  await expect(label).toHaveCSS("font-weight", "600");
+  await expect(label).toHaveCSS("color", "rgb(100, 116, 139)");
+  // The value: font-bold (700) + mt-1 (the color stays the readable superset —
+  // the reference's slate-800 values are its VLM-confirmed near-invisible
+  // defect).
+  const value = page.getByTestId("stat-today-s-sales");
+  await expect(value).toHaveCSS("font-weight", "700");
+  await expect(value).toHaveCSS("margin-top", "4px");
+});
+
+test("Reports stat cards are the reference's flat-chip family (F-62)", async ({
+  page,
+}) => {
+  await page.goto("/Reports");
+  // Total Revenue: the chip is w-12 h-12 rounded-2xl (48px/16px) with a flat
+  // indigo-500/15 fill + a 1px indigo-500/30 border and a w-6 (24px)
+  // indigo-400 icon — on the LEFT of the text (flex items-center gap-4).
+  const label = page.getByText("Total Revenue", { exact: true });
+  await expect(label).toBeVisible();
+  // The label p sits two divs deep (text wrapper → card) in the reference's
+  // horizontal family; the chip is the svg's parent.
+  const card = label.locator("..").locator("..");
+  const chip = card.locator("svg").first().locator("..");
+  await expect(chip).toBeVisible();
+  await expect(chip).toHaveCSS("width", "48px");
+  await expect(chip).toHaveCSS("height", "48px");
+  await expect(chip).toHaveCSS("border-radius", "16px");
+  // indigo-500/15: v4 serializes fractional alphas as oklab — pin the ALPHA.
+  await expect
+    .poll(async () => chip.evaluate((el) => getComputedStyle(el).backgroundColor))
+    .toMatch(/(?:\/\s*0\.15\)|,\s*0\.15\))/);
+  await expect
+    .poll(async () => chip.evaluate((el) => getComputedStyle(el).borderColor))
+    .toMatch(/(?:\/\s*0\.3\)|,\s*0\.3\))/);
+  const icon = chip.locator("svg");
+  await expect(icon).toHaveCSS("width", "24px");
+  await expect(icon).toHaveCSS("color", "rgb(129, 140, 248)");
+  // The label: 400 (no font-weight class) + white/35 (the reference's own
+  // Reports exception — every other view's subtitle is slate-500).
+  await expect(label).toHaveCSS("font-weight", "400");
+  await expect
+    .poll(async () => label.evaluate((el) => getComputedStyle(el).color))
+    .toMatch(/(?:\/\s*0\.35\)|,\s*0\.35\))/);
+  // The value: font-black (900) + white.
+  const value = page.getByTestId("stat-total-revenue");
+  await expect(value).toHaveCSS("font-weight", "900");
+  await expect(value).toHaveCSS("color", "rgb(255, 255, 255)");
+});
+
+test("the muted-tone family matches the reference (F-63: subtitle + empty states)", async ({
+  page,
+}) => {
+  // The subtitle: text-slate-500 on every view except Reports (white/35) —
+  // the reference's muted design language, matched verbatim. The date line
+  // is the p immediately after the Dashboard's h1 (the PageHeader contract).
+  await page.goto("/Dashboard");
+  const subtitle = page.locator("main h1 + p");
+  await expect(subtitle).toBeVisible();
+  await expect(subtitle).toHaveCSS("color", "rgb(100, 116, 139)");
+  // "No data yet": text-slate-400 (the category chart's empty state —
+  // order-independent: no earlier spec in the run order creates products).
+  const empty = page.getByText("No data yet", { exact: true });
+  await expect(empty).toBeVisible();
+  await expect(empty).toHaveCSS("color", "rgb(148, 163, 184)");
+  // The cart's empty copy: white/25 (the reference's own muted tone).
+  await page.goto("/POS");
+  const cartEmpty = page.getByText("Scan or select products");
+  await expect(cartEmpty).toBeVisible();
+  await expect
+    .poll(async () => cartEmpty.evaluate((el) => getComputedStyle(el).color))
+    .toMatch(/(?:\/\s*0\.25\)|,\s*0\.25\))/);
+});

@@ -463,9 +463,13 @@ export function TerminalView() {
         </div>
         <h2 className="text-xs font-bold uppercase tracking-wide text-white/80">Cart</h2>
         {cart.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
-            <ShoppingCart className="h-16 w-16 text-white/15" strokeWidth={1.5} aria-hidden="true" />
-            <p className="text-sm text-white/40">Scan or select products</p>
+          // Session-10 (F-63, measured live): the reference's own wrap and
+          // tones — flex flex-col items-center justify-center h-full
+          // text-white/20 py-8, a white/20 stroke-1.5 64px cart icon, and
+          // `text-sm mt-3 text-white/25` copy.
+          <div className="flex h-full flex-col items-center justify-center py-8 text-center text-white/20">
+            <ShoppingCart className="h-16 w-16" strokeWidth={1.5} aria-hidden="true" />
+            <p className="mt-3 text-sm text-white/25">Scan or select products</p>
           </div>
         ) : (
           <ul className="vpx-scroll mt-3 flex-1 space-y-2 overflow-y-auto" aria-label="Cart items">

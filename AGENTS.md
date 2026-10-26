@@ -113,11 +113,48 @@ bite hardest here:
 - **The receipt footer is a TEXTAREA** (`rows=2`, min-h 60px, resize vertical).
 - **The login surface**: inputs are `h-11 sm:h-12 bg-slate-50/50 border-slate-200 rounded-xl
   placeholder:text-slate-600 pl-10` (DIRECT slate classes — never themed utilities); the card is
-  `bg-white/95 backdrop-blur-sm shadow-2xl overflow-hidden` with a 4px top gradient strip
+  `bg-white/95 shadow-2xl overflow-hidden` with a 4px top gradient strip
   (slate-200→300→200) and the content padding on an inner wrapper (`p-8 sm:p-10 md:pt-12
   md:pb-10 md:px-10`); the logo is the vendored `public/veloxpos-logo.png` (96×96 img); SSO
-  buttons are `px-5 py-3.5` (54px, text-base); sign-in is `font-medium`. E2E-pinned in
+  buttons are `px-5 py-3.5` (54px, text-base); sign-in is `font-medium`. **The card's blur is
+  `backdrop-blur-xs`** (Session-10, F-59 — the reference's v3-era `backdrop-blur-sm` computes
+  4px, which is v4's `backdrop-blur-xs` after the documented scale rename, trap #8; v4's
+  blur-sm would double it to 8px); e2e-pinned on the computed `blur(4px)`. The post-login
+  landing is `/` (Session-10, F-60 — the reference lands on the root path; `/POS` stays the
+  canonical nav href, and the root page serves the same terminal). E2E-pinned in
   `tests/e2e/auth.spec.ts`.
+
+## The stat-card + muted-tone contracts (Session-10 pins)
+
+- **The reference ships TWO stat families — never share them** (Session-10, F-61/F-62):
+  - **Dashboard**: SOLID-GRADIENT icon chips (`p-2.5 rounded-xl` + the `.stat-grad-*` CSS
+    classes in `tokens.css` — green-400→emerald-500 / indigo-400→purple-500 /
+    blue-400→indigo-500 / amber-400→orange-500; the EXACT rgb stops are CSS classes because
+    v4's utility gradients interpolate in oklab and serialize `lab()` stops — the
+    `.brand-chip` doctrine) with WHITE `h-5 w-5` icons; corner blobs
+    `absolute -top-6 -right-6 h-20 w-20 rounded-full opacity-20` on the same gradients;
+    labels `text-xs font-semibold text-slate-500 uppercase tracking-wider` (600); values
+    `text-2xl font-bold mt-1` (700). The VALUE COLOR stays `text-white/90` — the reference's
+    slate-800 values are its VLM-confirmed near-invisible defect (the headings doctrine).
+  - **Reports**: horizontal cards (`glass-card rounded-2xl p-5 flex items-center gap-4`),
+    chip on the LEFT (`w-12 h-12 rounded-2xl` + `bg-{tone}-500/15` + 1px
+    `{tone}-500/30` border + `h-6 w-6` `{tone}-400` icons), labels `text-xs text-white/35
+    uppercase tracking-wider` (400), values `text-2xl font-black text-white` (900), NO
+    corner blob; tones indigo/emerald/violet. `ReportsStat` lives in reports-view.tsx.
+- **The muted-tone design language is matched VERBATIM** (Session-10, F-63): PageHeader
+  subtitles are `text-slate-500` (the ONE exception: Reports' own "Sales & revenue
+  analytics" is `text-white/35` — the reference's own choice, via the `subtitleClassName`
+  prop); "No data yet" is `text-slate-400 text-sm text-center py-12`; the Registers/Cashiers
+  empty cards are `p-5 py-12` + `w-16 h-16 text-slate-200` stroke-2 icons (mb-3) +
+  `text-slate-500` copy; the Sales/Inventory empty tds are `py-12 text-slate-400`
+  (Inventory adds `text-sm`); the POS cart empty copy is `text-sm mt-3 text-white/25`; the
+  Reports "No data for this period" is `text-white/25`. Never substitute white/xx for the
+  reference's slate tones — slate-400/500 are its design language (the readable-superset
+  doctrine is reserved for the near-invisible slate-700/800 defects).
+- **The unpinned-palette lesson** (F-62): v4's default palette defines colors in oklab —
+  any ramp value NOT hex-pinned in `globals.css`'s `@theme` serializes as `lab(…)` instead
+  of the reference's `rgb(…)`. `--color-indigo-400: #818cf8` was added in Session-10;
+  when a pin expects `rgb(...)` and reads `lab(...)`, pin the hex.
 
 ## The chrome + chart contracts (Session-6 pins)
 

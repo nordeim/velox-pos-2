@@ -81,9 +81,13 @@ export function LoginSurface() {
     try {
       const params = new URLSearchParams(window.location.search);
       const from = params.get("from_url");
-      return from && from.startsWith("/") ? from : "/POS";
+      // Session-10 (F-60, measured live): the reference lands on `/` after
+      // login (the terminal at the root path) — `/` is the landing default,
+      // not /POS. Both render the terminal (router.ts maps / → terminal);
+      // the reference's URL is the contract.
+      return from && from.startsWith("/") ? from : "/";
     } catch {
-      return "/POS";
+      return "/";
     }
   };
 
@@ -117,7 +121,8 @@ export function LoginSurface() {
           return;
         }
         // Registration signs the new owner in (the scaffolding's contract).
-        window.location.assign("/POS");
+        // Session-10 (F-60): the reference's landing — `/`.
+        window.location.assign("/");
         return;
       }
       const res = await fetch("/api/auth/login", {
@@ -149,8 +154,11 @@ export function LoginSurface() {
       {/* Session-5 (measured live): the reference's card — bg-white/95 +
           backdrop-blur + shadow-2xl + overflow-hidden + a 4px top gradient
           strip, with the content padding on an inner wrapper
-          (p-8 sm:p-10 md:pt-12 md:pb-10 md:px-10). */}
-      <div className="relative w-full max-w-md overflow-hidden rounded-2xl border-0 bg-white/95 shadow-2xl backdrop-blur-sm">
+          (p-8 sm:p-10 md:pt-12 md:pb-10 md:px-10). Session-10 (F-59): the
+          reference's class is v3-era `backdrop-blur-sm` = blur(4px); v4
+          RENAMED the scale (trap #8) — the 4px spelling here is
+          `backdrop-blur-xs` (v4's blur-sm would double it to 8px). */}
+      <div className="relative w-full max-w-md overflow-hidden rounded-2xl border-0 bg-white/95 shadow-2xl backdrop-blur-xs">
         <div
           aria-hidden="true"
           className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200"

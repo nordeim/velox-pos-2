@@ -8,8 +8,8 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.5.0
-last_updated: 2026-10-26
+version: 2.6.0
+last_updated: 2026-10-27
 ---
 
 # VeloxPOS — Project Skill
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-9 lock: unit **133/133** (13 files) · e2e **80/80**
-(66 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-10 lock: unit **133/133** (13 files) · e2e **84/84**
+(70 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -68,7 +68,7 @@ bun run lint                   # eslint flat config — 0 errors, 1 documented w
 bun run typecheck              # tsc --noEmit — strict
 bun run test                   # vitest — tests/unit/** (133)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               # playwright (80) — NEEDS the build first (:3100)
+bun run test:e2e               # playwright (84) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -272,6 +272,28 @@ is a loss machine.
     measurement produces a class string, map it through the library's actual export
     table, and PIN the class (`toHaveClass(/lucide-file-chart-column-increasing/)`) so
     the mapping cannot silently rot.
+19. **(Session-10) A documented trap can land and still be missed elsewhere (F-59)** —
+    the v4 blur-scale rename (v3 `backdrop-blur-sm` 4px = v4 `backdrop-blur-xs`) was
+    documented as trap #8 and correctly applied to the drawer backdrop, but the login
+    card carried the verbatim v3 class and computed double the reference's blur for
+    nine sessions — nothing pinned the computed `backdrop-filter`. Lesson: when a scale-
+    rename trap is documented, grep EVERY use of the renamed utility family
+    (`backdrop-blur-*`, `shadow-*`, `rounded-*`), and pin at least one computed value
+    per family.
+20. **(Session-10) v4's default palette is oklab-defined (F-62)** — any ramp value NOT
+    hex-pinned in the `@theme` block serializes as `lab(...)` instead of the reference's
+    `rgb(...)`. `text-indigo-400` computed `lab(59.866 22.4834 -64.4485)` until
+    `--color-indigo-400: #818cf8` was pinned. Lesson: when a computed pin expects
+    `rgb(...)` and reads `lab(...)`, the color is the same — pin the HEX in `@theme`
+    and the serialization follows.
+21. **(Session-10) Copy pins are not style pins (F-61/F-62/F-63)** — the stat cards'
+    labels and every empty state's copy were pinned as visible text while their
+    TREATMENTS (chip gradients, icon colors, weights, muted tones, padding rhythms)
+    drifted freely for nine sessions. Lesson: a surface is not pinned until its
+    computed geometry/colors are asserted, not just its copy; and when a component is
+    shared between two reference views, verify BOTH views' reference DOMs first — the
+    reference itself ships TWO different stat-card families (Dashboard gradients vs
+    Reports flat chips) that the clone had collapsed into one.
 
 ## 8. Component architecture & the React patterns that are law
 
@@ -356,7 +378,7 @@ SUPERSET instead:
 1. **Unit (Vitest, 133/133, 13 files)** — the pure seams only (plus the docs-counts
    lockstep gate). New `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 80/80)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 84/84)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -654,3 +676,51 @@ shift lifecycle, and the drawer contract at 390×844. VLM sweep of screenshots
 login canvas IS light per Session-4's measured gradient; Dashboard was the
 legitimately active pill; a 900px viewport shows the first three Settings
 sections). Skill v2.5.0.
+
+## Session history addendum — Session-10
+
+**The cycle:** received-tree gate green on first run (133/133 · 84/84 target pending ·
+13/13 smoke) — wait: the received tree measured **80/80** e2e (the Session-9 baseline);
+the reference stayed drift-free for the FOURTH consecutive cycle. With the style surface
+stable, this cycle's audit went to a NEW depth — whole-DOM dumps of the stat-card
+families + the empty-state census + the muted-tone sweep — and found five clone-side
+gaps the copy-only pins had never covered:
+
+- **F-59**: the login card's `backdrop-blur-sm` (v4 = 8px) vs the reference's v3-era
+  4px — the documented trap #8 applied to the drawer but missed on the card; cured with
+  `backdrop-blur-xs` + a computed `blur(4px)` pin (trap 19).
+- **F-60**: the post-login landing `/POS` vs the reference's `/` — the redirect now
+  defaults to `/`, a new `(app)/page.tsx` serves the terminal at the root, and the
+  landing is pinned (pathname predicates — `toHaveURL` regexes match the FULL url
+  string, not the path; the first RED run tripped on exactly that).
+- **F-61**: the Dashboard stat family — solid-gradient 40px chips with white icons +
+  gradient opacity-20 corner blobs + semibold slate-500 labels + bold mt-1 values
+  (value color keeps the readable superset; the reference's slate-800 values are its
+  VLM-confirmed near-invisible defect). The exact gradients live as `.stat-grad-*` CSS
+  classes — v4's utility gradients serialize `lab()` stops (the `.brand-chip` doctrine).
+- **F-62**: the Reports stat family — a DIFFERENT reference family (horizontal cards,
+  48px rounded-2xl /15+/30 chips LEFT, w-6 tone-400 icons, 400 white/35 labels,
+  font-black white values, no blob, indigo/emerald/violet tones); the dedicated
+  `ReportsStat` component replaces the shared StatCard there. Surfaced trap 20 (the
+  unpinned indigo-400 lab() serialization).
+- **F-63**: the systematic muted-tone substitution — the reference's slate-500
+  subtitles / slate-400 empty copy / 64px slate-200 stroke-2 empty icons / white-25
+  cart copy / py-12 rhythms had all been substituted with white/xx variants in the
+  initial build; matched verbatim across seven views (the `subtitleClassName` prop
+  carries Reports' own white/35 exception). The Registers empty-card pins live in
+  registers-shifts.spec's first test — the empty state only renders before Register 1
+  exists (an order-dependence the full-suite run caught; the isolated run passed).
+
+**TDD:** all five fixes red-first (the blur 8px≠4px, the landing /POS≠/, the chips
+44px≠40px/48px, the subtitle white/50≠slate-500), then green. The lockstep: e2e 80 → 84
+(+4 tests; the F-60 landing assertions EXTENDED the existing sign-in test, and the
+F-63 registers pins EXTENDED the registers-shifts first test).
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **133/133** (13
+files) · build green (hygiene-clean; the root route `ƒ /` in the table) · smoke
+**13/13** · e2e **84/84**. Live evidence (`scripts/capture-s10-evidence.mjs`):
+**12/12** — all five fixes measured live, the checkout journey, and the drawer
+contract at 390×844. VLM sweep of screenshots 49–54: 6/6 effective (the one initial
+flag — "no visible blur" on the login card — was the prompt's expectation bug: the
+reference's canvas is a plain gradient with nothing behind the card to blur; the 4px
+value is a computed contract, verified on both sides). Skill v2.6.0.

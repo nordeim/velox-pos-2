@@ -61,7 +61,13 @@ test("successful sign-in lands on the Terminal with the shift gate", async ({ pa
   await page.getByLabel("Email").fill("sepnetflix2023@outlook.com");
   await page.getByLabel("Password").fill("$Abcd1234");
   await page.getByTestId("login-submit").click();
-  await page.waitForURL("**/POS");
+  // Session-10, F-60: the reference lands on `/` after login (the terminal
+  // at the root path, measured live through the real UI). The clone's root
+  // page serves the same terminal, so the landing is pinned to the
+  // reference's URL (pathname predicates — toHaveURL regexes match the FULL
+  // url string, not the path).
+  await page.waitForURL((url) => url.pathname === "/");
+  await expect(page).toHaveURL((url) => url.pathname === "/");
   await expect(page.getByRole("heading", { name: "No active shift" })).toBeVisible();
   await expect(page.getByTestId("charge-button")).toBeDisabled();
 });
@@ -128,6 +134,20 @@ test("the login card carries the reference's shadow + 4px top gradient strip", a
     getComputedStyle(el).backgroundImage,
   );
   expect(stripBg).toContain("linear-gradient");
+});
+
+test("the login card's backdrop blur is the reference's 4px (the v4 blur-scale rename trap)", async ({
+  page,
+}) => {
+  // Session-10, F-59: the reference's card class is `backdrop-blur-sm` in
+  // v3-era CSS = blur(4px). Tailwind v4 RENAMED the blur scale — v4's
+  // backdrop-blur-sm is 8px (v3's `blur`), and v3's 4px is v4's
+  // `backdrop-blur-xs` (the documented trap #8). The class string must be
+  // translated, not copied — this pin holds the translation.
+  await page.goto("/login");
+  const card = page.locator("main.login-canvas > div");
+  await expect(card).toBeVisible();
+  await expect(card).toHaveCSS("backdrop-filter", "blur(4px)");
 });
 
 test("the login logo is the reference's img (the hexagonal crystal asset)", async ({

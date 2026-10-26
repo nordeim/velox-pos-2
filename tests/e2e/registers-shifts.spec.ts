@@ -9,7 +9,18 @@ import { expect, test } from "@playwright/test";
 test.describe.serial("registers & shifts", () => {
   test("creates Register 1 via the measured New Register modal", async ({ page }) => {
     await page.goto("/Registers");
-    await expect(page.getByText("No registers configured yet")).toBeVisible();
+    // Session-10 (F-63) pins — the reference's empty-card family, measured
+    // live 2026-10-27: the icon is w-16 (64px) + slate-200 + stroke-2 with
+    // mb-3; the copy is slate-500 (the reference's muted design language,
+    // matched verbatim). These live HERE (not in surfaces.spec) because the
+    // empty state only renders before this test creates Register 1.
+    const emptyCopy = page.getByText("No registers configured yet");
+    await expect(emptyCopy).toBeVisible();
+    await expect(emptyCopy).toHaveCSS("color", "rgb(100, 116, 139)");
+    const emptyIcon = emptyCopy.locator("..").locator("svg").first();
+    await expect(emptyIcon).toHaveCSS("width", "64px");
+    await expect(emptyIcon).toHaveCSS("color", "rgb(226, 232, 240)");
+    await expect(emptyIcon).toHaveAttribute("stroke-width", "2");
     await page.getByRole("button", { name: "New Register" }).click();
     const dialog = page.getByRole("dialog", { name: "New Register" });
     await expect(dialog.getByRole("button", { name: "Create" })).toBeDisabled();

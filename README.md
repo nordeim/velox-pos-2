@@ -5,7 +5,7 @@
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6)
 ![Tests](https://img.shields.io/badge/unit%20tests-133%20%2F%20133-brightgreen)
-![E2E](https://img.shields.io/badge/e2e-80%20%2F%2080-brightgreen)
+![E2E](https://img.shields.io/badge/e2e-84%20%2F%2084-brightgreen)
 ![License](https://img.shields.io/badge/license-Proprietary-lightgrey)
 
 **A production-ready, enterprise-grade Point of Sale web application — a functional superset of
@@ -98,7 +98,7 @@ register, a closed shift, and a week of sales).
 | `bun run lint` | ESLint (flat config) |
 | `bun run typecheck` | `tsc --noEmit` (strict) |
 | `bun run test` | Vitest unit suite — the pure domain seams (133 tests / 13 files) |
-| `bun run test:e2e` | Playwright suite against the production standalone build (80 tests; desktop 1440×900 + mobile 390×844 projects) |
+| `bun run test:e2e` | Playwright suite against the production standalone build (84 tests; desktop 1440×900 + mobile 390×844 projects) |
 | `bun run smoke` | The 13-step API smoke ladder against the standalone artifact on :3210 (own scratch `db/smoke.db`; health → auth wall → Zod seam → CRUD → rate limit → boot gate → artifact hygiene) |
 | `bun run gate` | The full pre-push gate: `lint → typecheck → test → build → smoke → e2e` |
 | `bun run db:push` | `prisma db push` against `db/custom.db` |
@@ -189,7 +189,7 @@ All endpoints return domain JSON; errors use `{ error: string }` with the docume
 bun run test            # unit: 133 tests / 13 files — the pure seams (money, cart, shift,
                         # reports, inventory-status, currency, router, validation, auth,
                         # db-path, env-check, site) + the docs-counts lockstep gate
-bun run test:e2e        # e2e: 80 tests — needs `bun run build` first (boots the standalone
+bun run test:e2e        # e2e: 84 tests — needs `bun run build` first (boots the standalone
                         # build on :3100 with its own scratch db, db/e2e.db)
 bun run smoke           # the 13-step API smoke ladder — also needs the build (boots the
                         # artifact on :3210 with db/smoke.db; verifies the boot gate +

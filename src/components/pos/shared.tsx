@@ -2,9 +2,10 @@
 
 // ---------------------------------------------------------------------------
 // Shared view furniture: the page header (title + subtitle, the reference's
-// ghost-heading style), the stat card (icon blob + label + value — the
-// Dashboard/Reports card family), and the two hand-rolled SVG charts (dotted
-// grid + violet stroke — zero chart dependencies, pixel-controlled parity).
+// ghost-heading style), the stat cards (the reference ships TWO families —
+// the Dashboard's solid-gradient chips and the Reports' flat /15 chips —
+// Session-10, F-61/F-62), and the two hand-rolled SVG charts (dotted grid +
+// violet stroke — zero chart dependencies, pixel-controlled parity).
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
@@ -15,22 +16,41 @@ export function PageHeader({
   title,
   subtitle,
   actions,
+  subtitleClassName,
 }: {
   title: string;
   subtitle?: string;
   actions?: React.ReactNode;
+  /** The reference's subtitles are text-slate-500 everywhere EXCEPT Reports
+   * ("Sales & revenue analytics" is its own white/35 exception — measured
+   * live 2026-10-27). Views pass the override; the default is the norm. */
+  subtitleClassName?: string;
 }) {
   return (
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div>
         <h1 className="text-2xl font-bold text-white/80">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-white/50">{subtitle}</p>}
+        {subtitle && (
+          <p className={`mt-1 text-sm ${subtitleClassName ?? "text-slate-500"}`}>
+            {subtitle}
+          </p>
+        )}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
   );
 }
 
+// Session-10 (F-61, measured live on the reference 2026-10-27): the
+// Dashboard stat family — SOLID-GRADIENT icon chips (the reference's own
+// v3-era utility classes, verbatim — the Added-banner posture; v4's palette
+// hexes are v3-identical) with WHITE w-5 icons, gradient opacity-20 corner
+// blobs at -top-6 -right-6, font-semibold slate-500 labels, and font-bold
+// mt-1 values. The VALUE COLOR stays the readable superset (text-white/90):
+// the reference renders its values in slate-800 on dark glass — VLM-confirmed
+// "dim and nearly invisible", its own defect (the same posture as the
+// headings doctrine). The Reports view does NOT use this family — it ships
+// its own flat-chip row (reports-view.tsx, F-62).
 export function StatCard({
   label,
   value,
@@ -42,26 +62,34 @@ export function StatCard({
   icon: React.ReactNode;
   tone: "green" | "violet" | "blue" | "orange";
 }) {
-  const tones: Record<string, { chip: string; blob: string }> = {
-    green: { chip: "bg-emerald-500/20 text-emerald-400", blob: "bg-emerald-500/25" },
-    violet: { chip: "bg-violet-500/20 text-violet-400", blob: "bg-violet-500/25" },
-    blue: { chip: "bg-blue-500/20 text-blue-400", blob: "bg-blue-500/25" },
-    orange: { chip: "bg-orange-500/20 text-orange-400", blob: "bg-orange-500/25" },
+  const tones: Record<string, string> = {
+    green: "stat-grad-green",
+    violet: "stat-grad-violet",
+    blue: "stat-grad-blue",
+    orange: "stat-grad-orange",
   };
-  const t = tones[tone];
+  const gradient = tones[tone];
   return (
     <div className="glass-card relative overflow-hidden rounded-2xl p-5">
-      <div className={`absolute -right-4 -top-4 h-20 w-20 rounded-full ${t.blob}`} aria-hidden="true" />
+      <div
+        className={`absolute -top-6 -right-6 h-20 w-20 rounded-full opacity-20 ${gradient}`}
+        aria-hidden="true"
+      />
       <div className="relative flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate text-xs font-bold uppercase tracking-wider text-white/60">
+        <div>
+          <p className="truncate text-xs font-semibold text-slate-500 uppercase tracking-wider">
             {label}
           </p>
-          <p className="mt-2 text-2xl font-extrabold text-white/90" data-testid={`stat-${label.toLowerCase().replace(/[^a-z]+/g, "-")}`}>
+          <p
+            className="mt-1 text-2xl font-bold text-white/90"
+            data-testid={`stat-${label.toLowerCase().replace(/[^a-z]+/g, "-")}`}
+          >
             {value}
           </p>
         </div>
-        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${t.chip}`}>
+        {/* The icon inherits the WHITE stroke via currentColor (the chip's
+            text-white) — no wrapper span, so the svg's parent IS the chip. */}
+        <div className={`shrink-0 rounded-xl p-2.5 ${gradient} text-white`}>
           {icon}
         </div>
       </div>

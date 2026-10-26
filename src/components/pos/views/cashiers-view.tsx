@@ -169,9 +169,12 @@ export function CashiersView() {
       />
 
       {cashiers.length === 0 ? (
-        <div className="glass-card mt-5 rounded-2xl p-12 text-center">
-          <Users className="mx-auto h-14 w-14 text-white" strokeWidth={1.5} aria-hidden="true" />
-          <p className="mt-4 text-white/60">No hay usuarios registrados</p>
+        // Session-10 (F-63, measured live): the reference's empty card —
+        // p-5 + py-12, a w-16 (64px) slate-200 stroke-2 Users icon with mb-3,
+        // and slate-500 copy (the Registers empty card's exact family).
+        <div className="glass-card mt-5 rounded-2xl p-5 py-12 text-center">
+          <Users className="mx-auto mb-3 h-16 w-16 text-slate-200" strokeWidth={2} aria-hidden="true" />
+          <p className="text-slate-500">No hay usuarios registrados</p>
         </div>
       ) : (
         <ul className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" data-testid="cashier-cards">

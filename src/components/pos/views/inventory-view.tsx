@@ -554,7 +554,10 @@ export function InventoryView() {
             <tbody>
               {visible.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-14 text-center text-white/50">
+                  {/* Session-10 (F-63, measured live): the reference's own
+                      empty-cell treatment — text-center py-12 text-slate-400
+                      text-sm. */}
+                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-400">
                     No products found
                   </td>
                 </tr>

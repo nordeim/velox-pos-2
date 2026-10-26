@@ -109,8 +109,10 @@ function CategoryBreakdown() {
   const products = usePosStore((s) => s.products);
   const total = products.length;
   if (total === 0) {
+    // Session-10 (F-63, measured live): the reference's own classes —
+    // text-slate-400 text-sm text-center py-12.
     return (
-      <div className="flex h-40 items-center justify-center text-sm text-white/40">
+      <div className="py-12 text-center text-sm text-slate-400">
         No data yet
       </div>
     );

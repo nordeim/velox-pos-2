@@ -1,9 +1,9 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.7
+# VeloxPOS — Master Project Architecture Document (PAD) v1.8
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
 **Companion documents:** `README.md` (tour) · `AGENTS.md` (agent invariants) · `CLAUDE.md` (Claude conventions) · `docs/veloxpos-implementation-plan.md` (the measured reference spec)
-**Last Updated:** 2026-10-26
+**Last Updated:** 2026-10-27
 **Audience:** Senior engineers, tech leads, DevOps, onboarding engineers, and AI coding agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -25,9 +25,10 @@ reports, validation) underneath **server-gated thin routes**, a **single Zustand
 (lint → typecheck → unit → build → e2e) is the only gate — there is no hosted CI — so every
 guardrail is enforced by tooling that runs in this checkout.
 
-**Scale & baselines (verified 2026-10-26, Session-9 re-certification):** 9 Prisma models · 26 API
-route files · 8 gated views
-+ login/reset/404 · 133 unit tests (13 files) · 80 e2e tests (2 browser projects) · standalone
+**Scale & baselines (verified 2026-10-27, Session-10 re-certification):** 9 Prisma models · 26 API
+route files · 8 gated views (9 route spellings — the root `/` page is the
+terminal's reference-parity landing, Session-10 F-60)
++ login/reset/404 · 133 unit tests (13 files) · 84 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -294,7 +295,7 @@ lint → typecheck → unit → build → smoke → e2e
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 13 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 80/80):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 84/84):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
@@ -641,3 +642,66 @@ style-only audits had missed for three sessions.
 - Test baselines: unit **133/133** (13 files) · e2e **80/80** (+2: the glyph + cursor
   pins; no prior pin weakened) · smoke **13/13**. The gate order is unchanged
   (`lint → typecheck → test → build → smoke → e2e`, `bun run gate`).
+
+## Revision Block — v1.8 (2026-10-27, Session-10)
+
+**Scope:** the standing audit→remediate→push cycle on the Session-9 tree (HEAD `daa74af`;
+the ledger is `docs/remediation-plan-session-10.md`). Five findings, all clone-side — the
+reference did NOT drift for the FOURTH consecutive cycle (every pinned surface re-measured
+byte-exact), but this cycle's parity audit went to a NEW depth: whole-DOM dumps of the
+stat-card families, the empty-state census, and the muted-tone substitution sweep — surfaces
+the prior sessions had only ever copy-pinned.
+
+- **F-59 (visual parity — the login card's backdrop blur doubled)**: the reference's card
+  class is v3-era `backdrop-blur-sm` = `blur(4px)`; the clone had copied the class verbatim
+  into Tailwind v4, where the blur scale was RENAMED (v4's `backdrop-blur-sm` = 8px; v3's
+  4px is v4's `backdrop-blur-xs`). The documented trap #8 was correctly applied to the
+  drawer backdrop but missed on the login card. Fixed via the class swap; protected by a
+  computed `blur(4px)` pin in auth.spec.
+- **F-60 (functional parity — the post-login landing)**: the reference lands on `/` after
+  login (the terminal at the root path — measured live through the real UI); the clone
+  landed on `/POS`. Fixed: the login redirect defaults to `/`, a new `(app)/page.tsx`
+  serves the terminal at the root (the (app) layout's server gate covers both spellings),
+  and the landing is pinned. `/POS` stays the canonical nav href (the reference's own
+  Terminal href).
+- **F-61 (visual parity — the Dashboard stat family)**: the reference's Dashboard stat
+  cards ship SOLID-GRADIENT 40px chips (`p-2.5 rounded-xl`, from-X-400 to-Y-500) with
+  WHITE w-5 icons, gradient opacity-20 corner blobs at -top-6/-right-6, `font-semibold
+  text-slate-500` labels, and `font-bold mt-1` values; the clone had invented flat /20
+  chips with colored icons, flat /25 blobs, bold white/60 labels, and extrabold values.
+  The exact gradients live as `.stat-grad-*` CSS classes (v4's utility gradients
+  interpolate in oklab and serialize `lab()` stops — the `.brand-chip` doctrine). The
+  VALUE COLOR keeps the readable `text-white/90` (the reference's slate-800 values are
+  its VLM-confirmed near-invisible defect — the headings doctrine).
+- **F-62 (visual parity — the Reports stat family)**: the reference's Reports stat cards
+  are a DIFFERENT family — horizontal `flex items-center gap-4` cards with 48px
+  `rounded-2xl` chips (`{tone}-500/15` fill + 1px `{tone}-500/30` border, `w-6 h-6`
+  `{tone}-400` icons) on the LEFT, 400 `text-white/35` labels, and `font-black` white
+  values, no corner blob, tones indigo/emerald/violet. The clone had reused the Dashboard
+  family with the wrong tones. Fixed via the dedicated `ReportsStat` component (Reports
+  stops using the shared StatCard); pinned. Also surfaced the unpinned-palette lesson:
+  v4's default palette is oklab-defined, so `text-indigo-400` computed `lab(...)` until
+  `--color-indigo-400: #818cf8` was pinned in the `@theme` block.
+- **F-63 (the systematic muted-tone substitution family)**: the initial build substituted
+  the reference's muted design language (slate-500 subtitles, slate-400 empty copy, 64px
+  slate-200 stroke-2 empty-state icons, white/25 cart copy, `py-12` rhythms) with white/xx
+  + 56px stroke-1.5 variants across seven views; the copy was pinned everywhere but the
+  treatments never were. Matched verbatim site-by-site (PageHeader subtitle
+  `text-slate-500` + the `subtitleClassName` prop for Reports' own white/35 exception;
+  "No data yet"; the Registers/Cashiers empty cards; the Sales/Inventory empty tds; the
+  POS cart empty; "No data for this period"); pinned on the order-independent sites plus
+  the registers-shifts first test (the Registers empty card only renders before Register 1
+  exists — the pin lives where the state is guaranteed).
+
+**Re-certification (all on the final tree):** lint ✓ (0 errors, 1 documented warning) ·
+tsc ✓ · unit **133/133** (13 files) · build ✓ (hygiene-clean; the root route `ƒ /` now in
+the table) · smoke **13/13** · e2e **84/84** (+4: the blur pin, the two stat-family pins,
+the muted-tone pin; the F-60 landing test was an EXTENSION of the existing sign-in test;
+the F-63 registers-empty pins extended the registers-shifts first test — no prior pin
+weakened). Live evidence on the rebuilt standalone (`scripts/capture-s10-evidence.mjs`,
+**12/12**): all five fixes measured live (blur(4px), the `/` landing, both stat families,
+the muted-tone family), the checkout journey, and the mobile drawer contract at 390×844.
+VLM sweep of screenshots 49–54: **6/6 effective** (the one initial flag — "no visible
+blur" on the login card — was the prompt's wrong expectation: the reference's canvas is a
+plain gradient with nothing behind the card to blur; the 4px value is a computed-style
+contract, pinned and verified on both sides).

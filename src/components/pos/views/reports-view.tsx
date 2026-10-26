@@ -10,7 +10,7 @@
 import * as React from "react";
 import { CalendarDays, CreditCard, TrendingUp } from "lucide-react";
 
-import { AreaChart, PageHeader, StatCard, type SeriesPoint } from "@/components/pos/shared";
+import { AreaChart, PageHeader, type SeriesPoint } from "@/components/pos/shared";
 import { usePosStore } from "@/lib/store";
 import { byMethod, dailySeries, PERIODS, summarize, type PeriodDays } from "@/lib/reports";
 import { formatMoney } from "@/lib/money";
@@ -33,6 +33,10 @@ export function ReportsView() {
       <PageHeader
         title="Reports"
         subtitle="Sales & revenue analytics"
+        // Session-10 (F-63, measured live): the reference's ONE subtitle
+        // exception — every other view's subtitle is slate-500, Reports'
+        // own is white/35.
+        subtitleClassName="text-white/35"
         actions={
           // Session-5 (measured live): the reference's period selector —
           // container `flex gap-2 p-1 rounded-2xl` with a white/7 border and
@@ -63,24 +67,30 @@ export function ReportsView() {
         }
       />
 
+      {/* Session-10 (F-62, measured live on the reference 2026-10-27): the
+          Reports stat family is NOT the Dashboard's — flat 48px rounded-2xl
+          chips with /15 fills + /30 borders on the LEFT of w-6 tone-400
+          icons, 400 white/35 labels, font-black white values, NO corner
+          blob. Tones: indigo / emerald / violet (the reference's measured
+          pairs). */}
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard
+        <ReportsStat
           label="Total Revenue"
           value={formatMoney(summary.revenue, currency)}
-          tone="violet"
-          icon={<TrendingUp className="h-5 w-5" aria-hidden="true" />}
+          tone="indigo"
+          icon={<TrendingUp className="h-6 w-6" aria-hidden="true" />}
         />
-        <StatCard
+        <ReportsStat
           label="Transactions"
           value={String(summary.transactions)}
-          tone="green"
-          icon={<CalendarDays className="h-5 w-5" aria-hidden="true" />}
+          tone="emerald"
+          icon={<CalendarDays className="h-6 w-6" aria-hidden="true" />}
         />
-        <StatCard
+        <ReportsStat
           label="Avg. Ticket"
           value={formatMoney(summary.avgTicket, currency)}
           tone="violet"
-          icon={<CreditCard className="h-5 w-5" aria-hidden="true" />}
+          icon={<CreditCard className="h-6 w-6" aria-hidden="true" />}
         />
       </div>
 
@@ -111,6 +121,64 @@ export function ReportsView() {
   );
 }
 
+// Session-10 (F-62, measured live on the reference 2026-10-27): the
+// Reports stat family — `rounded-2xl p-5 flex items-center gap-4` cards with
+// the chip on the LEFT: `w-12 h-12 rounded-2xl` + a {tone}-500/15 fill + a
+// 1px {tone}-500/30 border around a w-6 {tone}-400 icon; labels `text-xs
+// text-white/35 uppercase tracking-wider` (400); values `text-2xl
+// font-black text-white` (900); NO corner blob. (The Dashboard's
+// solid-gradient StatCard is a different family — see shared.tsx.)
+function ReportsStat({
+  label,
+  value,
+  icon,
+  tone,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  tone: "indigo" | "emerald" | "violet";
+}) {
+  const tones: Record<string, { fill: string; border: string; icon: string }> = {
+    indigo: {
+      fill: "bg-indigo-500/15",
+      border: "border-indigo-500/30",
+      icon: "text-indigo-400",
+    },
+    emerald: {
+      fill: "bg-emerald-500/15",
+      border: "border-emerald-500/30",
+      icon: "text-emerald-400",
+    },
+    violet: {
+      fill: "bg-violet-500/15",
+      border: "border-violet-500/30",
+      icon: "text-violet-400",
+    },
+  };
+  const t = tones[tone];
+  return (
+    <div className="glass-card flex items-center gap-4 rounded-2xl p-5">
+      {/* The icon inherits its tone via currentColor — no wrapper span, so
+          the svg's parent IS the chip. */}
+      <div
+        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${t.fill} ${t.border} ${t.icon}`}
+      >
+        {icon}
+      </div>
+      <div>
+        <p className="text-xs uppercase tracking-wider text-white/35">{label}</p>
+        <p
+          className="text-2xl font-black text-white"
+          data-testid={`stat-${label.toLowerCase().replace(/[^a-z]+/g, "-")}`}
+        >
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function MethodTable({
   methods,
   currency,
@@ -121,8 +189,10 @@ function MethodTable({
   showShare?: boolean;
 }) {
   if (methods.length === 0) {
+    // Session-10 (F-63, measured live): the reference's own muted tone —
+    // h-40 flex items-center justify-center text-white/25 text-sm.
     return (
-      <div className="flex h-40 items-center justify-center text-sm text-white/40">
+      <div className="flex h-40 items-center justify-center text-sm text-white/25">
         No data for this period
       </div>
     );

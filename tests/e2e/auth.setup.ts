@@ -16,7 +16,10 @@ setup("authenticate as the store owner", async ({ page }) => {
   await page.getByLabel("Email").fill(OWNER_EMAIL);
   await page.getByLabel("Password").fill(OWNER_PASSWORD);
   await page.getByTestId("login-submit").click();
-  await page.waitForURL("**/POS");
+  // Session-10 (F-60): the reference's landing is `/` (the terminal at the
+  // root path); the predicate accepts the /POS spelling too so a future
+  // re-pin of either landing keeps the setup honest.
+  await page.waitForURL((url) => url.pathname === "/" || url.pathname === "/POS");
   await expect(page.getByRole("heading", { name: "No active shift" })).toBeVisible();
   await page.context().storageState({ path: AUTH_STATE });
 });
