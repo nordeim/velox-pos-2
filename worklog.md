@@ -3067,3 +3067,9 @@ Omni-Study domain is gone from src/prisma/tests (the Omni-Study session tooling 
 the historical docs remain untouched as archives), the reference contract is measured and pinned,
 the gate is green end-to-end, and the push path is the wrapper runbook. Standing debt: NONE
 identified in the new domain. Baselines: unit **117/117**, e2e **39/39**.
+
+**Parallel-session reconciliation.** origin/main moved during this session (8e05a75..816781f —
+another agent's VeloxPOS pivot). Reconciled by adopting its purely-additive artifacts
+(docs/archive/omni-study1/ reorganization + the veloxpos_SKILL.md distillation, with a
+reconciliation note) and merging the histories with `-s ours` — the Session-101 tree (all gates
+green in this session) is the implementation of record; the parallel tree remains an ancestor.
