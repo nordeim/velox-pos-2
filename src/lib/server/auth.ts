@@ -1,11 +1,8 @@
 // ---------------------------------------------------------------------------
 // The server-side auth layer (the next/headers half — src/lib/auth.ts is the
-// pure seam). Reads the `sf_session` httpOnly cookie through the request
+// pure seam). Reads the `vx_session` httpOnly cookie through the request
 // cookie store, verifies the HMAC token, resolves the user; builds the
 // session/clear cookie helpers the auth routes answer with.
-//
-// Layering (documented in src/lib/auth.ts): everything HERE may import
-// next/headers + the db; nothing in src/lib/auth.ts does.
 // ---------------------------------------------------------------------------
 
 import { cookies } from "next/headers";
@@ -17,7 +14,7 @@ import { UnauthorizedError } from "./http";
 
 // ---- the session cookie contract ------------------------------------------------
 
-export const SESSION_COOKIE_NAME = "sf_session";
+export const SESSION_COOKIE_NAME = "vx_session";
 /** 7 days — mirrors SESSION_TTL_MS in the pure seam. */
 export const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
 
@@ -29,13 +26,9 @@ const SESSION_USER_SELECT = {
   id: true,
   email: true,
   fullName: true,
-  themeMode: true,
-  accentColor: true,
-  avatarEmoji: true,
-  notificationsEnabled: true,
-  schoolName: true,
-  gradeLevel: true,
-  studyGoalHours: true,
+  role: true,
+  phone: true,
+  active: true,
   emailVerified: true,
   createdAt: true,
   updatedAt: true,
@@ -45,13 +38,9 @@ export type SessionUser = {
   id: string;
   email: string;
   fullName: string;
-  themeMode: string;
-  accentColor: string;
-  avatarEmoji: string;
-  notificationsEnabled: boolean;
-  schoolName: string;
-  gradeLevel: string;
-  studyGoalHours: number;
+  role: string;
+  phone: string;
+  active: boolean;
   emailVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -64,13 +53,9 @@ export function publicUser(user: SessionUser) {
     id: user.id,
     email: user.email,
     name: user.fullName,
-    themeMode: user.themeMode,
-    accentColor: user.accentColor,
-    avatarEmoji: user.avatarEmoji,
-    notificationsEnabled: user.notificationsEnabled,
-    schoolName: user.schoolName,
-    gradeLevel: user.gradeLevel,
-    studyGoalHours: user.studyGoalHours,
+    role: user.role,
+    phone: user.phone,
+    active: user.active,
     emailVerified: user.emailVerified,
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),

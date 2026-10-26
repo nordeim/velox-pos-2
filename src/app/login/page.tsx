@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { GraduationCap } from "lucide-react";
+import { Zap } from "lucide-react";
 
 // The measured auth surface (sub-screens swap client-side — see
 // src/components/auth/login-surface.tsx). useSearchParams requires a
@@ -11,16 +11,13 @@ import { LoginSurface } from "@/components/auth/login-surface";
 
 function AuthFallback() {
   return (
-    <main className="sf-canvas flex min-h-dvh items-center justify-center p-4">
-      <div className="flex w-full max-w-sm flex-col items-center rounded-2xl border border-slate-100 bg-card p-8 shadow-2xl dark:border-slate-800">
+    <main className="vx-canvas flex min-h-dvh items-center justify-center p-4">
+      <div className="vx-card flex w-full max-w-md flex-col items-center p-8">
         <span
-          className="sf-print-exact flex h-11 w-11 animate-pulse items-center justify-center rounded-xl text-white"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, rgb(var(--sf-primary)), rgb(var(--sf-primary-gradient-to)))",
-          }}
+          aria-hidden
+          className="vx-gradient flex h-12 w-12 animate-pulse items-center justify-center rounded-2xl text-white"
         >
-          <GraduationCap className="size-6" strokeWidth={2} />
+          <Zap className="h-6 w-6" strokeWidth={2} fill="currentColor" />
         </span>
       </div>
     </main>

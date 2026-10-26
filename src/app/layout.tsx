@@ -4,17 +4,15 @@ import "./globals.css";
 
 import { Toaster } from "@/components/ui/toast";
 import { siteUrl } from "@/lib/site";
-import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 
-// The root layout is a SERVER component: metadata + the pre-paint theme boot
-// script + the global toaster. The boot script resolves the cached theme
-// against matchMedia BEFORE first paint (no FOUC for dark users, and the
-// login route themes for dark-OS visitors) — see S11-1 / theme-system.spec.
+// The root layout is a SERVER component: metadata + the global toaster.
+// VeloxPOS is a dark-only application (the reference's measured aesthetic) —
+// there is no theme boot script or light variant.
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
-  title: "StudyFlow — Your study companion",
+  title: "VeloxPOS (Point Of Sale)",
   description:
-    "Your study companion — tasks, schedule, notes, flashcards, and focus.",
+    "VeloxPOS — a fast, self-hosted point of sale: terminal, inventory, registers, cashiers, and reports.",
 };
 
 export default function RootLayout({
@@ -22,10 +20,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
-      </head>
-      <body className="sf-canvas min-h-dvh antialiased">
+      <body className="vx-canvas min-h-dvh antialiased">
         {children}
         <Toaster />
       </body>

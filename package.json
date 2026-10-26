@@ -1,7 +1,7 @@
 {
-  "name": "omni-study",
+  "name": "velox-pos",
   "version": "1.0.0",
-  "description": "StudyFlow — your study companion. A production-ready clone (functional superset) of omni-study1.base44.app built on Next.js 16 + React 19 + Prisma/SQLite.",
+  "description": "VeloxPOS \u2014 a fast, self-hosted point of sale (terminal, inventory, registers, cashiers, reports). A production-ready clone (functional superset) of veloxposen.base44.app built on Next.js 16 + React 19 + Prisma/SQLite.",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
@@ -16,7 +16,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:seed:sample": "DATABASE_URL=\"file:../db/custom.db\" bun prisma/seed-sample.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.11.1",

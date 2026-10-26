@@ -46,7 +46,9 @@ export async function POST(request: NextRequest) {
       raw.fullName === undefined && raw.name !== undefined
         ? { ...raw, fullName: raw.name }
         : raw;
-    const { fullName, email, password } = parseWith(registerSchema, body);
+    const parsed = parseWith(registerSchema, body);
+    const fullName = parsed.name;
+    const { email, password } = parsed;
 
     const normalizedEmail = email.toLowerCase();
     const existing = await db.user.findUnique({

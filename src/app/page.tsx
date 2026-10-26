@@ -1,61 +1,38 @@
 "use client";
 
 // ---------------------------------------------------------------------------
-// The WHOLE app (§5): one page — auth gate → shell → view switcher. The 20
+// The WHOLE app: one page — auth gate → shell → view switcher. The 8
 // PascalCase paths are rewritten onto / by next.config.ts; the store syncs
 // the view with the pathname (hydrate()).
 //
-// Load-stability contract (ADR-014): the ACTIVE view's initial collections
-// pre-warm IN PARALLEL with /api/auth/me and the Splash flips only when BOTH
-// settle — first paint renders with final geometry (dashboard CLS 0.00). A
-// failed pre-warm never blocks the shell (the background loadAll retries).
-// A 401 leaves through window.location.replace("/login") — a FULL reload, so
-// the theme boot script re-defaults before the login surface paints.
+// Load-stability contract: the shell renders as soon as /api/auth/me
+// settles; the active view fetches its own data (each view owns its loading
+// state — a slow /api/dashboard/summary never blocks the Terminal).
+// A 401 leaves through window.location.replace("/login") — a FULL reload.
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
+import { Zap } from "lucide-react";
 
 import { ConnectivityBanner } from "@/components/layout/connectivity-banner";
 import { MobileChrome } from "@/components/layout/mobile-chrome";
-import { RumBeacon } from "@/components/layout/rum-beacon";
 import { Sidebar } from "@/components/layout/sidebar";
-import { GraduationCap } from "lucide-react";
 import { apiGet, ApiError } from "@/lib/api";
-import { useDataStore } from "@/lib/data";
-import { INITIAL_COLLECTIONS } from "@/lib/view-collections";
-import type { ViewId } from "@/lib/router";
-import {
-  useAppStore,
-  useThemeStore,
-  type AppUser,
-} from "@/lib/store";
+import { useAppStore, type AppUser } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
-import { AIAssistantView } from "@/components/views/aiassistant-view";
-import { AnalyticsView } from "@/components/views/analytics-view";
-import { AssignmentsView } from "@/components/views/assignments-view";
-import { CalendarView } from "@/components/views/calendar-view";
-import { CalculatorView } from "@/components/views/calculator-view";
+import { CashiersView } from "@/components/views/cashiers-view";
 import { DashboardView } from "@/components/views/dashboard-view";
-import { EventsView } from "@/components/views/events-view";
-import { ExamsView } from "@/components/views/exams-view";
-import { FilesView } from "@/components/views/files-view";
-import { FlashcardsView } from "@/components/views/flashcards-view";
-import { FocusTimerView } from "@/components/views/focustimer-view";
-import { GradeTrackerView } from "@/components/views/gradetracker-view";
-import { MathSolverView } from "@/components/views/mathsolver-view";
-import { MyDayView } from "@/components/views/myday-view";
-import { NotesView } from "@/components/views/notes-view";
-import { PracticeTestsView } from "@/components/views/practicetests-view";
+import { InventoryView } from "@/components/views/inventory-view";
+import { RegistersView } from "@/components/views/registers-view";
+import { ReportsView } from "@/components/views/reports-view";
+import { SalesView } from "@/components/views/sales-view";
 import { SettingsView } from "@/components/views/settings-view";
-import { StudyGroupsView } from "@/components/views/studygroups-view";
-import { TasksView } from "@/components/views/tasks-view";
-import { TimetableView } from "@/components/views/timetable-view";
+import { TerminalView } from "@/components/views/terminal-view";
 
 /**
  * Sets data-app-hydrated on the shell commit — the e2e gate that proves
- * the authed chrome (sidebar nav) has actually rendered. The --sf-primary
- * wait alone resolves pre-paint via the boot script (S8-A lesson).
+ * the authed chrome (sidebar nav) has actually rendered.
  */
 function HydrationMarker() {
   React.useEffect(() => {
@@ -65,26 +42,14 @@ function HydrationMarker() {
 }
 
 /** The static view registry — one component per NAV_ITEM view id. */
-const VIEW_COMPONENTS: Record<ViewId, React.ComponentType> = {
+const VIEW_COMPONENTS: Record<string, React.ComponentType> = {
+  terminal: TerminalView,
   dashboard: DashboardView,
-  myday: MyDayView,
-  tasks: TasksView,
-  calendar: CalendarView,
-  events: EventsView,
-  timetable: TimetableView,
-  assignments: AssignmentsView,
-  exams: ExamsView,
-  notes: NotesView,
-  flashcards: FlashcardsView,
-  practicetests: PracticeTestsView,
-  studygroups: StudyGroupsView,
-  gradetracker: GradeTrackerView,
-  analytics: AnalyticsView,
-  files: FilesView,
-  calculator: CalculatorView,
-  mathsolver: MathSolverView,
-  aiassistant: AIAssistantView,
-  focustimer: FocusTimerView,
+  inventory: InventoryView,
+  sales: SalesView,
+  registers: RegistersView,
+  cashiers: CashiersView,
+  reports: ReportsView,
   settings: SettingsView,
 };
 
@@ -92,24 +57,21 @@ type GateStatus = "loading" | "ready" | "error";
 
 function Splash({ error, onRetry }: { error?: string; onRetry?: () => void }) {
   return (
-    <div className="sf-canvas flex min-h-dvh flex-col items-center justify-center gap-4">
+    <div className="vx-canvas flex min-h-dvh flex-col items-center justify-center gap-4">
       <span
-        className="sf-print-exact flex h-14 w-14 animate-pulse items-center justify-center rounded-2xl text-white"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, rgb(var(--sf-primary)), rgb(var(--sf-primary-gradient-to)))",
-        }}
+        aria-hidden
+        className="vx-gradient vx-glow flex h-14 w-14 animate-pulse items-center justify-center rounded-2xl text-white"
       >
-        <GraduationCap className="h-7 w-7" strokeWidth={2} />
+        <Zap className="h-7 w-7" strokeWidth={2} fill="currentColor" />
       </span>
       {error && (
         <div className="flex flex-col items-center gap-2 text-center">
-          <p className="text-sm text-slate-500 dark:text-slate-400">{error}</p>
+          <p className="text-sm text-slate-400">{error}</p>
           {onRetry && (
             <button
               type="button"
               onClick={onRetry}
-              className="rounded-md px-3 py-1.5 text-sm font-medium text-sf-primary-strong outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:text-sf-primary-strong-dark"
+              className="vx-focusable rounded-md px-3 py-1.5 text-sm font-medium text-violet-300 outline-none"
             >
               Try again
             </button>
@@ -133,43 +95,24 @@ export default function Home() {
     const boot = async () => {
       setStatus("loading");
       setGateError("");
-      // The view comes from the URL, not the render closure (AP-59 family).
+      // The view comes from the URL, not the render closure.
       useAppStore.getState().hydrate();
-      const activeView = useAppStore.getState().view;
-
-      // The pre-warm rides IN PARALLEL with the auth round-trip and never
-      // blocks the shell on failure (the view's own loadAll retries).
-      const prewarm = useDataStore
-        .getState()
-        .loadCollections(INITIAL_COLLECTIONS[activeView])
-        .catch(() => {});
 
       try {
         const { user } = await apiGet<{ user: AppUser }>("/api/auth/me");
         if (cancelled) return;
-
-        const theme = useThemeStore.getState();
-        theme.loadFromUser(user);
-        theme.installSystemThemeTracking();
-
-        await prewarm;
-        if (cancelled) return;
-
+        void user;
         setStatus("ready");
-        // The full background refresh: pre-warmed collections stay, the
-        // rest of the cache fills without gating the first paint.
-        void useDataStore.getState().loadAll();
       } catch (err: unknown) {
         if (cancelled) return;
         if (err instanceof ApiError && err.status === 401) {
-          // FULL reload — the boot script re-defaults the theme on /login.
           window.location.replace("/login");
           return;
         }
         setGateError(
           err instanceof Error
             ? err.message
-            : "Something went wrong while loading your workspace.",
+            : "Something went wrong while loading the store.",
         );
         setStatus("error");
       }
@@ -184,7 +127,7 @@ export default function Home() {
   if (status !== "ready") {
     return (
       <>
-        <a href="#main-content" className="sf-skip-link">
+        <a href="#main-content" className="vx-skip-link">
           Skip to main content
         </a>
         <Splash
@@ -195,24 +138,23 @@ export default function Home() {
     );
   }
 
-  const ActiveView = VIEW_COMPONENTS[view] ?? VIEW_COMPONENTS.dashboard;
+  const ActiveView = VIEW_COMPONENTS[view] ?? VIEW_COMPONENTS.terminal;
 
   return (
     <>
-      <a href="#main-content" className="sf-skip-link">
+      <a href="#main-content" className="vx-skip-link">
         Skip to main content
       </a>
       <Sidebar />
       <HydrationMarker />
       <MobileChrome />
       <ConnectivityBanner />
-      <RumBeacon />
       <main
         id="main-content"
         tabIndex={-1}
         className={cn(
-          "p-4 pt-20 outline-none transition-[margin] lg:p-8 lg:pt-8",
-          sidebarCollapsed ? "lg:ml-20" : "lg:ml-[260px]",
+          "vx-scroll min-h-dvh px-4 pb-10 pt-20 outline-none transition-[margin] lg:px-8 lg:pt-8",
+          sidebarCollapsed ? "lg:ml-[68px]" : "lg:ml-[220px]",
         )}
       >
         <ActiveView />
