@@ -1,9 +1,9 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.17
+# VeloxPOS — Master Project Architecture Document (PAD) v1.18
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
 **Companion documents:** `README.md` (tour) · `AGENTS.md` (agent invariants) · `CLAUDE.md` (Claude conventions) · `docs/veloxpos-implementation-plan.md` (the measured reference spec)
-**Last Updated:** 2026-10-28 (Session-19)
+**Last Updated:** 2026-10-28 (Session-20)
 **Audience:** Senior engineers, tech leads, DevOps, onboarding engineers, and AI coding agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -28,7 +28,7 @@ guardrail is enforced by tooling that runs in this checkout.
 **Scale & baselines (verified 2026-10-27, Session-16 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views (9 route spellings — the root `/` page is the
 terminal's reference-parity landing, Session-10 F-60)
-+ login/reset/404 · 149 unit tests (14 files) · 105 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 149 unit tests (14 files) · 107 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -249,7 +249,7 @@ Dependency rule: arrows point downward only. `src/lib` pure seams never import R
  │                           db-path, db, store, api, utils) + server/ (http, auth, entities)
  ├ 📂 prisma               — schema.prisma (9 models) · seed.ts (owner + settings; --demo dataset)
  ├ 📂 tests/unit           — 14 vitest files (the seam registry + the docs-counts gate)
- ├ 📂 tests/e2e            — 7 spec files + auth.setup + kill-port + provisioning
+ ├ 📂 tests/e2e            — 8 spec files + auth.setup + kill-port + provisioning
  ├ 📂 docs                 — implementation plan, runbooks, Tailwind report, screenshots/
  └ ⚙️ next.config.ts · playwright.config.ts · vitest.config.ts · package.json · .env.example
 ```
@@ -297,7 +297,7 @@ lint → typecheck → unit → build → smoke → e2e
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 14 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 105/105):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 107/107):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
@@ -306,7 +306,9 @@ lint → typecheck → unit → build → smoke → e2e
    `inventory` (CRUD + search + CSV-adjacent flows), `registers-shifts` (the
    lifecycle), `terminal` (cart math, cash checkout + change, ticket, receipt, stock decrement),
    `surfaces` (Sales/Cashiers/Reports/Settings/404/health + the dialog-animation and
-   cart-md-geometry parity pins).
+   cart-md-geometry parity pins), `viewport-drift-sweep` (the Session-20 tier: the 8 routes ×
+   4 widths zero-overflow battery + the chrome-switch contract + the with-data
+   functional-scroll containment guard at 390).
 3. **Field-tested e2e doctrine:** auth waits for the hydration-gated submit button (`toBeEnabled`)
    before filling; assertions use visibility (not DOM count) for `hidden md:*` elements; the
    scratch db is never replaced while the server lives (clients bind the inode; field-tested
@@ -1288,3 +1290,56 @@ desktop + 13 mobile + 1 setup). Screenshots 93–95. Docs lockstep: AGENTS (the
 Session-19 contracts + the print-path law), CLAUDE (the baseline + the
 print-path line), README, the SKILL v2.15.0 Session-19 addendum, the worklog
 entry, `docs/remediation-plan-session-19.md`, `docs/session_33.md`.
+
+## Revision Block — v1.18 (2026-10-28, Session-20)
+
+**Scope:** the four-width drift-sweep cycle on the Session-19 tree (`6f32b4f` = the
+Session-19 push `2d18c51` + the operator's session_34 raw-log commit; a git-pull refresh —
+the workspace persisted, environment acts limited to re-verification). Received-tree gate
+green (lint 0 · tsc · unit 149/149 · build · smoke 13/13 · e2e 105/105 — the Session-19
+lock held). FOURTEENTH consecutive drift-free reference cycle (every standing pin
+byte-exact — the login card, the F-76 alert, the sidebar + `/` landing, the Dashboard date
+line, the Spanish families, the reference's own mobile defect: still no hamburger, the
+static 220px sidebar, the 390px document scrolling to 1280px). The clone's mobile drawer
+re-verified live on the dev server at 390×844 (the operator's named priority): the
+labeled hamburger, the dialog semantics with 8 labeled links, focus→Close on open,
+Escape→hamburger focus restore + scroll-lock release, route-close unmount, zero
+horizontal overflow — plus the 13/13 mobile e2e. Static sweeps clean (zero dead files,
+secrets clean, the documented credential verifies, the Session-19 code review confirmed
+the two surgical cures + pins + docs exactly as planned).
+
+**The NEW depth (the session_33 "Next" pointer — the neo-crm-style drift-sweep tier):**
+**F-116, a protection gap rather than a live defect.** The four-width responsive frame
+had ZERO standing e2e protection: the suite pinned 390 (the drawer spec, /POS-centered)
+and 1440 (the desktop specs); the intermediate widths 768/1024 had no coverage at all;
+the route-battery overflow contract existed for /POS@390 only; and the with-data ledger
+containment (the neo-crm M-109c1 genus — a seeded row's min-content overflowing the
+phone frame) had no guard anywhere. The live ANALYZE proved the frame currently correct
+at 8 routes × 4 widths, empty AND demo-seeded (the ledger tables 640–773px stay inside
+their `.vpx-scroll` containers) — and the reference itself ships the class.
+
+**The cure — `tests/e2e/viewport-drift-sweep.spec.ts` (2 tests, e2e 105 → 107, 91 → 93
+desktop):** (1) the route battery — every route at every audit width computes doc/main
+`scrollWidth ≤ clientWidth`, plus the chrome-switch contract (the hamburger owns the
+sub-md chrome, the sidebar the md+ chrome — VISIBILITY pins); (2) the with-data guard —
+a self-provisioned product, Inventory at 390: main stays contained, the ledger container
+is a FUNCTIONAL scroll region, and the table keeps its `min-w-[760px]` floor.
+
+**The cycle's probe law (the mutation-proof doctrine):** the containment observable is
+the `scrollLeft` READ-BACK, not a scrollWidth census — a frame-level pin cannot catch
+the inner-container break (the outer `glass-card overflow-hidden` absorbs the spill);
+Chromium reports `scrollWidth > clientWidth` even for `overflow-x: visible`; the
+read-back distinguishes (the injected mutation no-ops the assignment — measured live).
+And the ledger-container lookup is `table.closest(".vpx-scroll")` — `main` itself
+carries `.vpx-scroll` and contains every table, so a document-order `.find()` picks
+MAIN and the pin fails falsely (the first run's lesson, fixed in the same cycle). A
+characterization spec's red IS the mutation proof: the pins pass on the standing build,
+and the regression-class evidence is the injected-mutation probe.
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **149/149** (14 files
+— UNMOVED) · build green · smoke **13/13** · e2e **107/107** (93 desktop + 13 mobile +
+1 setup). Screenshots 96–98. Docs lockstep: AGENTS (the Session-20 contracts), CLAUDE
+(the baseline + the drift-sweep line), README (badge + scripts + testing), the SKILL
+v2.16.0 Session-20 addendum, docs-counts.test.ts (the "Session-19 lock" literal becomes
+the **Session-20 lock**), the worklog entry, `docs/remediation-plan-session-20.md`,
+`docs/session_35.md`.

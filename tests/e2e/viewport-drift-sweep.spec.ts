@@ -1,0 +1,165 @@
+import { expect, test } from "@playwright/test";
+
+// ---------------------------------------------------------------------------
+// Session-20 (F-116): the four-width responsive drift-sweep battery — the
+// standing visual-regression tier this codebase did not have (the session_33
+// "Next" pointer; the master skill §15 gate:full doctrine). Before this spec
+// the suite pinned 390 (the mobile drawer, /POS-centered) and 1440 (the
+// desktop specs) — the intermediate widths 768/1024 had ZERO coverage, the
+// route-battery overflow contract existed for /POS@390 only, and the
+// with-data ledger containment had no guard anywhere.
+//
+// The ANALYZE facts this spec transcribes (the V16/V17 probes, measured live
+// before the spec was written): every route computes docScrollW === clientW
+// at all four widths, empty AND demo-seeded; the chrome switches exactly at
+// md (the sidebar `hidden md:flex`, the hamburger `md:hidden`); the ledger
+// tables (min-w 720–760) stay contained inside their `.vpx-scroll
+// overflow-x-auto` containers. The reference itself ships the regression
+// class (its own static 220px sidebar scrolls the 390px document to 1280px).
+//
+// The containment pin's observable is FUNCTIONAL, not structural — the V18
+// mutation proof: a frame-level pin alone cannot catch the inner-container
+// break (the outer `glass-card overflow-hidden` absorbs the spill — measured
+// live), and Chromium reports `scrollWidth > clientWidth` even for
+// overflow-x: visible (a scrollWidth census cannot distinguish the two —
+// measured live). The `scrollLeft = 50` read-back DOES distinguish: under the
+// injected regression the assignment no-ops. Pin the functional scroll.
+// ---------------------------------------------------------------------------
+
+const WIDTHS = [390, 768, 1024, 1440] as const;
+const ROUTES = [
+  "/POS",
+  "/Dashboard",
+  "/Inventory",
+  "/Sales",
+  "/Registers",
+  "/Cashiers",
+  "/Reports",
+  "/StoreSettings",
+] as const;
+
+test.describe("the four-width drift-sweep battery (Session-20, F-116)", () => {
+  test("no route overflows the four audit widths (the 390/768/1024/1440 battery)", async ({ page }) => {
+    test.slow(); // 32 route visits (8 routes × 4 widths) + hydration settles
+    for (const width of WIDTHS) {
+      await page.setViewportSize({ width, height: 844 });
+      for (const [i, route] of ROUTES.entries()) {
+        await page.goto(route, { waitUntil: "domcontentloaded" });
+        await page.waitForTimeout(700); // the hydration settle (the empty-store battery posture)
+        const probe = await page.evaluate(() => {
+          const de = document.documentElement;
+          const main = document.querySelector("main");
+          return {
+            docScrollW: de.scrollWidth,
+            clientW: de.clientWidth,
+            mainScrollW: main ? main.scrollWidth : null,
+          };
+        });
+        expect(
+          probe.docScrollW,
+          `${route} @${width}: the document must not overflow horizontally`,
+        ).toBeLessThanOrEqual(probe.clientW);
+        if (probe.mainScrollW !== null) {
+          expect(
+            probe.mainScrollW,
+            `${route} @${width}: main must not overflow horizontally`,
+          ).toBeLessThanOrEqual(probe.clientW);
+        }
+        // The chrome-switch contract, asserted once per width (on /POS, the
+        // first route): the hamburger is the <md chrome, the sidebar the >=md
+        // chrome. VISIBILITY assertions — `hidden md:flex` elements stay in
+        // the DOM below md; count would lie (the AGENTS law).
+        if (i === 0) {
+          const hamburger = page.getByRole("button", {
+            name: "Open navigation menu",
+          });
+          const sidebar = page.getByTestId("app-sidebar");
+          if (width < 768) {
+            await expect(hamburger, `@${width}: the hamburger owns the sub-md chrome`).toBeVisible();
+            await expect(sidebar, `@${width}: the sidebar is hidden below md`).not.toBeVisible();
+          } else {
+            await expect(sidebar, `@${width}: the sidebar owns the md+ chrome`).toBeVisible();
+            await expect(hamburger, `@${width}: the hamburger is hidden at md and above`).not.toBeVisible();
+          }
+        }
+      }
+    }
+  });
+
+  test("the with-data ledger stays contained and scrollable at 390 (the M-109c1 guard)", async ({ page }) => {
+    // Self-owned data (the s19 provisionFixture posture — the serial
+    // one-worker suite; the name is unique to this spec).
+    const cats = await (await page.request.get("/api/categories")).json();
+    let catId = cats.find((c: { name: string }) => c.name === "Drift Sweep")?.id;
+    if (!catId) {
+      const cat = await page.request.post("/api/categories", {
+        data: { name: "Drift Sweep" },
+      });
+      catId = (await cat.json()).id;
+    }
+    await page.request.post("/api/products", {
+      data: {
+        name: "Drift Sweep Cola",
+        price: 2.5,
+        categoryId: catId,
+        stock: 50,
+        minStock: 2,
+        barcode: "DSWEEP-390",
+        taxRate: 0,
+      },
+    });
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/Inventory", { waitUntil: "domcontentloaded" });
+    // The settled wait (the s16 bootstrap-race lesson): the product row IS
+    // the settled state — never a timer.
+    await page
+      .locator("table tbody tr")
+      .filter({ hasText: "Drift Sweep Cola" })
+      .first()
+      .waitFor({ state: "visible", timeout: 15_000 });
+
+    const probe = await page.evaluate(() => {
+      const de = document.documentElement;
+      const main = document.querySelector("main");
+      // the ledger container = the table's OWN .vpx-scroll wrapper
+      // (table.closest) — NEVER a document-order .find(): `main` itself
+      // carries .vpx-scroll (the app-shell's overflow-y-auto) and contains
+      // the table, so a `.find(c => c.querySelector("table"))` picks MAIN,
+      // which is not a horizontal scroll container (the first run's lesson)
+      const table = document.querySelector("table");
+      const container = table ? table.closest(".vpx-scroll") : null;
+      // THE FUNCTIONAL SCROLL PROBE (the V18 mutation-proven observable):
+      // under overflow-x: visible the assignment no-ops — scrollWidth
+      // cannot distinguish, scrollLeft CAN.
+      let functionalScroll = false;
+      if (container) {
+        container.scrollLeft = 50;
+        functionalScroll = container.scrollLeft > 0;
+        container.scrollLeft = 0;
+      }
+      return {
+        docScrollW: de.scrollWidth,
+        clientW: de.clientWidth,
+        mainScrollW: main ? main.scrollWidth : null,
+        functionalScroll,
+        tableScrollW: table ? table.scrollWidth : null,
+      };
+    });
+    expect(
+      probe.docScrollW,
+      "the document must stay contained at 390 with data",
+    ).toBeLessThanOrEqual(probe.clientW);
+    expect(probe.mainScrollW, "main must stay contained at 390 with data").toBeLessThanOrEqual(
+      probe.clientW,
+    );
+    expect(
+      probe.functionalScroll,
+      "the ledger container must be a FUNCTIONAL scroll region (scrollLeft assignment works — the V18 mutation-proven observable)",
+    ).toBe(true);
+    expect(
+      probe.tableScrollW,
+      "the table keeps its min-width floor (min-w-[760px]) — the container contains, the table never shrinks",
+    ).toBeGreaterThanOrEqual(760);
+  });
+});

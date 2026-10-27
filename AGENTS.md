@@ -513,6 +513,38 @@ bite hardest here:
   two-byte `[m` sequence. tsc/build/e2e green is the counter-proof; hexdump or
   grep-count before "fixing" any bracket-adjacent string a display showed you.
 
+## The four-width drift-sweep contracts (Session-20 pins — F-116)
+
+- **The responsive frame is e2e-pinned at ALL FOUR audit widths** (390/768/1024/1440 —
+  `tests/e2e/viewport-drift-sweep.spec.ts`, the session_33 "Next" pointer landed): every
+  route computes doc/main `scrollWidth ≤ clientWidth` at every width (zero horizontal
+  overflow — the battery), and the chrome switches exactly at md: the hamburger owns the
+  sub-md chrome, the sidebar the md+ chrome. VISIBILITY pins (`toBeVisible`/
+  `not.toBeVisible`), never count — `hidden md:flex` elements stay in the DOM below md
+  (the standing law). The reference itself ships the regression class (its own static
+  220px sidebar scrolls the 390px document to 1280px — the 14th consecutive drift sweep).
+- **The with-data ledger containment is FUNCTIONALLY pinned at 390** (the M-109c1 guard,
+  the neo-crm genus): with a self-provisioned product, Inventory at 390 keeps main
+  contained, the ledger container (`.vpx-scroll`) is a FUNCTIONAL scroll region, and the
+  table keeps its `min-w-[760px]` floor — the container contains, the table never
+  shrinks.
+- **The containment pin's observable is the `scrollLeft` READ-BACK** (the cycle's
+  mutation proof): a frame-level pin alone cannot catch the inner-container break (the
+  outer `glass-card overflow-hidden` absorbs the spill — measured live); Chromium reports
+  `scrollWidth > clientWidth` even for `overflow-x: visible` (a scrollWidth census cannot
+  distinguish the two — measured live); the `scrollLeft = 50` read-back CAN (under the
+  injected mutation the assignment no-ops). Never weaken the functional probe to a
+  structural one.
+- **The ledger-container lookup is `table.closest(".vpx-scroll")`** — NEVER a
+  document-order `.find(c => c.querySelector("table"))`: `main` ITSELF carries
+  `.vpx-scroll` (the app-shell's overflow-y-auto) and contains every table, so the find
+  picks MAIN, which is not a horizontal scroll container — the assignment no-ops and the
+  pin fails falsely (the first run's lesson, fixed in the same cycle).
+- **A characterization spec's red is the mutation proof**: when the finding is a
+  protection gap (the code currently correct), the pins land and must PASS on the
+  standing build, and the regression-class evidence is the injected-mutation probe
+  (recorded in the plan's ledger) — not a contrived failing assertion.
+
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
 `src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px

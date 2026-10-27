@@ -8,8 +8,8 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.15.0
-last_updated: 2026-10-27
+version: 2.16.0
+last_updated: 2026-10-28
 ---
 
 # VeloxPOS — Project Skill
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-19 lock: unit **149/149** (14 files) · e2e **105/105**
-(91 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-20 lock: unit **149/149** (14 files) · e2e **107/107**
+(93 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -68,7 +68,7 @@ bun run lint                   # eslint flat config — 0 errors, 1 documented w
 bun run typecheck              # tsc --noEmit — strict
 bun run test                   # vitest — tests/unit/** (149)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               playwright (105) — NEEDS the build first (:3100)
+bun run test:e2e               playwright (107) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -432,13 +432,17 @@ SUPERSET instead:
 1. **Unit (Vitest, 149/149, 14 files)** — the pure seams only (plus the docs-counts
    lockstep gate). New `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 105/105)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 107/107)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
    `chromium` — the full browser; chrome-headless-shell has a cookie quirk on
    plain-HTTP localhost) and `mobile` (390×844, runs only the drawer spec).
    Auth once via storageState (the rate limiter); `auth.spec.ts` opts out.
+   The Session-20 drift-sweep tier (`viewport-drift-sweep.spec.ts`): the 8
+   routes × 4 widths (390/768/1024/1440) zero-overflow battery + the chrome-
+   switch contract + the with-data functional-scroll containment guard — the
+   standing visual-regression tier (the master skill §15 gate:full doctrine).
 3. **Live re-measurement (agent-browser)** — computed styles beat screenshots;
    re-measure the reference before any design-system change and record the
    measurement in the plan doc.
@@ -1321,3 +1325,45 @@ Session-19 contracts + the print-path law), CLAUDE (the baseline + the
 print-path line), PAD v1.17, README (badge + scripts + testing), the worklog
 entry, `docs/remediation-plan-session-19.md`, `docs/session_33.md`.
 Skill v2.15.0.
+
+## Session history addendum — Session-20 (v2.16.0) — the four-width drift-sweep tier
+
+**The finding (F-116) was a protection gap, not a live defect:** the four-width
+responsive frame had ZERO standing e2e protection — the suite pinned 390 (the
+drawer spec, /POS-centered) and 1440 (the desktop specs), the intermediate
+widths 768/1024 had no coverage at all, the route-battery overflow contract
+existed for /POS@390 only, and the with-data ledger containment (the neo-crm
+M-109c1 genus — a seeded row's min-content overflowing the phone frame) had no
+guard anywhere. The live ANALYZE proved the frame currently correct at 8 routes
+× 4 widths, empty AND demo-seeded — and the reference itself ships the
+class (its own static 220px sidebar scrolls the 390px document to 1280px).
+
+**The tier (`tests/e2e/viewport-drift-sweep.spec.ts`, 2 tests — e2e 105 →
+107, 91 → 93 desktop):** (1) the route battery — every route at every audit
+width computes doc/main scrollWidth ≤ clientWidth, plus the chrome-switch
+contract (the hamburger owns the sub-md chrome, the sidebar the md+ chrome —
+VISIBILITY pins; `hidden md:flex` elements stay in the DOM below md); (2) the
+with-data guard — a self-provisioned product, Inventory at 390: main stays
+contained, the ledger container is a FUNCTIONAL scroll region, and the table
+keeps its min-w-[760px] floor (the container contains — the table never
+shrinks).
+
+**The containment pin's observable is FUNCTIONAL, not structural (the cycle's
+probe law):** a frame-level pin alone cannot catch the inner-container break
+(the outer `glass-card overflow-hidden` absorbs the spill — measured live);
+Chromium reports `scrollWidth > clientWidth` even for `overflow-x: visible`
+(a scrollWidth census cannot distinguish — measured live); the `scrollLeft =
+50` read-back DOES distinguish (under the injected mutation the assignment
+no-ops — the honest mutation-proof red for a characterization spec). And the
+container lookup is `table.closest(".vpx-scroll")` — NEVER a document-order
+`.find(c => c.querySelector("table"))`: `main` ITSELF carries `.vpx-scroll`
+(the app-shell's overflow-y-auto) and contains every table, so the find picks
+MAIN, which is not a horizontal scroll container (the first run's lesson).
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **149/149**
+(14 files — UNMOVED) · build green · smoke **13/13** · e2e **107/107** (93
+desktop + 13 mobile + 1 setup). Screenshots 96–98. Docs lockstep: AGENTS (the
+Session-20 contracts), CLAUDE (the baseline + the drift-sweep line), PAD
+v1.18, README (badge + scripts + testing), the worklog entry,
+`docs/remediation-plan-session-20.md`, `docs/session_35.md`.
+Skill v2.16.0.

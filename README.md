@@ -5,7 +5,7 @@
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6)
 ![Tests](https://img.shields.io/badge/unit%20tests-149%20%2F%20149-brightgreen)
-![E2E](https://img.shields.io/badge/e2e-105%20%2F%20105-brightgreen)
+![E2E](https://img.shields.io/badge/e2e-107%20%2F%20107-brightgreen)
 ![License](https://img.shields.io/badge/license-Proprietary-lightgrey)
 
 **A production-ready, enterprise-grade Point of Sale web application — a functional superset of
@@ -98,7 +98,7 @@ register, a closed shift, and a week of sales).
 | `bun run lint` | ESLint (flat config) |
 | `bun run typecheck` | `tsc --noEmit` (strict) |
 | `bun run test` | Vitest unit suite — the pure domain seams (149 tests / 14 files) |
-| `bun run test:e2e` | Playwright suite against the production standalone build (105 tests; desktop 1440×900 + mobile 390×844 projects) |
+| `bun run test:e2e` | Playwright suite against the production standalone build (107 tests; desktop 1440×900 + mobile 390×844 projects, plus the four-width 390/768/1024/1440 drift-sweep battery) |
 | `bun run smoke` | The 13-step API smoke ladder against the standalone artifact on :3210 (own scratch `db/smoke.db`; health → auth wall → Zod seam → CRUD → rate limit → boot gate → artifact hygiene) |
 | `bun run gate` | The full pre-push gate: `lint → typecheck → test → build → smoke → e2e` |
 | `bun run db:push` | `prisma db push` against `db/custom.db` |
@@ -189,7 +189,7 @@ All endpoints return domain JSON; errors use `{ error: string }` with the docume
 bun run test            # unit: 149 tests / 14 files — the pure seams (money, cart, shift,
                         # reports, inventory-status, currency, router, validation, auth,
                         # db-path, env-check, site) + the docs-counts lockstep gate
-bun run test:e2e        # e2e: 105 tests — needs `bun run build` first (boots the standalone
+bun run test:e2e        # e2e: 107 tests — needs `bun run build` first (boots the standalone
                         # build on :3100 with its own scratch db, db/e2e.db)
 bun run smoke           # the 13-step API smoke ladder — also needs the build (boots the
                         # artifact on :3210 with db/smoke.db; verifies the boot gate +
@@ -202,6 +202,10 @@ The e2e suite runs two projects: **desktop** (1440×900) and **mobile** (390×84
 `mobile-navigation.spec.ts` drawer suite). Auth is established once per run (`auth.setup.ts`,
 storageState reuse) to respect the 10/IP/15-minute rate limit. The scratch db is provisioned by the
 webServer command itself (kill-port → provision → boot) and never replaced while the server lives.
+The Session-20 drift-sweep tier (`viewport-drift-sweep.spec.ts`) pins the responsive frame at all
+four audit widths — 390/768/1024/1440 — across every route (zero horizontal overflow + the
+chrome-switch contract), and the with-data ledger containment at 390 (the functional-scroll
+guard).
 
 ## Design System
 

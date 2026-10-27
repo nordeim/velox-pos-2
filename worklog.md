@@ -1648,3 +1648,64 @@ record), session_33.md (the narration). `.env.example` verified against the
 working `.env`. Pushed via `docs/ssh_git_wrapper_v3.py` → main on
 `git@github.com:nordeim/velox-pos-2.git`, remote-verified; operator key
 shredded.
+
+## Session-20 — the four-width drift-sweep tier (velox-pos-2)
+
+**Date:** 2026-10-28 · **Tree:** `6f32b4f` received (the Session-19 push `2d18c51` + the
+operator's session_34 raw-log commit — a GIT PULL this cycle; the workspace persisted
+from Session-19) · **Cycle:** the session_33 "Next" pointer's drift-sweep target + the
+operator's mobile-navigation priority check.
+
+**The received tree**: gate FULLY GREEN on arrival — lint 0 (1 documented warning) ·
+tsc · unit **149/149** (14 files) · build · smoke **13/13** · e2e **105/105** (2.4m).
+Environment re-verified (`.env` + `db/` at the repo root persisted; chromium-1243
+cached). Static sweeps clean: zero dead files, secrets clean (test fixtures only), the
+documented credential VERIFIES, and the Session-19 code review confirmed the two
+surgical cures + pins + docs exactly as planned.
+
+**Reference sweep #14: ALL STANDING PINS HOLD — the FOURTEENTH consecutive drift-free
+cycle** (login card blur(4px)/white/95/16px, F-76 byte-exact, the 220px sidebar + the
+`/` landing, the Dashboard date line, the Sales/Cashiers Spanish families, the
+reference's own mobile defect at 390×844 — no hamburger, the static sidebar, the 390px
+document scrolling to 1280px). **The clone's mobile drawer re-verified live on the dev
+server** (the operator's priority): labeled hamburger · dialog semantics + 8 labeled
+links · focus management (open→Close, Escape→hamburger + scroll-lock release) ·
+route-close unmount · zero horizontal overflow — plus 13/13 mobile e2e. NO Tailwind v4
+regression.
+
+**The NEW depth — the four-width (390/768/1024/1440) route-battery ANALYZE, empty AND
+demo-seeded**: ZERO overflow findings on the standing code (the ledger tables 640–773px
+stay inside their `.vpx-scroll` containers; the chrome switches exactly at md) — the
+finding is **F-116, the MISSING protection tier** (the suite pinned 390 /POS-centered
+and 1440 only; 768/1024 had zero coverage; the with-data containment class — the neo-crm
+M-109c1 genus — had no guard anywhere). The mutation proofs designed the pin: a
+frame-level pin is blind to the inner break (the outer `overflow-hidden` clips);
+`scrollWidth` cannot distinguish `overflow-x: auto` from `visible` (Chromium reports
+content width for both); the **`scrollLeft` read-back CAN** (the injected mutation
+no-ops the assignment — measured live).
+
+**The cure — `tests/e2e/viewport-drift-sweep.spec.ts` (2 tests, no production code)**:
+the route battery (8 routes × 4 widths: doc/main `scrollWidth ≤ clientWidth` + the
+chrome-switch contract, VISIBILITY pins) + the with-data guard (self-provisioned
+product; Inventory@390: main contained, the ledger container a FUNCTIONAL scroll region,
+the table's `min-w-[760px]` floor intact). The spec's first run caught a PROBE bug (the
+container lookup picked `main` — which itself carries `.vpx-scroll`; fixed to
+`table.closest(".vpx-scroll")`); the second run: both tests PASS on the standing build
+(the characterization green; the red is the mutation record).
+
+**E2E 105 → 107 (93 desktop) · specs 7 → 8** — the count-lockstep constants AND every
+live-tense doc site moved in the SAME commit (docs-counts gate + the "Session-19 lock" →
+"Session-20 lock" literal + the scoped-negative move "8 spec files"→"7 spec files" — the
+gate catching its own doc history; README badge/scripts/testing, CLAUDE baseline + the
+drift-sweep law, PAD **v1.18**, SKILL **v2.16.0** + the Session-20 addendum, AGENTS the
+Session-20 contracts).
+
+**Gate on the final tree**: lint 0 (1 documented warning) · tsc · unit **149/149**
+(14 files — UNMOVED) · build · smoke **13/13** · e2e **107/107** (2.9m). Evidence:
+screenshots **96–98** (the with-data Inventory contained at 390, the POS md chrome
+switch at 768 with the 380px cart rail, the mobile drawer) via the committed
+self-provisioning `scripts/capture-s20-evidence.mjs`; the STANDING protection lives in
+the e2e suite itself (the battery + the containment guard run on every
+`bun run test:e2e`). Docs lockstep: this worklog entry, remediation-plan-session-20
+(the full ledger + record), session_35.md (the narration). `.env.example` verified
+against the working `.env`.

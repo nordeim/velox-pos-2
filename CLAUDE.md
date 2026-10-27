@@ -240,6 +240,17 @@ No hosted CI exists; the local gate is the only gate.
   old pattern; covering only new pins leaves the old ones red.
 - **The 10 documented v4 traps** live in the `globals.css` header; the mobile-nav-critical ones
   are repeated in `AGENTS.md`.
+- **The four-width drift-sweep tier is e2e-pinned** (Session-20, F-116,
+  `tests/e2e/viewport-drift-sweep.spec.ts`): every route at 390/768/1024/1440
+  computes doc/main `scrollWidth ≤ clientWidth` (zero horizontal overflow), the
+  chrome switches exactly at md (the hamburger owns the sub-md chrome, the
+  sidebar the md+ chrome — VISIBILITY pins, never count), and the with-data
+  ledger stays contained AND functionally scrollable at 390 (the
+  `scrollLeft` read-back probe — the mutation-proven observable: a
+  frame-level pin alone cannot catch the inner-container break, the outer
+  `overflow-hidden` absorbs it). The container lookup is
+  `table.closest(".vpx-scroll")` — `main` itself carries `.vpx-scroll` and
+  contains every table; a document-order find picks MAIN and no-ops.
 
 ## Testing conventions
 
@@ -251,7 +262,7 @@ No hosted CI exists; the local gate is the only gate.
   (the gate fails until you do; history blocks keep their historical numbers by design).
 - **E2E** (`tests/e2e/**`, Playwright, production standalone on :3100): user journeys through the
   real UI. Two projects — `chromium` (1440×900) and `mobile` (390×844; runs only
-  `mobile-navigation.spec.ts`). **Baseline: 105 tests.** Auth once via `auth.setup.ts` +
+  `mobile-navigation.spec.ts`). **Baseline: 107 tests.** Auth once via `auth.setup.ts` +
   storageState (the rate limiter is 10/IP/15 min). The scratch db (`db/e2e.db`) is provisioned
   by the webServer command (kill-port → provision → boot) and never replaced while the server
   lives — replacing it after boot desynchronizes the login and page-render clients
