@@ -4,8 +4,8 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6)
-![Tests](https://img.shields.io/badge/unit%20tests-138%20%2F%20138-brightgreen)
-![E2E](https://img.shields.io/badge/e2e-102%20%2F%20102-brightgreen)
+![Tests](https://img.shields.io/badge/unit%20tests-146%20%2F%20146-brightgreen)
+![E2E](https://img.shields.io/badge/e2e-104%20%2F%20104-brightgreen)
 ![License](https://img.shields.io/badge/license-Proprietary-lightgrey)
 
 **A production-ready, enterprise-grade Point of Sale web application — a functional superset of
@@ -97,8 +97,8 @@ register, a closed shift, and a week of sales).
 | `bun run build` | Standalone production build (`next build` + static/public copy) |
 | `bun run lint` | ESLint (flat config) |
 | `bun run typecheck` | `tsc --noEmit` (strict) |
-| `bun run test` | Vitest unit suite — the pure domain seams (138 tests / 14 files) |
-| `bun run test:e2e` | Playwright suite against the production standalone build (102 tests; desktop 1440×900 + mobile 390×844 projects) |
+| `bun run test` | Vitest unit suite — the pure domain seams (146 tests / 14 files) |
+| `bun run test:e2e` | Playwright suite against the production standalone build (104 tests; desktop 1440×900 + mobile 390×844 projects) |
 | `bun run smoke` | The 13-step API smoke ladder against the standalone artifact on :3210 (own scratch `db/smoke.db`; health → auth wall → Zod seam → CRUD → rate limit → boot gate → artifact hygiene) |
 | `bun run gate` | The full pre-push gate: `lint → typecheck → test → build → smoke → e2e` |
 | `bun run db:push` | `prisma db push` against `db/custom.db` |
@@ -111,11 +111,11 @@ register, a closed shift, and a week of sales).
 | Framework | Next.js 16 (App Router, standalone output) | Server-gated routes at the reference's real paths |
 | UI runtime | React 19 | Client views; ONE Zustand store (`usePosStore`) |
 | Styling | Tailwind CSS v4 (CSS-first, no config file) | Pinned palette + the measured `glass-*` classes |
-| Primitives | Radix UI (shadcn-style components in `src/components/ui`) | Dialogs, selects, toasts, switches |
+| Primitives | Radix UI (shadcn-style components in `src/components/ui`) | Dialogs, selects, switches (the toaster is zustand-based — no Radix toast) |
 | ORM | Prisma 6 / SQLite (`db/custom.db`) | 9 models, all ownership-scoped |
 | Auth | scrypt + HMAC httpOnly cookie (`sf_session`) | Boot-guarded secret, rate-limited public endpoints |
 | Validation | Zod 4 at every API boundary | Nothing reaches Prisma unvalidated |
-| Charts | Hand-rolled SVG (`src/components/pos/shared.tsx`) | Zero chart dependencies; dotted-grid parity |
+| Charts | Hand-rolled SVG (`src/components/pos/shared.tsx` + the `smoothPath`/`niceScale` seams) | Zero chart dependencies; the two measured chart families |
 
 ```
 Browser ──► /POS /Dashboard /Inventory /Sales /Registers /Cashiers /Reports /StoreSettings
@@ -186,10 +186,10 @@ All endpoints return domain JSON; errors use `{ error: string }` with the docume
 ## Testing
 
 ```bash
-bun run test            # unit: 138 tests / 14 files — the pure seams (money, cart, shift,
+bun run test            # unit: 146 tests / 14 files — the pure seams (money, cart, shift,
                         # reports, inventory-status, currency, router, validation, auth,
                         # db-path, env-check, site) + the docs-counts lockstep gate
-bun run test:e2e        # e2e: 102 tests — needs `bun run build` first (boots the standalone
+bun run test:e2e        # e2e: 104 tests — needs `bun run build` first (boots the standalone
                         # build on :3100 with its own scratch db, db/e2e.db)
 bun run smoke           # the 13-step API smoke ladder — also needs the build (boots the
                         # artifact on :3210 with db/smoke.db; verifies the boot gate +

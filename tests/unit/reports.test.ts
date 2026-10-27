@@ -5,6 +5,7 @@ import {
   categorySlices,
   dailySeries,
   inPeriod,
+  niceScale,
   niceTicks,
   periodStart,
   PERIODS,
@@ -168,6 +169,46 @@ describe("niceTicks (the chart axis contract — ~5 nice steps, never per-unit)"
   it("never explodes the tick count (the F-50 regression pin)", () => {
     for (const max of [4, 8, 17, 99, 470, 2500, 99_999, 1_000_000]) {
       expect(niceTicks(max).length).toBeLessThanOrEqual(6);
+    }
+  });
+});
+
+// Session-15 (F-107, measured on the demo-seeded dashboard): niceTicks stops
+// at the largest step multiple ≤ max, but the charts mapped the DOMAIN to
+// ceil(max) — on real data ($92 day) the curve peaked ABOVE the topmost
+// gridline (DOM: 6.85 vs 36.30). niceScale is the recharts-faithful cure: the
+// domain TOP is the smallest nice-step multiple ≥ max, and the ticks run
+// 0..top on the same step — the peak always sits at/below the top gridline.
+describe("niceScale (the with-data domain contract — the top covers the data)", () => {
+  it("preserves the measured empty-state contract byte-for-byte (max 4)", () => {
+    expect(niceScale(4, 5)).toEqual({ top: 4, ticks: [0, 1, 2, 3, 4] });
+  });
+
+  it("rounds the domain top UP to the step multiple covering the data (the demo $92 day)", () => {
+    expect(niceScale(92, 5)).toEqual({ top: 100, ticks: [0, 20, 40, 60, 80, 100] });
+  });
+
+  it("keeps already-nice tops unchanged (80 stays 80, 100 stays 100)", () => {
+    expect(niceScale(80, 5)).toEqual({ top: 80, ticks: [0, 20, 40, 60, 80] });
+    expect(niceScale(100, 5)).toEqual({ top: 100, ticks: [0, 20, 40, 60, 80, 100] });
+  });
+
+  it("supports the 2.5-step family with a covering top", () => {
+    expect(niceScale(12, 5)).toEqual({ top: 12.5, ticks: [0, 2.5, 5, 7.5, 10, 12.5] });
+  });
+
+  it("guards the degenerate maxima (mirrors niceTicks)", () => {
+    expect(niceScale(0, 5)).toEqual({ top: 0, ticks: [0] });
+    expect(niceScale(1, 5)).toEqual({ top: 1, ticks: [0, 1] });
+  });
+
+  it("the top always covers the data on the step lattice (the F-107 property)", () => {
+    for (const max of [3.2, 4, 8, 17, 80, 92, 99, 410.64, 470, 2500, 99_999]) {
+      const { top, ticks } = niceScale(max, 5);
+      expect(top).toBeGreaterThanOrEqual(max);
+      expect(top % (ticks[1] - ticks[0])).toBeLessThanOrEqual(1e-6);
+      expect(ticks[ticks.length - 1]).toBe(top);
+      expect(ticks.length).toBeLessThanOrEqual(7);
     }
   });
 });

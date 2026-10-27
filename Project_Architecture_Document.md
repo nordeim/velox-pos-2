@@ -1,9 +1,9 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.12
+# VeloxPOS — Master Project Architecture Document (PAD) v1.13
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
 **Companion documents:** `README.md` (tour) · `AGENTS.md` (agent invariants) · `CLAUDE.md` (Claude conventions) · `docs/veloxpos-implementation-plan.md` (the measured reference spec)
-**Last Updated:** 2026-10-27 (Session-14)
+**Last Updated:** 2026-10-27 (Session-15)
 **Audience:** Senior engineers, tech leads, DevOps, onboarding engineers, and AI coding agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -25,10 +25,10 @@ reports, validation) underneath **server-gated thin routes**, a **single Zustand
 (lint → typecheck → unit → build → e2e) is the only gate — there is no hosted CI — so every
 guardrail is enforced by tooling that runs in this checkout.
 
-**Scale & baselines (verified 2026-10-27, Session-14 re-certification):** 9 Prisma models · 26 API
+**Scale & baselines (verified 2026-10-27, Session-15 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views (9 route spellings — the root `/` page is the
 terminal's reference-parity landing, Session-10 F-60)
-+ login/reset/404 · 138 unit tests (14 files) · 102 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 146 unit tests (14 files) · 104 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -39,7 +39,7 @@ production build.
 | UI runtime | React | ^19 | The platform's current runtime; no `forwardRef` era patterns |
 | Language | TypeScript (strict) | ^5 | `tsc --noEmit` is the fast gate; the build enforces (`ignoreBuildErrors: false`) |
 | Styling | Tailwind CSS (CSS-first) | ^4 | No config file — tokens in `@theme`; the ten v3→v4 traps are pinned in code |
-| Primitives | Radix UI (shadcn-style, `src/components/ui`) | latest | Accessible dialogs/selects/toasts — never hand-rolled |
+| Primitives | Radix UI (shadcn-style, `src/components/ui`) | latest | Accessible dialogs/selects/switches — never hand-rolled (the toaster is the deliberate zustand exception, documented in its header) |
 | State | Zustand | ^5.0.15 | ONE store (`usePosStore`); selectors with `useShallow` semantics |
 | ORM | Prisma / SQLite | ^6.19.3 | 9 models; ownership scoping by construction; `db-path.ts` anchors the file |
 | Validation | Zod | ^4.6.5 | Strip mode at every API boundary |
@@ -292,12 +292,12 @@ auth-support pair — `VerificationToken` (6-digit OTP, 15-minute window) and
 lint → typecheck → unit → build → smoke → e2e
 ```
 
-1. **Unit (Vitest, 138/138):** the pure seams — money (cents math, formatting), cart (reducer,
+1. **Unit (Vitest, 146/146):** the pure seams — money (cents math, formatting), cart (reducer,
    totals, charge gate), shift (state machine, variance), reports (bucketing, shares),
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 14 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 102/102):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 104/104):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
@@ -990,3 +990,67 @@ cross-check: the clone's Dashboard chart matches the reference's on all four con
 axes (line family, dashed grid, axis structure, zero dots); the only visible delta is
 the container-responsive width at different capture viewports — the internal contract is
 the pinned part. Screenshots 71–74.
+
+## Revision Block — v1.13 (2026-10-27, Session-15)
+
+**Scope:** the with-data + list-parity remediation cycle on the Session-14 tree
+(`197443c`). Received-tree gate green on the first run (lint 0 · tsc · unit 138/138 ·
+build · smoke 13/13 · e2e 102/102). NINTH consecutive drift-free reference cycle (every
+standing pin byte-exact: the login card, the F-76 alert, the sidebar/pill, the terminal
+gate, the Spanish families, the Dashboard date line — and the reference's own mobile
+defect, still no hamburger at 390×844).
+
+**The NEW depth (the session_24 "Next" pointers, both taken):**
+
+1. **The StoreSettings dialog/select internals** (V17–V22): the six h3 sections, the
+   16-label census, the New Category dialog (byte-parity on every measured value —
+   384px, #0f121a, 8px radius, p-6, 18px/600 title, h-9 input, 42px buttons), the
+   select panel family (#161922/6px/1px #262a36), and the fiscal toggle decoded as the
+   reference's `lucide-toggle-left` icon-button (no switch semantics — the clone's
+   labeled Radix Switch stays the documented a11y superset). **Two list-parity deltas
+   (F-108/F-109)**: the reference's Currency listbox is exactly [USD - US Dollar, EUR -
+   Euro, GBP - British Pound, MXN - Mexican Peso, COP - Colombian Peso, ARS - Argentine
+   Peso] and its Card Payment Provider listbox exactly [None, Stripe, PayPal, Clip,
+   Mercado Pago] — Session-101 had recorded only "USD/EUR/MXN/GBP/…" (an ellipsis,
+   never enumerated), and the clone shipped invented extras (CAD/AUD/PEN; SumUp/Square)
+   while MISSING the reference's own entries (ARS; PayPal/Clip/Mercado Pago). Cured:
+   the measured lists replace the inventions (the measurement-over-assumption doctrine),
+   the Zod gate updates itself through the existing refines, and both lists are e2e-
+   pinned by exact enumeration.
+2. **The populated-data dashboard re-sweep with the demo seed** (V23–V25): a demo-seeded
+   scratch db (15 products, 5 categories, 33 sales) booted against the standalone
+   build exposed **F-107** — both charts mapped the domain to `ceil(dataMax)` while the
+   gridlines stopped at the largest nice multiple below it, so a $92-day peak floated
+   ~29px above the topmost gridline into ungridded space (DOM-measured: Dashboard peak
+   6.85 vs gridline 36.30; Reports 5.44 vs 28.26 — invisible to the empty-store e2e by
+   construction). Cured with the **`niceScale(max, count) → {top, ticks}`** pure seam in
+   `reports.ts` (the recharts-faithful domain: the top is the smallest nice-step
+   multiple ≥ max, ticks 0..top): unit-pinned 6/6 with the empty-state contract
+   preserved byte-for-byte (`niceScale(4,5) = {4, [0,1,2,3,4]}`), both charts adopted
+   it, zero e2e collateral (proven at the value level before the code moved).
+
+**The static sweep (SD-1/SD-2/SD-3):** a full zero-importer census (files AND
+dependencies) — the file census is clean (45/45 live, the s14 purge holds), but the
+dependency census caught `@radix-ui/react-toast` (the toaster has been zustand-based
+since the scaffolding; the s14 V9 "toast is load-bearing" classification was wrong —
+corrected on the record) and `axe-core` (an Omni-Study-era remnant). Both `bun remove`d;
+the SKILL/README/PAD primitives rows corrected in the same commit. `react-dom` withdrawn
+(peer-coupled to next — framework-required). Plus the stale dashboard-view comment (the
+"violet dotted-grid" text that outlived the Session-14 rewrite).
+
+**TDD:** unit RED 10/10 (6 niceScale import-class + 4 currency assertions — the flipped
+`isCardProvider("PayPal")` pin proving the measurement gap live); e2e RED both list pins
+on their exact-enumeration assertions (the s14 two-tier-RED lesson applied: the unit
+test held aside for the e2e RED build, restored for GREEN). One blast-radius site the
+census missed — `validation.test.ts`'s "PayPal rejected" pin (the same unmeasured
+assumption baked into a test) — caught by the unit gate itself and corrected with the
+measured contract.
+
+**Re-certification on the final tree:** lint 0 (1 documented warning) · tsc · unit
+**146/146** (14 files) · build · smoke **13/13** · e2e **104/104** (the two list pins
+riding the 102 baseline, nothing weakened). Live evidence
+(`scripts/capture-s15-evidence.mjs`, the demo-db boot): **14/14** — both charts' with-
+data scale contracts (peaks at 25.9/20.2 BELOW their 100-gridlines at 5.0/4.0, ticks
+covering the domain 0..100), both listboxes byte-exact, the dead-dep census, the F-76
+spot-check (oklab posture), the mobile drawer. VLM cross-check **4/4** on the post-fix
+captures. Screenshots 75–80 (75/76 the pre-fix audit record, 77–80 the cured state).

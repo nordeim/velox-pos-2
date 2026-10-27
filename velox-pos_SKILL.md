@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.10.0
+version: 2.11.0
 last_updated: 2026-10-27
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-14 lock: unit **138/138** (14 files) · e2e **102/102**
-(88 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-15 lock: unit **146/146** (14 files) · e2e **104/104**
+(90 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -40,7 +40,7 @@ warning) · standalone build green.
 | UI runtime | React ^19 | No `forwardRef` era patterns; `set-state-in-effect` is a lint ERROR |
 | Language | TypeScript ^5 strict | `tsc --noEmit` is the fast gate |
 | Styling | Tailwind CSS ^4 (CSS-first) | **NO `tailwind.config.js`** — `@theme` pins only; `tw-animate-css` imported for the Radix animation family; `@custom-variant hover (&:hover)` un-wraps the `(hover: hover)` media for touch parity |
-| Primitives | Radix UI (shadcn-style, `src/components/ui`) | dialog, select, toast, alert-dialog are load-bearing; switch, input, label, button |
+| Primitives | Radix UI (shadcn-style, `src/components/ui`) | dialog, select, alert-dialog are load-bearing Radix; the toaster is a tiny zustand store + stack (Session-15 SD-1: `@radix-ui/react-toast` had zero importers since the scaffolding — removed); switch, input, label, button |
 | State | Zustand ^5 | ONE store (`usePosStore`, `src/lib/store.ts`); no React Context |
 | ORM | Prisma ^6 / SQLite | `db/custom.db` at the repo root; `src/lib/db-path.ts` owns the URL contract |
 | Validation | Zod ^4.6 | Strip mode at EVERY API boundary (`src/lib/validation.ts`) |
@@ -66,9 +66,9 @@ removed `quill`, `web-vitals`, `tailwindcss-animate`, `@radix-ui/react-radio-gro
 bun run dev                    # :3000 (output teed to dev.log)
 bun run lint                   # eslint flat config — 0 errors, 1 documented warning
 bun run typecheck              # tsc --noEmit — strict
-bun run test                   # vitest — tests/unit/** (138)
+bun run test                   # vitest — tests/unit/** (146)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               playwright (102) — NEEDS the build first (:3100)
+bun run test:e2e               playwright (104) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -112,9 +112,9 @@ Prisma; `src/lib/server/**` may import both; views import client seams only.
 | `money.ts` | integer-cents math, `formatMoney`, `round2` | The ONLY place amounts are computed; never `parseFloat` arithmetic in components |
 | `cart.ts` | immutable reducer, `cartTotals`, the CHARGE gate, `ticketLabel` | Client totals are display-only; checkout recomputes server-side |
 | `shift.ts` | `canOpenShift` (one ACTIVE per register), `expectedCash`, `shiftVariance` | Open/close state machine |
-| `reports.ts` | 7/14/30/90 period windows, `dailySeries`, `byMethod`, `categorySlices` | Feeds Dashboard + Reports |
+| `reports.ts` | 7/14/30/90 period windows, `dailySeries`, `byMethod`, `categorySlices`, `niceScale` (F-107: domain top = the nice multiple ≥ max — the peak never overshoots the top gridline; `niceScale(4,5)` = the measured empty contract) | Feeds Dashboard + Reports |
 | `inventory-status.ts` | `stockStatus` (ok/low/out), `lowStockCount`, the CSV round-trip | Low = ≤ minStock |
-| `currency.ts` | currency list + symbol map | Settings-driven |
+| `currency.ts` | the MEASURED lists + guards (F-108/F-109, Session-15) | Currency = [USD - US Dollar, EUR - Euro, GBP - British Pound, MXN - Mexican Peso, COP - Colombian Peso, ARS - Argentine Peso]; Provider = [none, Stripe, PayPal, Clip, Mercado Pago] — the lists ARE the Zod gate; e2e-pinned by exact enumeration |
 | `router.ts` | the 8 reference paths + `viewFromPath` (unknown → null → Spanish 404) | `/Settings` 404s BY DESIGN (the sidebar href is `/StoreSettings`) |
 | `validation.ts` | every Zod contract (strip mode; `"" → null` transforms) | Nothing reaches Prisma unvalidated |
 | `auth.ts` (pure) | scrypt hash/verify, HMAC token mint/verify, rate limiter | Cookie layer is `server/auth.ts` |
@@ -429,10 +429,10 @@ SUPERSET instead:
 
 ## 12. Testing strategy (three tiers)
 
-1. **Unit (Vitest, 138/138, 14 files)** — the pure seams only (plus the docs-counts
+1. **Unit (Vitest, 146/146, 14 files)** — the pure seams only (plus the docs-counts
    lockstep gate). New `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 102/102)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 104/104)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -1060,3 +1060,37 @@ charts' contracts end-to-end, the SD-1 census, the F-76 drift spot-check (oklab-
 posture), the mobile drawer. VLM parity: the clone's chart matches the reference's on
 all four contract axes. Screenshots 71–74. The count constants re-anchored (E2E=102,
 "Session-14 lock", "88 desktop + 13 mobile + 1 setup"). Skill v2.10.0.
+
+### Session-15 addendum (2026-10-27) — the with-data scale + the measured lists
+
+The NINTH consecutive drift-free reference cycle (every standing pin byte-exact, and the
+reference's own mobile defect persists — no hamburger at 390×844). Both session_24
+"Next" pointers taken: **the StoreSettings dialog/select internals measured for the
+first time** (the six h3 sections, the 16-label census, the New Category dialog at
+byte-parity, the select panel family, the fiscal toggle decoded as the reference's
+`lucide-toggle-left` icon-button — the clone's labeled Radix Switch stays the a11y
+superset), and **the populated-data dashboard re-sweep with the demo seed**.
+
+Three findings cured (F-107/F-108/F-109): (1) both charts' domains were `ceil(dataMax)`
+while the gridlines stopped at the nice multiple below — a $92-day peak floated ~29px
+above the top gridline (DOM-measured on the demo db; invisible to the empty-store e2e
+by construction); the `niceScale` seam now rounds the domain top UP to the nice multiple
+≥ max with `niceScale(4,5)` byte-identical to the measured empty contract. (2/3) both
+Settings listboxes were never enumerated — Session-101 recorded "USD/EUR/MXN/GBP/…"
+and the clone shipped invented extras (CAD/AUD/PEN; SumUp/Square) while MISSING the
+reference's own entries (**ARS - Argentine Peso**; **PayPal/Clip/Mercado Pago**). The
+measured lists replace the inventions; the lists ARE the Zod gate; both are e2e-pinned
+by exact enumeration. The dependency census also caught `@radix-ui/react-toast` (the
+toaster is zustand-based; the s14 V9 "toast is load-bearing" classification was WRONG —
+corrected on the record) and `axe-core` — both removed; the primitives rows corrected.
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **146/146** (14 files;
++6 the niceScale seam, +2 the measured-list pins) · build green · smoke **13/13** · e2e
+**104/104** (+2 list pins — all NEW, no prior pin weakened; the validation pin that
+encoded the same unmeasured assumption flipped with the measurement). Live evidence
+(`scripts/capture-s15-evidence.mjs`, the demo-db boot): **14/14** — both charts'
+with-data scale contracts (peaks BELOW their top gridlines, ticks covering the domain),
+both listboxes byte-exact, the dead-dep census, the F-76 spot-check (oklab posture),
+the mobile drawer. VLM cross-check **4/4**. Screenshots 75–80 (75/76 the pre-fix audit
+record). The count constants re-anchored (UNIT=146, E2E=104, "Session-15 lock",
+"90 desktop + 13 mobile + 1 setup"). Skill v2.11.0.

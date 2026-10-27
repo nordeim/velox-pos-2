@@ -1201,3 +1201,89 @@ which corrects the s13 credentials claim on the record), README + vitest
 config + the docs-counts constants re-anchored (138/14/102, "Session-14
 lock", "88 desktop"), `docs/remediation-plan-session-14.md` (the ledger
 V1–V24 + the execution record), and `docs/session_23.md` (the narration).
+
+## Session-15 — the with-data scale + measured-lists parity pass + the dead-dep census (velox-pos-2)
+
+**Received state**: `197443c` (Session-14's tree `5bb9785` + the operator's
+`docs/session_24.md` commit — the raw log of the Session-14 conversation; its
+"Next" pointer named this cycle's targets: the populated-data dashboard
+re-sweep with the demo seed + the Settings dialog internals). **Result**: the
+NINTH consecutive drift-free reference cycle; both NEW-depth targets decoded;
+three findings cured (F-107/F-108/F-109); the dependency census caught two
+dead deps; the full gate green at the new baselines.
+
+**The received-tree gate** green on the first run: lint 0 (1 documented
+warning) · tsc · unit 138/138 (14 files) · build · smoke 13/13 · e2e
+**102/102** (the Session-14 lock held at `197443c`).
+
+**The live re-measurement** (agent-browser, computed styles): every standing
+pin byte-exact for the NINTH consecutive cycle — the login card (blur(4px),
+white/95, 16px, the 4px slate strip, h1 30px/700, SSO 54px, inputs 48px), the
+F-76 alert ("Invalid email or password", 12px, red-50/0.7, red-200, 16px,
+14px red-700), the 220px sidebar + the 42px violet pill, the terminal gate +
+CART, the Dashboard date line + both chart h3s, the Sales/Cashiers Spanish
+families, and the reference's own mobile defect (no hamburger, 220px static
+sidebar at 390×844 — the clone's drawer superset stays correct).
+
+**The NEW depth #1 — the StoreSettings internals** (first full measurement):
+the six h3 sections (16px/700), the 16-label census, the New Category dialog
+at BYTE PARITY (384px, #0f121a, 8px radius, p-6, 18px/600 title, h-9 input,
+42px buttons), the select panel family (#161922/6px), the fiscal toggle
+decoded (a `lucide-toggle-left` icon-button, no switch semantics — the
+clone's labeled Radix Switch stays the a11y superset) — and **two list-parity
+deltas**: the reference's Currency listbox = [USD - US Dollar, EUR - Euro,
+GBP - British Pound, MXN - Mexican Peso, COP - Colombian Peso, ARS -
+Argentine Peso] (the clone missed ARS, carried invented CAD/AUD/PEN) and its
+Card Payment Provider listbox = [None, Stripe, PayPal, Clip, Mercado Pago]
+(the clone missed PayPal/Clip/Mercado Pago, carried invented SumUp/Square).
+Root cause: Session-101's "USD/EUR/MXN/GBP/…" — an ellipsis never enumerated
+(the same unmeasured-assumption class as the s14 chart colors). Cured: the
+measured lists replace the inventions; the Zod gate updates through the
+existing refines; both e2e-pinned by exact enumeration.
+
+**The NEW depth #2 — the populated dashboard with the demo seed**: a
+demo-seeded scratch db (15 products, 5 categories, 33 sales) against the
+standalone build exposed **F-107** — both charts mapped the domain to
+ceil(dataMax) while gridlines stopped at the nice multiple below: a $92-day
+peak floated ~29px above the topmost gridline (DOM: 6.85 vs 36.30 Dashboard,
+5.44 vs 28.26 Reports; invisible to the empty-store e2e by construction).
+Cured with the `niceScale(max, count) → {top, ticks}` pure seam in
+`src/lib/reports.ts` (recharts-faithful: the top is the smallest nice-step
+multiple ≥ max): unit-pinned 6/6, both charts adopted it,
+`niceScale(4,5)` = `{4, [0,1,2,3,4]}` — the measured empty-state contract
+byte-preserved, zero e2e collateral.
+
+**The static sweep (SD-1/SD-2/SD-3)**: the zero-importer FILE census clean
+(45/45 live — the s14 purge holds), but the DEPENDENCY census caught
+`@radix-ui/react-toast` (the toaster is zustand-based since the scaffolding;
+the s14 V9 "toast is load-bearing" classification was WRONG — corrected on
+the record) and `axe-core` (Omni-Study-era). Both `bun remove`d; the
+SKILL/README/PAD primitives rows corrected. `react-dom` withdrawn
+(peer-coupled). Plus the stale dashboard-view "violet dotted-grid" comment
+and README's stale "dotted-grid parity" charts row.
+
+**TDD**: unit RED 10/10 (6 niceScale import-class + 4 currency assertions —
+the flipped `isCardProvider("PayPal")` pin proving the gap live); e2e RED
+both list pins on their exact-enumeration assertions (the s14 two-tier-RED
+lesson applied: the unit test held aside for the RED build). One
+blast-radius site the census missed — `validation.test.ts`'s "PayPal
+rejected" pin (the same assumption baked into a test) — caught by the unit
+gate and corrected with the measurement.
+
+**Re-certification on the final tree**: lint 0 (1 documented warning) · tsc ·
+unit **146/146** (14 files) · build · smoke **13/13** · e2e **104/104**.
+Live evidence `scripts/capture-s15-evidence.mjs` **14/14** (the demo-db boot:
+peaks 25.9/20.2 BELOW their 100-gridlines at 5.0/4.0, ticks covering the
+domain, both listboxes byte-exact, the dep census, F-76 oklab posture, the
+drawer); VLM cross-check **4/4**; screenshots 75–80 (75/76 the pre-fix audit
+record).
+
+**Docs lockstep**: AGENTS.md (the with-data + list-parity contracts
+section), CLAUDE.md (the niceScale + measured-lists entries), PAD v1.13
+(revision block + the corrected primitives row), velox-pos_SKILL.md v2.11.0
+(§2 rows + seam rows + the Session-15 addendum), README (counts + the
+corrected primitives/charts rows), the implementation plan's §0/§seam
+measured-list lines, `docs/remediation-plan-session-15.md` (the ledger V1–V25
++ the execution record), and `docs/session_25.md` (the narration). The count
+constants re-anchored: UNIT 146/14 files · E2E 104 ("Session-15 lock",
+"90 desktop + 13 mobile + 1 setup").

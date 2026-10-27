@@ -12,7 +12,7 @@
 import * as React from "react";
 
 import { smoothPath } from "@/lib/chart-path";
-import { niceTicks } from "@/lib/reports";
+import { niceScale } from "@/lib/reports";
 
 export function PageHeader({
   title,
@@ -143,7 +143,13 @@ export function LineChart({
   const plotH = 240;
   const baseY = 245; // the measured axis baseline
   const max = Math.max(4, ...data.map((d) => d.value));
-  const niceMax = Math.ceil(max);
+  // F-107 (Session-15): the domain TOP is the nice multiple ≥ max — the
+  // curve's peak never overshoots the topmost gridline (the recharts
+  // behavior). On the empty store niceScale(4,5) = {4, [0,1,2,3,4]} —
+  // byte-identical to the prior niceTicks values, so every empty-state pin
+  // holds.
+  const scale = niceScale(max, 5);
+  const niceMax = scale.top;
   const x = (i: number): number =>
     plotX + (data.length <= 1 ? plotW / 2 : (i / (data.length - 1)) * plotW);
   const y = (v: number): number => baseY - (v / niceMax) * plotH;
@@ -154,7 +160,7 @@ export function LineChart({
   const lastX = x(data.length - 1);
   const area = `${line} L${lastX},${baseY} L${x(0)},${baseY} Z`;
   // F-50: nice ticks — never one grid line per unit of the domain.
-  const gridLines = niceTicks(niceMax, 5);
+  const gridLines = scale.ticks;
 
   return (
     <svg
@@ -281,7 +287,11 @@ export function AreaChart({
   const plotH = 186;
   const baseY = 190; // the measured area baseline
   const rawMax = Math.max(4, ...data.map((d) => d.value));
-  const niceMax = Math.max(4, Math.ceil(rawMax));
+  // F-107 (Session-15): same cure as the Dashboard chart — the domain top
+  // covers the data on the step lattice (empty store: {4, [0,1,2,3,4]},
+  // byte-identical to the prior values).
+  const scale = niceScale(rawMax, 5);
+  const niceMax = Math.max(4, scale.top);
   const x = (i: number): number =>
     plotX + (data.length <= 1 ? plotW / 2 : (i / (data.length - 1)) * plotW);
   const y = (v: number): number => baseY - (v / niceMax) * plotH;
@@ -290,7 +300,7 @@ export function AreaChart({
   const lastX = x(data.length - 1);
   const area = `${line} L${lastX},${baseY} L${x(0)},${baseY} Z`;
   // F-50: nice ticks — never one grid line per unit of the domain.
-  const gridLines = niceTicks(niceMax, 5);
+  const gridLines = scale.ticks;
   const labelEvery = Math.max(1, Math.ceil(data.length / 10));
 
   return (

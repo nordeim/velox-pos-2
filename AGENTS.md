@@ -362,6 +362,32 @@ bite hardest here:
   drifted hash first, end-to-end verified the restore). Any script that exercises a
   password-changing flow ends by proving the documented login works.
 
+## The with-data + list-parity contracts (Session-15 pins — F-107..F-109)
+
+- **The chart SCALE is `niceScale`** (`src/lib/reports.ts`, unit-pinned): the domain top is
+  the smallest nice-step multiple ≥ the data max and the ticks run 0..top on the same
+  step — the curve's peak never overshoots the topmost gridline (the recharts behavior;
+  the pre-fix `ceil(max)` domain floated a $92-day peak ~29px above the 80-gridline,
+  DOM-measured on the demo-seeded dashboard — the exact with-data class the empty-store
+  e2e cannot see). `niceScale(4,5)` = `{4, [0,1,2,3,4]}` — byte-identical to the measured
+  empty-state contract; no empty-store pin moved.
+- **The two Settings listboxes are MEASURED — never restyle or extend from memory**
+  (F-108/F-109, e2e-pinned by exact enumeration): Currency = [USD - US Dollar, EUR - Euro,
+  GBP - British Pound, MXN - Mexican Peso, COP - Colombian Peso, ARS - Argentine Peso];
+  Card Payment Provider = [none, Stripe, PayPal, Clip, Mercado Pago]. The lists ARE the
+  Zod gate (`isSupportedCurrency`/`isCardProvider` in `validation.ts`). Session-101's
+  "USD/EUR/MXN/GBP/…" was an unenumerated ellipsis; the invented extras (CAD/AUD/PEN,
+  SumUp/Square) left the tree the same way every unmeasured assumption does.
+- **The reference's fiscal toggle is a `lucide-toggle-left` icon-button** (24px icon +
+  inline text, NO role=switch, NO aria state — measured live): the clone's labeled Radix
+  Switch is the documented a11y superset (the drawer/readable-headings posture). Do not
+  "fix" it back to an icon-button.
+- **The toaster is zustand-based — `@radix-ui/react-toast` was a zero-importer dead dep**
+  (Session-15 SD-1; the s14 V9 "toast is load-bearing" classification was wrong —
+  corrected on the record). `axe-core` left with it (SD-2, an Omni-Study-era remnant).
+  The ui primitive set remains EXACTLY the 10 live files; the Radix set is
+  slot/alert-dialog/dialog/label/select/switch only.
+
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
 `src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px

@@ -69,6 +69,32 @@ export function niceTicks(max: number, count = 5): number[] {
   return out;
 }
 
+/** A recharts-faithful nice SCALE (Session-15, F-107): the domain TOP is the
+ * smallest nice-step multiple ≥ max, and the ticks run 0..top on the same
+ * step — so a curve's peak always sits at/below the topmost gridline.
+ * niceTicks alone stops at the largest multiple ≤ max; when the charts
+ * mapped the domain to ceil(max) anyway (a $92 day), the peak rose ~29px
+ * above the last gridline into ungridded space (DOM-measured on the
+ * demo-seeded dashboard). Contract preservation: niceScale(4, 5) is
+ * byte-identical to niceTicks(4, 5) = the reference's measured empty-state
+ * ticks [0,1,2,3,4] — every empty-store pin unchanged. Unit-pinned in
+ * tests/unit/reports.test.ts. */
+export function niceScale(max: number, count = 5): { top: number; ticks: number[] } {
+  const safeMax = Math.ceil(Math.max(0, max));
+  if (safeMax <= 0) return { top: 0, ticks: [0] };
+  if (safeMax === 1) return { top: 1, ticks: [0, 1] };
+  const rough = safeMax / count;
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  const norm = rough / mag;
+  const step = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10) * mag;
+  const top = Math.ceil(safeMax / step) * step;
+  const ticks: number[] = [];
+  for (let v = 0; v <= top + step * 1e-6; v += step) {
+    ticks.push(Math.round(v * 1e6) / 1e6);
+  }
+  return { top, ticks };
+}
+
 /** One bucket per day in the window (inclusive), in chronological order. */
 export type DailyBucket = { date: string; label: string; revenue: number; count: number };
 

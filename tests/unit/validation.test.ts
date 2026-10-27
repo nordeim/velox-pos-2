@@ -111,7 +111,14 @@ describe("storeSettingsUpdateSchema", () => {
     expect(storeSettingsUpdateSchema.safeParse({ ...base, primaryColor: "violet" }).success).toBe(
       false,
     );
+    // Session-15 (F-109, measured live): PayPal IS one of the reference's
+    // five providers — the prior "PayPal rejected" pin encoded the
+    // unmeasured assumption. SumUp (a Session-101 invention) is the
+    // rejection case now.
     expect(storeSettingsUpdateSchema.safeParse({ ...base, cardProvider: "PayPal" }).success).toBe(
+      true,
+    );
+    expect(storeSettingsUpdateSchema.safeParse({ ...base, cardProvider: "SumUp" }).success).toBe(
       false,
     );
   });

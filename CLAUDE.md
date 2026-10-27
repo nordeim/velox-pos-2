@@ -170,12 +170,24 @@ No hosted CI exists; the local gate is the only gate.
   and toast surfaces are unmeasurable there and stay the clone's
   documented supersets.
 - **Toasts via `useToast()`** → `toast.success/error/info(message)` — never `alert()`.
-- **Chart axes render `niceTicks`** (`src/lib/reports.ts`, unit-pinned): ~5 nice
-  1/2/2.5/5×10^k steps, NEVER one grid line per unit of the domain — the
-  Session-101 per-dollar grid stacked hundreds of labels on real data (F-50,
-  invisible to the empty-store e2e; caught by a VLM eyeball of the live
-  dashboard). The Dashboard x axis = weekday abbreviations (12px); Reports =
+- **Chart axes render `niceScale`** (`src/lib/reports.ts`, unit-pinned —
+  Session-15, F-107): the domain TOP is the smallest nice-step multiple ≥ the
+  data max, and the ticks run 0..top on the same step — the curve's peak
+  never overshoots the topmost gridline (the recharts behavior; the old
+  `ceil(max)` domain let a $92-day peak float ~29px above the 80-gridline,
+  DOM-measured on the demo seed). `niceScale(4,5)` = `{4, [0,1,2,3,4]}` —
+  byte-identical to the prior `niceTicks(4,5)` = the measured empty-state
+  contract. The Dashboard x axis = weekday abbreviations (12px); Reports =
   dates (11px) + `$` y ticks.
+- **The Settings listboxes are MEASURED** (Session-15, F-108/F-109 — never
+  restyle or extend from memory): Currency = [USD - US Dollar, EUR - Euro,
+  GBP - British Pound, MXN - Mexican Peso, COP - Colombian Peso, ARS -
+  Argentine Peso]; Card Payment Provider = [none, Stripe, PayPal, Clip,
+  Mercado Pago]. The lists ARE the Zod validation gate
+  (`isSupportedCurrency`/`isCardProvider`); both are e2e-pinned by exact
+  enumeration. The reference's fiscal toggle is a `lucide-toggle-left`
+  icon-button with NO switch semantics — the clone's labeled Radix Switch is
+  the documented a11y superset (the drawer posture).
 - **The chart internals are TWO measured contracts** (Session-14, F-95..F-106,
   e2e-pinned — do not restyle the charts from memory): the Dashboard chart is
   the indigo-500 `#6366f1` 2.5px SMOOTH line (`smoothPath` in
@@ -216,13 +228,13 @@ No hosted CI exists; the local gate is the only gate.
 
 - **Unit** (`tests/unit/**`, vitest): only the pure seams. If you add a `src/lib` seam, add its
   file here — red → green (TDD) for new logic, regression tests for fixes. Expected baseline:
-  138 tests / 14 files. **`docs-counts.test.ts` is the lockstep gate** (Session-8, F-52): it
+  146 tests / 14 files. **`docs-counts.test.ts` is the lockstep gate** (Session-8, F-52): it
   LIVE-censuses the test/source tree and pins every live-tense count site in the docs to the
   constants — when a suite grows, update the constants AND every doc site in the SAME commit
   (the gate fails until you do; history blocks keep their historical numbers by design).
 - **E2E** (`tests/e2e/**`, Playwright, production standalone on :3100): user journeys through the
   real UI. Two projects — `chromium` (1440×900) and `mobile` (390×844; runs only
-  `mobile-navigation.spec.ts`). **Baseline: 102 tests.** Auth once via `auth.setup.ts` +
+  `mobile-navigation.spec.ts`). **Baseline: 104 tests.** Auth once via `auth.setup.ts` +
   storageState (the rate limiter is 10/IP/15 min). The scratch db (`db/e2e.db`) is provisioned
   by the webServer command (kill-port → provision → boot) and never replaced while the server
   lives — replacing it after boot desynchronizes the login and page-render clients

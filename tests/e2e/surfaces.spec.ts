@@ -431,6 +431,34 @@ test("select triggers compute the reference's 12px radius + #262a36 border", asy
   await expect(currency).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
 });
 
+// Session-15 (F-108/F-109, measured live 2026-10-27): both Settings
+// listboxes ENUMERATED for the first time — Session-101 recorded only
+// "USD/EUR/MXN/GBP/…" and the clone shipped invented extras while missing
+// the reference's own entries (ARS; PayPal/Clip/Mercado Pago). These pins
+// hold the LIST CONTENTS to the measurement, in the measured order.
+test("the Currency listbox is the reference's measured six (F-108)", async ({ page }) => {
+  await page.goto("/StoreSettings");
+  await page.getByRole("combobox", { name: "Currency" }).click();
+  const options = page.getByRole("option");
+  await expect(options.first()).toBeVisible();
+  await expect(options).toHaveText([
+    "USD - US Dollar",
+    "EUR - Euro",
+    "GBP - British Pound",
+    "MXN - Mexican Peso",
+    "COP - Colombian Peso",
+    "ARS - Argentine Peso",
+  ]);
+});
+
+test("the Card Payment Provider listbox is the reference's measured five (F-109)", async ({ page }) => {
+  await page.goto("/StoreSettings");
+  await page.getByRole("combobox", { name: "Card payment provider" }).click();
+  const options = page.getByRole("option");
+  await expect(options.first()).toBeVisible();
+  await expect(options).toHaveText(["None", "Stripe", "PayPal", "Clip", "Mercado Pago"]);
+});
+
 // ---------------------------------------------------------------------------
 // Session-6 pins: the chrome-depth census (measured live on the reference).
 // Save Changes is the reference's LARGER primary CTA (px-6 py-3.5, 54px,

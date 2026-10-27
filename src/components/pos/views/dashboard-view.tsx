@@ -3,8 +3,10 @@
 // ---------------------------------------------------------------------------
 // The Dashboard view: the date line + the four stat cards (TODAY'S SALES /
 // TRANSACTIONS / PRODUCTS / LOW STOCK — the measured tones) + "Sales — Last
-// 7 days" (the violet dotted-grid line chart) + "Products by Category".
-// All numbers come from the pure seams (reports.ts / inventory-status.ts).
+// 7 days" (the measured indigo smooth line over the slate dashed grid —
+// Session-14's two-chart contract, scaled by niceScale since Session-15) +
+// "Products by Category". All numbers come from the pure seams
+// (reports.ts / inventory-status.ts).
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
