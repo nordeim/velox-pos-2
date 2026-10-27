@@ -135,6 +135,22 @@ No hosted CI exists; the local gate is the only gate.
 - **Unpinned palette values serialize as `lab(...)`** (F-62): v4's defaults are oklab-defined —
   pin the hex in `globals.css`'s `@theme` when a computed pin expects the reference's
   `rgb(...)` (indigo-400 `#818cf8` was the Session-10 catch).
+- **The auth surface (Session-12)**: the login error renders the bordered
+  Alert panel (`rounded-xl border-red-200 bg-red-50/70 p-4` + inner
+  `text-sm text-red-700`, no icon — `src/components/ui/alert.tsx`; scope
+  alert locators to `main.login-canvas [role='alert']`, trap #28); the
+  forgot/sign-up views SWAP the whole card (back-first ArrowLeft link, h2,
+  `h-10 sm:h-11` fields with slate-400 placeholders, 44px solid buttons —
+  sign-up is exactly Email/Password/Confirm Password with a client-side
+  equality check, NO Full name, NO SSO); the sign-in body is ONE centered
+  `space-y-6 sm:space-y-8` flex column (halo+ring logo group, responsive
+  `text-2xl sm:text-3xl tracking-tight` h1, knockout OR divider at
+  `tracking-[0.1em]` — v4 rescaled tracking-wider, trap #25; in-form
+  justify-between links row; `text-sm h-11 sm:h-12` button, busy copy
+  "Signing in…"). The 404: plain white span numeral + slate-800/slate-500
+  text + the 50px ArrowLeft gradient link on `rounded-3xl p-12`; the root
+  not-found auth-gates guests server-side (`getCurrentUser()` →
+  `redirect("/login")`, F-82).
 - **Key-based modal resets** (`key={editing?.id ?? "new"}`) — no setState-in-effect dialog resets
   (React 19 lint rule `react-hooks/set-state-in-effect`).
 - **Toasts via `useToast()`** → `toast.success/error/info(message)` — never `alert()`.
@@ -175,7 +191,7 @@ No hosted CI exists; the local gate is the only gate.
   (the gate fails until you do; history blocks keep their historical numbers by design).
 - **E2E** (`tests/e2e/**`, Playwright, production standalone on :3100): user journeys through the
   real UI. Two projects — `chromium` (1440×900) and `mobile` (390×844; runs only
-  `mobile-navigation.spec.ts`). **Baseline: 88 tests.** Auth once via `auth.setup.ts` +
+  `mobile-navigation.spec.ts`). **Baseline: 93 tests.** Auth once via `auth.setup.ts` +
   storageState (the rate limiter is 10/IP/15 min). The scratch db (`db/e2e.db`) is provisioned
   by the webServer command (kill-port → provision → boot) and never replaced while the server
   lives — replacing it after boot desynchronizes the login and page-render clients

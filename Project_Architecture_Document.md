@@ -1,4 +1,4 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.9
+# VeloxPOS — Master Project Architecture Document (PAD) v1.10
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
@@ -28,7 +28,7 @@ guardrail is enforced by tooling that runs in this checkout.
 **Scale & baselines (verified 2026-10-27, Session-10 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views (9 route spellings — the root `/` page is the
 terminal's reference-parity landing, Session-10 F-60)
-+ login/reset/404 · 133 unit tests (13 files) · 88 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 133 unit tests (13 files) · 93 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -295,7 +295,7 @@ lint → typecheck → unit → build → smoke → e2e
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 13 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 88/88):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 93/93):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
@@ -702,6 +702,84 @@ first inventory test — no prior pin weakened). Live evidence on the rebuilt st
 (`scripts/capture-s11-evidence.mjs`, **12/12**): all six fixes measured live, the checkout
 journey (T-000039), and the mobile drawer contract at 390×844. VLM sweep of screenshots
 55–60: **6/6 effective** (including the typed-text legibility check).
+
+## Revision Block — v1.10 (2026-10-27, Session-12)
+
+**Scope:** the standing audit→remediate→push cycle on the Session-11 tree (HEAD `336284e`;
+the ledger is `docs/remediation-plan-session-12.md`). Ten findings, all clone-side and all
+on the auth surface — the reference did NOT drift for the SIXTH consecutive cycle (every
+pinned surface re-measured byte-exact), but the audit's NEW depth opened the four
+never-measured auth surfaces (the failed-login error state, the forgot view, the sign-up
+view, the 404) plus the sign-in view's own content-block skeleton — the card the guest
+actually meets diverged from the reference in its error state, both sub-views, its
+internal rhythm, its logo treatment, its links row, and the 404 the guest never sees
+(because the reference gates it).
+
+- **F-76 (MEDIUM)**: the failed-login error rendered a bare `<p>` (`rounded-lg bg-red-50
+  px-3 py-2 text-red-600`) while the reference renders a bordered **Alert panel**
+  (`rounded-xl border-red-200 bg-red-50/70 p-4` + inner `text-sm text-red-700`, no icon).
+  Both the error and the success notice now render through the new
+  `src/components/ui/alert.tsx` primitive (the success tone is the symmetric emerald — a
+  documented superset; the reference's success state is unmeasurable).
+- **F-77 (MEDIUM)**: the forgot view kept the sign-in chrome (logo/h1/sub/SSO/OR) with only
+  the password hidden; the reference SWAPS the whole card — a "Back to sign in" link
+  (ArrowLeft, slate-500/500, `-mb-2`) first, a centered h2 block (`text-xl sm:text-2xl
+  font-bold text-slate-900` + slate-600 desc), a `space-y-4 sm:space-y-5` form with ONE
+  44px field (`h-10 sm:h-11`, `placeholder:text-slate-400`) and the 44px solid-slate-900
+  Send button. Measured content spacing `space-y-4 sm:space-y-6`.
+- **F-78 (MEDIUM)**: the sign-up view kept the chrome AND a Full name field; the reference
+  ships back-first + h2 "Create your account" (no desc) + exactly Email / Password /
+  **Confirm Password** at 44px (`text-sm sm:text-base`, confirm placeholder
+  "Re-enter password"), NO SSO, NO Full name — the UI stops collecting fullName (the
+  register API's optional field is simply not sent; no contract change). The equality
+  check runs CLIENT-SIDE before any fetch.
+- **F-79 (MEDIUM)**: the 404's five deltas — brand-chip numeral → plain
+  `text-3xl font-bold text-white` span; `text-white/60` h1 → `text-slate-800 mb-2`;
+  `text-white/50` p → `text-slate-500 mb-8`; `text-sm font-bold` + "←" glyph link →
+  `font-medium` (16px/500, 50px) with a lucide ArrowLeft icon; card `rounded-2xl p-10` →
+  `rounded-3xl p-12`, wrapper `min-h-dvh p-4` → `min-h-screen p-6` (the bg already matched:
+  the reference's `pos-gradient-subtle` computes solid rgb(8,10,20) = `--color-ink`).
+- **F-82 (MEDIUM)**: logged-out visitors saw the clone's public 404 on unknown routes;
+  the reference AUTH-GATES unknown routes. The root not-found is now an async server
+  component mirroring the (app) layout's gate (`getCurrentUser()` → `redirect("/login")`);
+  Next 16 renders `/_not-found` as Dynamic within the request scope — no build escape
+  needed.
+- **F-85 (MEDIUM, the content-block depth)**: beneath the byte-exact standing pins, the
+  sign-in body was a flat margin chain; the reference is ONE
+  `flex flex-col items-center text-center space-y-6 sm:space-y-8` block — the logo a
+  blur(24px)-halo `relative group` behind a `ring-4 ring-white/50 rounded-full shadow-lg`
+  span (80px mobile / 96px desktop); the h1 `text-2xl sm:text-3xl tracking-tight`; the sub
+  `text-sm sm:text-base font-medium`; the OR divider a CONTINUOUS absolute `h-[1px]` line
+  with a `bg-white px-3` knockout rendering uppercase "or"; the form a
+  `space-y-4 sm:space-y-5 → space-y-3 sm:space-y-4 → space-y-1.5` chain; the links INSIDE
+  the form in a `flex-col sm:flex-row justify-between` row (Forgot left / signup right at
+  desktop, column/8px/center at 390px); the SSO family on `text-[16px]` +
+  `transition-all duration-200 hover:shadow-sm` with Google's `-ml-4` icon quirk.
+- **F-81 (LOW-MEDIUM)**: the sign-in button — 16px text + `py-3` → the measured
+  `text-sm h-11 sm:h-12 shadow-sm transition-all duration-200` (14px/500, 44/48px).
+- **F-80 (LOW)**: the signup phrase is MIXED on the reference — "Need an account? " at
+  400/slate-500 + "Sign up" in a `font-medium text-slate-700` span (the Session-4
+  whole-phrase font-medium pin had drifted on the reference).
+- **F-83 (LOW)**: the "Forgot password?" link — `text-sm font-medium
+  text-slate-500 hover:text-slate-700`, NO underline anywhere.
+- **F-84 (LOW)**: the sign-in busy copy — "Signing in…" (observed mid-flight on the
+  reference); the signup/forgot busy copy stays the clone's (unmeasured).
+- **Three v3→v4 serialization traps cured by the GREEN run (the F-59 genus)**: (1)
+  `bg-red-50/70` serializes `oklab(.../0.7)` — the same color as the reference's rgba, pinned
+  by regex both ways; (2) v4's `rounded-full` = `calc(infinity * 1px)` → 33554400px vs v3's
+  9999px (pins accept both serializations); (3) v4 RESCALED `tracking-wider` 0.1em →
+  0.05em — the component ships `tracking-[0.1em]` (the class is translated, not copied).
+  Plus one locator trap: Next's own route-announcer div carries `role="alert"` at body
+  level — the alert pins scope to `main.login-canvas [role='alert']`.
+
+**Re-certification (all on the final tree):** lint ✓ (0 errors, 1 documented warning) ·
+tsc ✓ · unit **133/133** (13 files) · build ✓ (hygiene-clean; `/_not-found` Dynamic) ·
+smoke **13/13** · e2e **93/93** (+5: the failed-login alert panel, the forgot-view swap,
+the signup 3-field card, the logo/halo/h1 depth, the OR/links pair; the button, link,
+wrong-creds and 404 contracts EXTENDED existing tests; one parity correction — the divider
+label pin moved from the literal "OR" to the reference's lowercase "or" + CSS uppercase).
+Live evidence (`scripts/capture-s12-evidence.mjs`): **8/8**. The count constants
+re-anchored (E2E=93, "Session-12 lock", "79 desktop + 13 mobile + 1 setup").
 
 ## Revision Block — v1.8 (2026-10-27, Session-10)
 

@@ -190,6 +190,49 @@ bite hardest here:
   `background-color` reads transparent; measure BOTH before concluding
   "outline"); disabled = opacity .5 + not-allowed.
 
+## The auth-surface contracts (Session-12 pins)
+
+- **The login card's error state is a bordered Alert PANEL, never a bare
+  paragraph**: `rounded-xl border-red-200 bg-red-50/70 p-4` + an inner
+  `text-sm text-red-700` block, NO icon (the measured reference contract;
+  copy "Invalid email or password"). Both error and success render through
+  `src/components/ui/alert.tsx` — the emerald success tone is the documented
+  superset. Locator trap #28: Next's own `#__next-route-announcer__` carries
+  `role="alert"` at body level — scope alert locators to
+  `main.login-canvas [role='alert']`.
+- **The forgot and sign-up views SWAP the whole card content**: the sign-in
+  chrome (logo, h1, sub, SSO, OR divider) unmounts; a "Back to sign in"
+  ArrowLeft link (`text-sm font-medium text-slate-500 … -mb-2`) is the first
+  child; the subviews' fields are `h-10 sm:h-11` (44px) with
+  `placeholder:text-slate-400` (NOT the sign-in view's `h-11 sm:h-12` /
+  slate-600 placeholders — the reference itself differs per view); the
+  buttons are `h-10 sm:h-11` solid slate-900 + `shadow-sm` +
+  `transition-all duration-200`. Sign-up carries exactly Email / Password /
+  **Confirm Password** (client-side equality check BEFORE any fetch) and NO
+  Full name (the register API's optional `fullName` is simply not sent).
+- **The sign-in body is ONE `flex flex-col items-center text-center
+  space-y-6 sm:space-y-8` block** — NOT a flat margin chain: the logo is a
+  `relative group` (a `blur-xl` slate halo behind a `ring-4 ring-white/50
+  rounded-full shadow-lg` span, `h-20 w-20 sm:h-24 sm:w-24`); the h1 is
+  `text-2xl sm:text-3xl font-bold tracking-tight`; the sub is
+  `text-sm sm:text-base font-medium`; the OR divider is a CONTINUOUS
+  absolute `h-[1px]` line + a `bg-white px-3` knockout rendering uppercase
+  "or" at `tracking-[0.1em]` (v4 rescaled `tracking-wider` — trap #25); the
+  links live INSIDE the form in a `flex-col sm:flex-row justify-between`
+  row (Forgot left / signup right at desktop; column/8px/center at 390px);
+  the "Sign up" phrase is MIXED (400/slate-500 base + a `font-medium
+  text-slate-700` span); the sign-in button is `text-sm h-11 sm:h-12
+  shadow-sm transition-all duration-200` with the busy copy "Signing in…".
+- **The 404 (authenticated) + the guest gate**: `glass-card rounded-3xl
+  p-12` + a PLAIN `text-3xl font-bold text-white` span numeral (never the
+  brand chip) + `text-slate-800` h1 / `text-slate-500` p + the 50px
+  `font-medium` gradient link with a lucide ArrowLeft icon, on
+  `min-h-screen p-6` + `bg-ink` (the reference's `pos-gradient-subtle`
+  computes the same solid rgb(8,10,20)). The root not-found is an async
+  server gate (`getCurrentUser()` → `redirect("/login")`, mirroring the
+  (app) layout) — guests never see the 404 (F-82, the reference's
+  behavior); Next renders `/_not-found` Dynamic within the request scope.
+
 ## The chrome + chart contracts (Session-6 pins)
 
 - **Nav items are `px-3 py-2.5` PADDING-DRIVEN** (40px inactive; the reference dropped its

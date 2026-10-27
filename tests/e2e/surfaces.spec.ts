@@ -77,7 +77,33 @@ test("unknown routes render the reference's Spanish 404", async ({ page }) => {
   await expect(page.getByText("404")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
   await expect(page.getByText("La página que buscas no existe o fue movida.")).toBeVisible();
-  await page.getByRole("link", { name: "Ir al Terminal" }).click();
+  // Session-12 (F-79, measured live 2026-10-27): the authenticated 404's
+  // full contract — the glass-card at rounded-3xl p-12, a PLAIN span numeral
+  // (30px/700/white, no chip background), the slate-800/slate-500 text
+  // family, and the 50px font-medium gradient link carrying the ArrowLeft
+  // icon (not a "←" text glyph).
+  const card = page.locator("div.glass-card");
+  await expect(card).toHaveCSS("padding", "48px");
+  await expect(card).toHaveCSS("border-radius", "24px");
+  const numeral = page.getByText("404", { exact: true });
+  await expect(numeral).toHaveCSS("font-size", "30px");
+  await expect(numeral).toHaveCSS("font-weight", "700");
+  await expect(numeral).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(numeral).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  const h1 = page.getByRole("heading", { name: "Página no encontrada" });
+  await expect(h1).toHaveCSS("color", "rgb(30, 41, 59)");
+  await expect(h1).toHaveCSS("margin-bottom", "8px");
+  const desc = page.getByText("La página que buscas no existe o fue movida.");
+  await expect(desc).toHaveCSS("color", "rgb(100, 116, 139)");
+  await expect(desc).toHaveCSS("margin-bottom", "32px");
+  const link = page.getByRole("link", { name: "Ir al Terminal" });
+  await expect(link).toHaveCSS("height", "50px");
+  await expect(link).toHaveCSS("font-size", "16px");
+  await expect(link).toHaveCSS("font-weight", "500");
+  const linkBg = await link.evaluate((el) => getComputedStyle(el).backgroundImage);
+  expect(linkBg).toContain("linear-gradient");
+  await expect(link.locator("svg")).toBeVisible(); // the ArrowLeft icon
+  await link.click();
   await page.waitForURL("**/POS");
 });
 

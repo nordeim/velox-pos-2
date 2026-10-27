@@ -861,3 +861,146 @@ Create, the #e7e9ef form-text family, the #161922 dropdown) — plus the
 oldest live defect in the codebase (invisible typed credentials) is measured,
 cured at the root, and pinned. Standing debt: NONE identified. Baselines:
 unit **133/133**, e2e **88/88**, smoke **13/13**.
+
+## Session-12 — the auth-surface parity pass: the alert panel, the subview swaps, the sign-in skeleton, the gated 404 (velox-pos-2)
+
+**Received state**: `336284e` (Session-11's tree `48ccbe2` + the operator's
+session-log commit). **Directive**: the standing audit→remediate→push cycle —
+workspace refresh, doc re-internalization, the skills-led code audit, the live
+reference re-measurement (visual + functional parity, the superset goal), the
+TDD remediation, the docs lockstep, and the SSH-wrapper push. (The cycle ran
+twice: the first pass completed the audit + plan + RED pins but was lost with
+a workspace reset before any commit — this entry records the authoritative
+re-run, every measurement re-taken live.)
+
+**Environment:** the workspace had been RESET again — fresh `git clone` +
+`cp .env.example .env` (`DATABASE_URL="file:../db/custom.db"` per the
+contract) + `bun install` (485 pkgs) + `db:generate` + `db:push` + `db:seed`
+(owner ready) + `bunx playwright install chromium` (1243). **Gate on the
+received tree: GREEN on first run** — lint 0 errors (1 documented warning) ·
+tsc clean · unit 133/133 · build green (hygiene-clean) · smoke 13/13 · e2e
+**88/88**. The Session-11 baseline held.
+
+**The audit (skills: web-application §12/§14/§15/§16, agent-browser —
+computed styles are ground truth, clone-app-pat-pro, tdd):** the SIXTH
+consecutive reference re-measurement held EVERY standing pin byte-exact
+(login blur(4px) + typed rgb(9,9,11) + 48px/54px geometry, sidebar, POS gate,
+Dashboard/Reports/Settings families, mobile-drawer posture) — and the NEW
+depth opened the four never-measured auth surfaces: the failed-login error
+state, the forgot-password view, the sign-up view, the 404 (authenticated
+AND logged-out). All ten findings were clone-side:
+
+- **F-76 (MEDIUM)**: the failed-login error rendered a bare `<p>` while the
+  reference renders a bordered **Alert panel** — `rounded-xl border-red-200
+  bg-red-50/70 p-4` + inner 14px `text-red-700`, NO icon, copy "Invalid email
+  or password" (the clone's API copy already matched). Cured through the new
+  `src/components/ui/alert.tsx` primitive (error + the symmetric emerald
+  success tone — the reference's success state is unmeasurable, documented
+  superset).
+- **F-77 (MEDIUM)**: the forgot view kept the sign-in chrome (only the
+  password field hid); the reference SWAPS the whole card — back-first
+  ArrowLeft link (`text-sm font-medium text-slate-500 … -mb-2`), the
+  centered h2 (`text-xl sm:text-2xl font-bold text-slate-900`) + slate-600
+  desc, ONE 44px field (`h-10 sm:h-11`, `placeholder:text-slate-400`), the
+  44px solid-slate-900 Send button, content spacing `space-y-4 sm:space-y-6`.
+- **F-78 (MEDIUM)**: the sign-up view — the reference's card is back-first +
+  "Create your account" (no desc) + exactly Email / Password / **Confirm
+  Password** at 44px (`text-sm sm:text-base`, confirm placeholder "Re-enter
+  password"), NO SSO, NO Full name. The UI stops collecting fullName (the
+  register API's optional field is simply not sent — no contract change);
+  the equality check runs CLIENT-SIDE before any fetch.
+- **F-79 (MEDIUM)**: the 404's five deltas — the brand-chip numeral → a
+  plain `text-3xl font-bold text-white` span; `text-white/60` h1 →
+  `text-slate-800 mb-2`; `text-white/50` p → `text-slate-500 mb-8`; the
+  `text-sm font-bold` + "←" glyph link → the 50px `font-medium` gradient
+  link with a lucide ArrowLeft icon; `rounded-2xl p-10` → `rounded-3xl
+  p-12`, wrapper `min-h-dvh p-4` → `min-h-screen p-6`. (The bg already
+  matched: the reference's `pos-gradient-subtle` computes solid
+  rgb(8,10,20) = `--color-ink` — verified, no token work.)
+- **F-82 (MEDIUM)**: logged-out visitors received the clone's public 404 on
+  unknown routes; the reference AUTH-GATES unknown routes (`/login` +
+  `from_url` before any 404 HTML). Cured by making the root not-found an
+  async server component mirroring the (app) layout's gate
+  (`getCurrentUser()` → `redirect("/login")`) — Next 16 renders
+  `/_not-found` Dynamic within the request scope, NO build escape needed.
+- **F-85 (MEDIUM, the second-pass discovery)**: beneath the byte-exact
+  standing pins, the sign-in body was a flat margin chain; the reference is
+  ONE `flex flex-col items-center text-center space-y-6 sm:space-y-8`
+  block — the logo a blur(24px)-halo `relative group` behind a
+  `ring-4 ring-white/50 rounded-full shadow-lg` span (80px mobile / 96px
+  desktop); the h1 `text-2xl sm:text-3xl font-bold tracking-tight` (24px
+  mobile / 30px / -0.75px); the sub `text-sm sm:text-base font-medium`; the
+  OR divider a CONTINUOUS absolute `h-[1px]` line with a `bg-white px-3`
+  knockout rendering uppercase "or"; the form a
+  `space-y-4/5 → space-y-3/4 → space-y-1.5` chain; the links INSIDE the
+  form in a `flex-col sm:flex-row justify-between` row (Forgot left /
+  signup right at desktop; column/8px/center at 390px); the SSO family on
+  `text-[16px]` + `transition-all duration-200 hover:shadow-sm` with
+  Google's `-ml-4` icon quirk.
+- **F-80 (LOW)**: the signup phrase is MIXED on the reference — "Need an
+  account? " 400/slate-500 + "Sign up" in a `font-medium text-slate-700`
+  span (the Session-4 whole-phrase font-medium pin had drifted on the
+  reference).
+- **F-81 (LOW-MEDIUM)**: the sign-in button — the measured `text-sm h-11
+  sm:h-12 shadow-sm transition-all duration-200` (14px/500) vs the clone's
+  16px `py-3`.
+- **F-83 (LOW)**: the "Forgot password?" link — `text-sm text-slate-500
+  hover:text-slate-700 font-medium transition-colors`, NO underline.
+- **F-84 (LOW)**: the sign-in busy copy — "Signing in…" (observed
+  mid-flight on the reference; the other views' busy copy is unmeasured and
+  stays the clone's).
+
+**Plan**: `docs/remediation-plan-session-12.md` (the verification ledger
+V1–V17, the findings table, the TDD task list T-1…T-16, the risks). Validated
+against the codebase before execution (the register API's optional fullName,
+the (app) layout's gate pattern, the alert locator collision, the
+`glass-card`/`--color-ink` byte-parity).
+
+**TDD execution:** RED pins first (auth.spec 14→19 tests: the forgot swap,
+the signup 3-field card, the logo/halo/h1 depth, the OR/links pair, the
+guest 404 gate; four contracts EXTENDED existing tests — wrong-creds,
+signup-affordance, sign-in-button, the 404). **RED proof: 9/9 targeted
+failures, zero collateral** (84 passing of 93). One locator hardening en
+route: Next's own route-announcer div carries `role="alert"` at body level —
+the alert pins scope to `main.login-canvas [role='alert']` (trap #28). Then
+GREEN: the Alert primitive, the login-surface restructure (the shared
+centered skeleton + per-view swaps + the confirm-password client check), the
+not-found rewrite + gate — in one pass.
+
+**Three v3→v4 serialization traps surfaced by the GREEN run and cured per
+the standing doctrine** (translate the class, pin the computed both ways):
+(1) `bg-red-50/70` computes `oklab(.../0.7)` — the same color as the
+reference's rgba, pinned by regex either way (trap #27); (2) v4's
+`rounded-full` = `calc(infinity * 1px)` → 33554400px vs v3's 9999px (trap
+#26 — pins accept both serializations); (3) v4 RESCALED `tracking-wider`
+0.1em → 0.05em — the component ships `tracking-[0.1em]` (trap #25, the
+F-59 genus).
+
+**Re-certification (all on the final tree):** lint ✓ (0 errors, 1 documented
+warning) · tsc ✓ · unit **133/133** (13 files) · build ✓ (hygiene-clean;
+`/_not-found` Dynamic) · smoke **13/13** · e2e **93/93** (+5 new; four
+contracts EXTENDED existing tests; one parity correction — the divider label
+pin moved from the literal "OR" to the reference's lowercase "or" + CSS
+uppercase transform). Live evidence (`scripts/capture-s12-evidence.mjs`),
+**8/8**: the sign-in block contract, the alert panel, the busy copy (held
+mid-flight via route interception — the transient-state capture pattern),
+the forgot swap, the signup card, the 404, the guest gate, and the mobile
+390×844 sign-in (80px logo, 24px h1, 44px inputs, links column, no
+horizontal overflow — the user's called-out surface family). Screenshots
+**61–66** in `docs/screenshots/`.
+
+**Docs lockstep:** README (93 sites), AGENTS.md (the auth-surface contracts
+section), CLAUDE.md (the same), PAD v1.10 (the revision block + the
+re-anchor), velox-pos_SKILL.md v2.8.0 (traps 25–28 + the Session-12
+addendum), the docs-counts constants re-anchored (E2E=93, "Session-12
+lock", "79 desktop + 13 mobile + 1 setup" — the unit gate enforced the
+same-commit rule mid-cycle), this worklog entry, the remediation plan's
+execution record, and the session narration (`docs/session_19.md`, the
+one-ahead numbering).
+
+**Stage summary.** The parity surface is stable (six consecutive drift-free
+reference cycles) and the pin doctrine now covers the last unpinned auth
+depth: the error state, both sub-views, the 404 (authenticated + gated),
+and the sign-in card's own skeleton — the surface every guest meets first.
+Standing debt: NONE identified. Baselines: unit **133/133**, e2e **93/93**,
+smoke **13/13**.

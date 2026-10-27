@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.7.0
+version: 2.8.0
 last_updated: 2026-10-27
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-11 lock: unit **133/133** (13 files) · e2e **88/88**
-(74 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-12 lock: unit **133/133** (13 files) · e2e **93/93**
+(79 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -68,7 +68,7 @@ bun run lint                   # eslint flat config — 0 errors, 1 documented w
 bun run typecheck              # tsc --noEmit — strict
 bun run test                   # vitest — tests/unit/** (133)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               # playwright (88) — NEEDS the build first (:3100)
+bun run test:e2e               playwright (93) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -321,6 +321,28 @@ is a loss machine.
     reference contract all along. The primitive's `bg-card border-border` IS the
     mechanism; re-point the token, strip the override. (And sweep ALL `*Content`
     primitives — four SelectContent sites carried the same inert pair.)
+25. **(Session-12) v4 RESCALED the tracking family (F-85f)** — v3's `tracking-wider`
+    is 0.1em; v4's is 0.05em. The reference's OR divider computes 0.1em; the copied
+    class computed HALF of it. Lesson: the F-59 genus extends beyond renames — v4
+    also RESCAALED utilities; any letter-spacing contract from a v3-era reference
+    needs the arbitrary-value spelling (`tracking-[0.1em]`) and a computed-px pin
+    (0.1em at 12px = 1.2px — computed styles resolve em to px).
+26. **(Session-12) v4's rounded-full is calc(infinity * 1px) (F-85a)** — the
+    reference's v3-era 9999px vs the clone's computed 33554400px (Chrome serializes
+    `3.35544e+07px`) — the same visual, different serializations. Lesson: pin the
+    CLASS SEMANTICS ("fully rounded"), not one serialization — accept both forms in
+    the assertion.
+27. **(Session-12) Alpha-modified utilities serialize as oklab(.../α) (F-76)** —
+    `bg-red-50/70` computes `oklab(0.970522 0.0123999 0.00388682 / 0.7)` in v4 while
+    the reference's v3-era CSS computes `rgba(254, 242, 242, 0.7)` — the SAME color.
+    Trap 20's hex-pin cure does NOT apply (the /70 forces color-mix serialization);
+    the login-geometry regex posture is the cure: pin the alpha either way
+    (`/rgba\(...\)|oklab\(...\/\s*α\)/`).
+28. **(Session-12) Next's route announcer carries role="alert" (F-76's e2e
+    hardening)** — `#__next-route-announcer__` (aria-live, role=alert) exists at
+    body level on every page; a page-level `getByRole("alert")` in strict mode
+    matches BOTH the app alert and the announcer. Lesson: scope role-based
+    locators to the surface container (`main.login-canvas [role='alert']`).
 
 ## 8. Component architecture & the React patterns that are law
 
@@ -405,7 +427,7 @@ SUPERSET instead:
 1. **Unit (Vitest, 133/133, 13 files)** — the pure seams only (plus the docs-counts
    lockstep gate). New `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 88/88)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 93/93)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -809,3 +831,76 @@ existing test). Live evidence (`scripts/capture-s11-evidence.mjs`): **12/12**
 mobile drawer contract at 390×844. VLM sweep of screenshots 55–60: **6/6
 effective** (including the typed-text legibility check on the login card).
 Skill v2.7.0.
+
+## Session history addendum — Session-12
+
+**The sixth consecutive drift-free reference cycle; the audit opened the four
+never-measured auth surfaces and found the sign-in card's own skeleton.**
+
+The received tree gated green on first run (133/133 · 88/88 · 13/13). The live
+re-measurement held EVERY standing pin byte-exact for the sixth cycle — and the
+NEW depth (the failed-login error state, the forgot view, the sign-up view, the
+authenticated 404, the logged-out bogus route) found ten findings, all
+clone-side, all on the auth surface. A second-pass structural capture of the
+sign-in card went further than any prior session: beneath the byte-exact pins
+(card blur/shadow, 48px inputs, 54px SSO), the reference's body is ONE
+`flex flex-col items-center text-center space-y-6 sm:space-y-8` block — the
+flat margin chain the clone shipped was never visible to size-only pins.
+
+- **F-76 (MEDIUM)**: the error state — a bare red `<p>` → the reference's
+  bordered Alert PANEL (`rounded-xl border-red-200 bg-red-50/70 p-4` + inner
+  14px red-700, no icon); both error and success now render through the new
+  `src/components/ui/alert.tsx` primitive (the emerald success tone is the
+  documented superset — the reference's success state is unmeasurable).
+- **F-77 (MEDIUM)**: the forgot view — the reference SWAPS the whole card
+  content (logo/h1/sub/SSO/OR all gone; a "Back to sign in" ArrowLeft link
+  first; the centered h2 + slate-600 desc; one 44px field with
+  `placeholder:text-slate-400`; the 44px solid-slate-900 Send button).
+- **F-78 (MEDIUM)**: the sign-up view — back-first + "Create your account" +
+  exactly Email/Password/Confirm Password at 44px, NO SSO, NO Full name (the
+  register API's optional fullName is simply not sent); the equality check
+  runs client-side BEFORE any fetch.
+- **F-79 (MEDIUM)**: the 404 — chip numeral → plain `text-3xl font-bold
+  text-white` span; slate-800 h1 / slate-500 p; the 50px `font-medium` gradient
+  link with the lucide ArrowLeft icon; `rounded-3xl p-12` card, `min-h-screen
+  p-6` wrapper (the reference's pos-gradient-subtle computes solid rgb(8,10,20)
+  = the clone's `--color-ink` — no token work).
+- **F-82 (MEDIUM)**: the guest gate — the reference auth-gates unknown routes;
+  the root not-found is now an async server component mirroring the (app)
+  layout's gate. Next 16 renders `/_not-found` Dynamic within the request
+  scope — NO build escape was needed.
+- **F-85 (MEDIUM, the content-block depth)**: the halo+ring logo group, the
+  responsive h1 (`text-2xl sm:text-3xl tracking-tight`) and sub
+  (`text-sm sm:text-base font-medium`), the knockout OR divider (continuous
+  absolute `h-[1px]` line + `bg-white px-3` uppercase "or"), the
+  `space-y-4/5 → 3/4 → 1.5` form chain, the IN-FORM `flex-col sm:flex-row
+  justify-between` links row (Forgot left / signup right at desktop;
+  column/8px/center at 390px), and the SSO family's `text-[16px]` +
+  `transition-all duration-200 hover:shadow-sm` with Google's `-ml-4` quirk.
+- **F-80 (LOW)**: the signup phrase is MIXED — "Need an account? " 400/slate-500
+  + "Sign up" in a font-medium slate-700 span (the Session-4 whole-phrase pin
+  had drifted on the reference).
+- **F-81 (LOW-MEDIUM)**: the sign-in button — `text-sm h-11 sm:h-12 shadow-sm
+  transition-all duration-200` (14px/500).
+- **F-83 (LOW)**: "Forgot password?" — `text-sm font-medium` slate-500 →
+  slate-700 hover, NO underline anywhere.
+- **F-84 (LOW)**: the busy copy — "Signing in…" (observed mid-flight on the
+  reference; the other views' busy copy is unmeasured and stays).
+
+**TDD:** all pins red-first — RED proof 9/9 targeted failures, zero collateral
+(84 passing of 93). Three v3→v4 serialization traps surfaced in the GREEN run
+and were cured per the standing doctrine (traps 25–27: the tracking rescale,
+the rounded-full infinity, the oklab alpha) plus the route-announcer locator
+trap (28). One parity correction on a prior pin: the divider label moved from
+the literal "OR" to the reference's lowercase "or" + CSS uppercase transform.
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **133/133**
+(13 files) · build green (hygiene-clean; `/_not-found` Dynamic) · smoke
+**13/13** · e2e **93/93** (+5 new tests; four contracts EXTENDED existing
+tests — no prior pin weakened). Live evidence
+(`scripts/capture-s12-evidence.mjs`): **8/8** — the sign-in block, the alert
+panel, the busy copy (held mid-flight via route interception), the forgot
+swap, the signup card, the 404, the guest gate, and the mobile 390px sign-in
+(80px logo, 24px h1, 44px inputs, links column, no horizontal overflow).
+Screenshots 61–66. The count constants re-anchored (E2E=93, "Session-12
+lock", "79 desktop + 13 mobile + 1 setup"). Skill v2.8.0.
