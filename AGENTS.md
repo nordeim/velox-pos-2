@@ -415,6 +415,38 @@ bite hardest here:
   wrapper div's inherited `color` misread the reference's "Sin ventas" as #e7e9ef
   until the leaf TD showed its own `text-slate-400` (byte-identical to the clone).
 
+## The with-data evidence + measurement contracts (Session-17 pins — F-112)
+
+- **The with-data evidence tier is TWO harnesses now**: `scripts/capture-s16-evidence.mjs`
+  (Registers/Sales/Cashiers) + `scripts/capture-s17-evidence.mjs` (**Inventory/Reports** —
+  F-112). The s17 harness pins the demo-seeded Inventory table census (15 rows, the
+  7-column header set, the stock-chip census out=1/low=2/ok=12, the category dots, the
+  search filter) and the Reports family (the 4 pills with 30 days active, the stat
+  labels/values, the 30-day db truth $410.64/33/$12.44, the glass-card surface, the
+  three h2s, the method rows + shares + bars, the 7-day window narrowing to
+  $366.56/28), plus the standing F-76/drawer spot-checks — 19/19, screenshots 87–89.
+  Run BOTH before pushing when any with-data surface changes.
+- **The Reports window semantics are calendar-bucket** (`summarize`/`dailySeries`,
+  unit-pinned): N day-buckets INCLUDING today — the 7-day window excludes sales older
+  than the 7th calendar-day-back even when every sale is <7×24h old. The page's
+  $366.56/28 (not 33/$410.64) is CORRECT; never "fix" the seam to a rolling
+  168-hours window without re-measuring the reference.
+- **Four measurement postures for live probes** (this cycle's lessons — all were
+  probe bugs, the clone code was correct every time): (1) **textContent vs innerText
+  case** — CSS-uppercased labels (`text-transform: uppercase`) read "TOTAL REVENUE"
+  in innerText but "Total Revenue" in textContent: PIN textContent, and match
+  innerText case-insensitively in settled-state waits (a case-sensitive innerText
+  wait hangs to its timeout). (2) **`waitForFunction` arity** — options is the THIRD
+  parameter: `waitForFunction(fn, null, { timeout })`; passing `{ timeout }` as the
+  second arg passes it as the function ARG and silently falls back to the 30s
+  default. (3) **DOM rows parse child nodes** — the MethodTable's method name is a
+  bare TEXT NODE (not a span) and the share `<span>` NESTS inside the font-bold
+  money span: span-index probes read `""` and `"$246.7460%"`. (4) **Pin the ALPHA,
+  never the oklab serialization** — v4 renders white/α as
+  `oklab(0.999994 0.0000… / 0.4)`: extract the trailing alpha
+  (`/([\d.]+)\)$/`), never pin the full computed string (the F-76 either-form regex
+  posture, generalized).
+
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
 `src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px

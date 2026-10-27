@@ -252,6 +252,12 @@ No hosted CI exists; the local gate is the only gate.
   logout teardown, the rate-limit 429, sitemap/robots, the no-secret boot refusal, the
   ARTIFACT-HYGIENE checks), and counts executed vs passed. Cookie round-trips on plain HTTP
   need `COOKIE_SECURE=false` (curl will not replay a Secure cookie over http).
+- **Evidence** (`scripts/capture-s16-evidence.mjs` + `scripts/capture-s17-evidence.mjs`,
+  tier 4): the with-data contracts the empty-store e2e can never see (the s15 V24 doctrine) —
+  the demo-seeded (`db/demo.db`, `--demo`) Registers/Sales/Cashiers (s16) and
+  Inventory/Reports (s17) surfaces, plus the standing F-76/drawer spot-checks, pinned live on
+  a booted standalone each cycle. Requires `bun run build` first; each script owns its server
+  lifecycle (s16 :3417, s17 :3418) and provisions the demo db if absent.
 - Parity assertions use computed styles/geometry (`toHaveCSS`, `boundingBox` semantics) and
   visibility (`not.toBeVisible` for `hidden md:*` elements — they stay in the DOM), never class
   lists.

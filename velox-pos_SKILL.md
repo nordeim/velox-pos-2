@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.12.0
+version: 2.13.0
 last_updated: 2026-10-27
 ---
 
@@ -1144,3 +1144,62 @@ evidence-infra lessons recorded in AGENTS.md: `visible` ≠ animation-settled (R
 zoom-in reads 384×0.95 ≈ 365 mid-flight), and bootstrap races on cold routes (wait
 for the SETTLED state, not a timer) — both fixed without weakening a check. The
 count constants re-anchored (UNIT=149, E2E=104, "Session-16 lock"). Skill v2.12.0.
+
+## Session history addendum — Session-17
+
+**The with-data Inventory/Reports evidence pass (F-112) + the measurement
+postures.** The workspace was RESET TWICE — the second reset took the prior
+Session-17 attempt's uncommitted work with it (never pushed), so this cycle redid
+the depth end-to-end from the received tree at `ceb4530`. Environment-only blip:
+the sandbox's cached Playwright browsers (build 1200) didn't match 1.63 (needs
+1243) — `bunx playwright install chromium`. The received-tree gate came up green
+(lint 0 · tsc · unit 149/149 · build · smoke 13/13 · e2e 104/104 — the Session-16
+lock held).
+
+**The drift sweep** (agent-browser): every standing pin byte-exact for the
+ELEVENTH consecutive cycle — the login card (blur(4px) · white/95 · 16px · h1
+30px/700 · inputs 48px/12px · SSO 54px), the F-76 alert, the 220px sidebar + the
+42px violet-600/0.2 Terminal pill (the nav content reads 219px — flex-1, the
+s16-recorded note), the terminal gate, the Dashboard date line, the Spanish
+families, and the reference's own mobile defect (no hamburger at 390×844).
+
+**The NEW depth (the session_28 "Next" pointer's target)**: the reference-side
+Inventory/Reports internals — the Inventory empty state (the byte-exact "Search
+by name or code..." placeholder, the "No products found" `text-center py-12
+text-slate-400 text-sm` cell) and the Reports surface at BYTE PARITY (the 4 pills
+with **"30 days" ACTIVE** — the clone's `days = 30` default matches; the three
+14px/700 CSS-uppercased h2s; the stat cards' surface rgba(16,18,32,0.9) + 1px
+white/0.07 — the clone's `glass-card` computes the byte-identical surface; the
+labels incl. **"Avg. Ticket"** byte-identical; the values `<p>` 24px/900). Then
+the WITH-DATA audit on the demo seed: **17/17, no defects** — the Inventory table
+census (15 rows, the stock chips out=1/low=2/ok=12, the category dots, the search
+filter) and the Reports family ($410.64/33/$12.44 at 30 days; card $246.74 (16)
+60% / cash $163.90 (17) 40%; the 7-day window narrowing to $366.56/28). The
+mid-audit "7-day discrepancy" was WITHDRAWN — the seam's calendar-bucket
+semantics (N day-buckets including today) are correct by design and unit-pinned.
+
+**F-112 — the evidence tier extended**: `scripts/capture-s17-evidence.mjs` (the
+s16-pattern successor, port 3418) pins the with-data Inventory/Reports contracts +
+the standing F-76/drawer spot-checks — **19/19**, screenshots 87–89. The tier is
+now TWO harnesses (s16 Registers/Sales/Cashiers + s17 Inventory/Reports).
+
+**Four measurement postures recorded** (all audit-probe bugs — the clone code was
+correct every time): (1) textContent vs innerText case — CSS-uppercased labels
+read "TOTAL REVENUE" in innerText but "Total Revenue" in textContent; pin
+textContent, match innerText case-insensitively in settled-state waits (a
+case-sensitive innerText wait hangs to its timeout). (2) `waitForFunction` arity —
+options is the THIRD argument (`fn, null, {timeout}`); a `{timeout}` passed as the
+second arg silently becomes the 30s default. (3) DOM rows parse child nodes — the
+MethodTable's method name is a bare TEXT node and the share span nests inside the
+font-bold money span; span-index probes read "" and "$246.7460%". (4) The
+generalized oklab-alpha posture — v4 renders white/α as `oklab(0.99999… / 0.4)`:
+extract the trailing alpha, never pin the full serialization.
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **149/149** (14
+files) · build green · smoke **13/13** · e2e **104/104** — the count constants
+UNMOVED (the evidence tier rides outside the unit/e2e counts per the V24
+doctrine; the "Session-16 lock" literal stays by design — zero lockstep
+collateral). Live evidence **19/19**; VLM cross-check **3/3**. Screenshots 87–89.
+Docs lockstep: AGENTS (the Session-17 contracts + the four postures), CLAUDE (the
+tier-4 evidence line), PAD v1.15, this addendum, the worklog entry,
+`docs/remediation-plan-session-17.md`, `docs/session_29.md`. Skill v2.13.0.

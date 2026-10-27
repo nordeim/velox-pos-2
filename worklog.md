@@ -1362,3 +1362,103 @@ remediation-plan-session-16 (the full ledger + record), session_27.md (the
 narration). Pushed via `docs/ssh_git_wrapper_v3.py` → main on
 `git@github.com:nordeim/velox-pos-2.git`, remote-verified; operator key
 shredded.
+
+## Session-17 — the with-data Inventory/Reports evidence pass (velox-pos-2)
+
+**Received state**: `ceb4530` (the Session-16 push `797b9c9` + the operator's
+session_28 raw-log commit — the workspace was RESET TWICE; the second reset
+took the prior Session-17 attempt's uncommitted work with it — never pushed —
+so this cycle redid the depth end-to-end from the received tree. Environment
+blip: the sandbox's cached Playwright browsers (build 1200) didn't match 1.63
+(needs 1243) — `bunx playwright install chromium`, environment-only).
+**Result**: the ELEVENTH consecutive drift-free reference cycle; both
+NEW-depth targets decoded (the reference-side Inventory/Reports internals at
+leaf precision + the with-data audit on the demo seed — 17/17, no with-data
+defects); the with-data evidence harness extended to Inventory/Reports
+(F-112); the full gate green at the UNMOVED baselines.
+
+**The received-tree gate** green: lint 0 (1 documented warning) · tsc · unit
+**149/149** (14 files) · build · smoke 13/13 · e2e **104/104** — the
+Session-16 lock held.
+
+**The live re-measurement** (agent-browser, computed styles): every standing
+pin byte-exact for the ELEVENTH consecutive cycle — the login card (blur(4px),
+white/95, 16px, h1 30px/700, SSO 54px, inputs 48px/12px), the F-76 alert
+("Invalid email or password", 12px radius, red-50/0.7, red-200, 16px pad,
+14px red-700), the 220px sidebar (nav content 219px — flex-1, the recorded
+read) + the 42px violet-600/0.2 Terminal pill, the terminal gate + CART, the
+Dashboard date line + both chart h3s, the Sales/Cashiers Spanish families,
+and the reference's own mobile defect (no hamburger, 220px z-50 static at
+390×844 — the clone's drawer superset stays correct, 13/13 mobile e2e).
+
+**The NEW depth #1 — the reference-side Inventory/Reports internals**: the
+Inventory empty state (h1 24px/700, "0 products registered" 14px slate-500,
+the byte-exact "Search by name or code..." placeholder at h-9, the "No
+products found" `text-center py-12 text-slate-400 text-sm` cell) and the
+Reports surface at BYTE PARITY — h1 24px, the "Sales & revenue analytics" sub
+white/0.35, the 4 period pills with **"30 days" ACTIVE** (the clone's
+`days = 30` default matches — no drift), the three 14px/700 CSS-uppercased
+h2s (Daily Sales / Revenue by Payment Method / Breakdown by Method), the stat
+cards `rounded-2xl p-5 flex items-center gap-4` (surface rgba(16,18,32,0.9) +
+1px white/0.07 — the clone's `glass-card` computes the byte-identical
+surface), the labels Total Revenue / Transactions / **"Avg. Ticket"**
+(12px/400 white/0.35), the values `<p>` 24px/900. No drift anywhere.
+
+**The NEW depth #2 — the with-data audit on the demo seed** (15 products, 5
+categories, 1 register, 1 closed shift, 33 sales → standalone :3418): the
+Inventory table census (15 rows, the 7-column header set, the stock-chip
+census out=1/low=2/ok=12, the category dots — the Beverages row's #8b5cf6,
+the search filter Espresso → 1 row) and the Reports family (the 4 pills with
+30 active, the stat family, the 30-day db truth **$410.64 / 33 / $12.44**, the
+glass-card surface, the method rows **card $246.74 (16) 60% / cash $163.90
+(17) 40%**, the breakdown bars, the **7-day window narrowing to $366.56/28**) —
+**17/17, no with-data defects**. The mid-audit "7-day discrepancy" was
+WITHDRAWN: the seam's calendar-bucket semantics (N day-buckets including
+today, coherent with `dailySeries`, unit-pinned) are correct by design — the
+5 sales on the 7th calendar-day-back fall outside the window.
+
+**The structural find — F-112**: the with-data Inventory/Reports contracts had
+NO standing tier — the logic seams are unit-pinned and the empty-state surface
+is e2e-pinned, but the live with-data rendering is invisible to the
+empty-store e2e by construction (the V24 doctrine) and the s16 harness covers
+only Registers/Sales/Cashiers. Cure: **`scripts/capture-s17-evidence.mjs`**
+(the s16-pattern successor, port 3418) — **19/19** (the 17 with-data
+contracts + the F-76 spot-check, which surfaced the oklab form
+`oklab(0.970522 … / 0.7)` live — the either-form posture working — + the
+mobile drawer). Screenshots **87–89**.
+
+**Four measurement postures recorded in AGENTS.md** (all audit-probe bugs —
+the clone code was correct every time): (1) textContent vs innerText case —
+CSS-uppercased labels read "TOTAL REVENUE" in innerText but "Total Revenue"
+in textContent; pin textContent, match innerText case-insensitively in
+settled-state waits (a case-sensitive innerText wait hangs to its timeout).
+(2) `waitForFunction` arity — options is the THIRD argument
+(`fn, null, {timeout}`); a `{timeout}` passed as the second arg silently
+becomes the 30s default. (3) DOM rows parse child nodes — the MethodTable's
+method name is a bare TEXT node and the share span nests inside the font-bold
+money span; span-index probes read "" and "$246.7460%". (4) The generalized
+oklab-alpha posture — v4 renders white/α as `oklab(0.99999… / 0.4)`: extract
+the trailing alpha, never pin the full serialization.
+
+**The static sweep**: zero-importer census clean (the one flag,
+`src/instrumentation.ts`, is Next.js's auto-registered convention entry —
+live by design; deps carry only the known type-level/peer-coupled
+withdrawals; `@radix-ui/react-toast` + `axe-core` remain gone), the dev-db
+credential verifies (`$Abcd1234` via the app's own `verifyPassword` — the
+standalone checker's first FAIL was its own salt-handling bug, fixed), the
+secrets scan clean, and the Session-16 code review clean (the saleTimestamp
+seam adopted at both receipt sites; every remaining `toLocale*` site
+explicit-locale by pinned design).
+
+**Gate on the final tree**: lint 0 (1 documented warning) · tsc · unit
+**149/149** (14 files) · build · smoke **13/13** · e2e **104/104** — the
+count constants UNMOVED (the evidence tier rides outside the unit/e2e counts
+per the V24 doctrine; the "Session-16 lock" literal stays by design — the
+docs-counts gate stayed green with zero re-anchoring). Evidence **19/19**;
+VLM cross-check **3/3**. Screenshots 87–89. Docs lockstep: AGENTS (the
+Session-17 contracts + the four postures), CLAUDE (the tier-4 evidence
+line), PAD v1.15, SKILL v2.13.0 (+Session-17 addendum), README untouched
+(no count changes), remediation-plan-session-17 (the full ledger + record),
+session_29.md (the narration). Pushed via `docs/ssh_git_wrapper_v3.py` →
+main on `git@github.com:nordeim/velox-pos-2.git`, remote-verified; operator
+key shredded.

@@ -1,9 +1,9 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.14
+# VeloxPOS — Master Project Architecture Document (PAD) v1.15
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
 **Companion documents:** `README.md` (tour) · `AGENTS.md` (agent invariants) · `CLAUDE.md` (Claude conventions) · `docs/veloxpos-implementation-plan.md` (the measured reference spec)
-**Last Updated:** 2026-10-27 (Session-16)
+**Last Updated:** 2026-10-27 (Session-17)
 **Audience:** Senior engineers, tech leads, DevOps, onboarding engineers, and AI coding agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -1110,3 +1110,58 @@ VLM cross-check **5/5**. Screenshots 81–86. Two evidence-infra lessons recorde
 AGENTS.md: `visible` ≠ animation-settled (Radix zoom-in reads 384×0.95 ≈ 365
 mid-flight), and bootstrap races on cold routes (wait for the SETTLED state, not a
 timer) — both fixed without weakening a single check.
+
+## Revision Block — v1.15 (2026-10-27, Session-17)
+
+**Scope:** the with-data Inventory/Reports evidence cycle on the Session-16 tree
+(`ceb4530`; the workspace was RESET and the prior Session-17 attempt's uncommitted
+work was lost with it — this cycle redid the depth end-to-end from the received
+tree). Received-tree gate green (lint 0 · tsc · unit 149/149 · build · smoke 13/13 ·
+e2e 104/104 — the Session-16 lock held; the only blip was environment-only: the
+sandbox's cached Playwright browsers (build 1200) didn't match 1.63 (needs 1243) —
+`bunx playwright install chromium`). ELEVENTH consecutive drift-free reference cycle
+(every standing pin byte-exact — the login card, the F-76 alert, the 220px sidebar +
+the 42px violet-600/0.2 Terminal pill, the terminal gate, the Dashboard date line,
+the Spanish families, and the reference's own mobile defect).
+
+**The NEW depth (the session_28 "Next" pointer's target):**
+
+1. **The reference-side Inventory/Reports internals, measured at leaf precision**:
+   the Inventory empty state (h1 24px/700, "0 products registered" 14px slate-500,
+   the byte-exact "Search by name or code..." placeholder at h-9, the "No products
+   found" `text-center py-12 text-slate-400 text-sm` cell) — parity everywhere. The
+   Reports surface at BYTE PARITY: h1 24px, the "Sales & revenue analytics" sub
+   white/0.35, the 4 period pills with **"30 days" ACTIVE** (full-white; the clone's
+   `days = 30` default matches — no drift), the three 14px/700 CSS-uppercased h2s
+   (Daily Sales / Revenue by Payment Method / Breakdown by Method), the stat cards
+   `rounded-2xl p-5 flex items-center gap-4` (surface rgba(16,18,32,0.9) + 1px
+   white/0.07 — the clone's `glass-card` computes the byte-identical surface), the
+   labels Total Revenue / Transactions / **"Avg. Ticket"** (12px/400 white/0.35,
+   CSS-uppercased), and the values as `<p>` **24px/900**.
+2. **The with-data audit on the demo seed** (15 products, 5 categories, 33 sales →
+   standalone boot): **17/17, no with-data defects** — the Inventory table census
+   (15 rows, the stock chips out=1/low=2/ok=12, the category dots, the search
+   filter) and the Reports family (the 30-day db truth $410.64/33/$12.44, the
+   method rows card $246.74 (16) 60% / cash $163.90 (17) 40%, the 7-day
+   calendar-bucket window narrowing to $366.56/28). The mid-audit "7-day
+   discrepancy" was WITHDRAWN: the seam's calendar-bucket semantics (N day-buckets
+   including today) are correct by design and unit-pinned.
+3. **F-112 — the with-data evidence tier extended** (`scripts/capture-s17-evidence.mjs`,
+   the s16-pattern successor): the Inventory/Reports with-data contracts + the
+   standing F-76/drawer spot-checks pinned live (**19/19**), screenshots 87–89 —
+   future cycles inherit the two-harness with-data tier.
+4. **Four measurement lessons** (all audit-probe bugs — the clone code was correct
+   every time): textContent-vs-innerText case (CSS-uppercased labels — pin
+   textContent, match innerText case-insensitively in waits); the `waitForFunction`
+   arity (options is the THIRD argument); DOM row parsing by child nodes (bare text
+   nodes, nested share spans); and the generalized oklab-alpha posture (v4's
+   `oklab(0.99999… / 0.4)` serializations — pin the alpha, never the full string).
+
+**Gate on the final tree:** lint 0 (1 documented warning) · tsc · unit **149/149**
+(14 files) · build · smoke **13/13** · e2e **104/104** — the count constants UNMOVED
+(the evidence tier rides outside the unit/e2e counts per the V24 doctrine; the
+"Session-16 lock" literal stays by design). Evidence **19/19**; VLM cross-check
+**3/3**. Screenshots 87–89. Docs lockstep: AGENTS.md (the Session-17 contracts), 
+CLAUDE.md (the tier-4 evidence line), this PAD v1.15, the SKILL v2.13.0 addendum,
+the worklog's Session-17 entry, `docs/remediation-plan-session-17.md` (the full
+ledger + record), and `docs/session_29.md` (the narration).
