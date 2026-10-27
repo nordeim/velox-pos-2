@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.14.0
+version: 2.15.0
 last_updated: 2026-10-27
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-16 lock: unit **149/149** (14 files) · e2e **104/104**
-(90 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-19 lock: unit **149/149** (14 files) · e2e **105/105**
+(91 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -68,7 +68,7 @@ bun run lint                   # eslint flat config — 0 errors, 1 documented w
 bun run typecheck              # tsc --noEmit — strict
 bun run test                   # vitest — tests/unit/** (149)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               playwright (104) — NEEDS the build first (:3100)
+bun run test:e2e               playwright (105) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -432,7 +432,7 @@ SUPERSET instead:
 1. **Unit (Vitest, 149/149, 14 files)** — the pure seams only (plus the docs-counts
    lockstep gate). New `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 104/104)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 105/105)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -1263,3 +1263,61 @@ Screenshots 90–92. Docs lockstep: AGENTS (the Session-18 contracts + the three
 postures + the db-derived-expectation law), CLAUDE (the tier-4 evidence line
 naming all three harnesses), PAD v1.16, this addendum, the worklog entry,
 `docs/remediation-plan-session-18.md`, `docs/session_31.md`. Skill v2.14.0.
+
+### Session-19 addendum (v2.15.0) — the receipt print-path pass
+
+**The cycle's target** (the session_31 "Next" pointer): the receipt print-path —
+the last unmeasured leg of the checkout→receipt chain. The reference's demo
+account is client-side write-gated (its checkout/receipt surfaces are
+unmeasurable), so the print path is the clone's OWN documented superset — and it
+was broken twice.
+
+**F-114 — the terminal receipt printed invisible text**: the `@media print`
+block set `color: #000` only on the `.receipt-print` CONTAINER; the receipt's
+explicit white text utilities (`text-white/60`, `/80`, `text-white`) beat the
+INHERITED color — under `page.emulateMedia({ media: "print" })` the census
+showed the ticket line at oklab-white/0.6, the items at white/0.8, and the
+**Total row at pure rgb(255,255,255)** on the white print canvas. Only "My
+Store" (the DialogTitle — no explicit color utility) printed black. **The
+print-path law**: the print canvas is WHITE — every receipt line must compute
+BLACK under print emulation; a container-only color can never deliver that
+(explicit utilities beat inheritance). The cure rides the cascade law the
+glass-* family already uses: tokens.css is UNLAYERED plain CSS, which beats
+Tailwind v4's `@layer utilities` — the `.receipt-print, .receipt-print *` rule
+gained `color: #000` with NO `!important`.
+
+**F-115 — the Sales receipt viewer's Imprimir printed a BLANK page**: its
+`SaleDetailDialog` carried NO `.receipt-print` wrapper, so under the print
+block's `body * { visibility: hidden }` nothing re-became visible (the emulation
+census: the dialog itself hidden, exactly ONE painted element). Cure: wrap the
+viewer's receipt content in `.receipt-print` (the terminal receipt's own
+structure); the Cerrar/Imprimir footer stays outside (buttons must not print).
+
+**The pins land in the e2e tier as print-media emulation** (the F-76 posture —
+computed styles are the ground truth): the F-114 pins ride the EXISTING
+cash-checkout test (emulate print → the Total row + a line item compute
+rgb(0,0,0) → emulate back — no count change, no shared-data-order risk); the
+F-115 pin is the one NEW test (e2e 104 → **105**, 90 → **91 desktop**; the
+"Session-16 lock" literal moves to the **Session-19 lock** — the cycle that
+re-anchors the count owns the lock name). `page.emulateMedia({ media: "print" })`
+is the honest harness for the whole print class — no print-preview dependency,
+assertable computed styles.
+
+**The probe lessons**: (1) the `Bun.password.verify` API rejects the app's own
+`scrypt$salt$hash` shape (`PASSWORD_UNSUPPORTED_ALGORITHM`) — the credential
+checker must MIRROR `src/lib/auth.ts`'s `scryptSync` + `timingSafeEqual`, not
+call Bun's password API. (2) The SD-4 display artifact struck again in the Read
+tool: `const [method` rendered as `const ethod` (the display eats the two-byte
+`[m` sequence) — withdrawn before any "fix", the second time the lesson has
+saved a false finding. (3) A print-path probe needs the full UI checkout first
+(the receipt dialog only exists post-checkout) — the amount-received gate is
+part of the fixture (the Complete button stays disabled until the amount covers
+the total).
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **149/149**
+(14 files — UNMOVED) · build green · smoke **13/13** · e2e **105/105** (91
+desktop + 13 mobile + 1 setup). Screenshots 93–95. Docs lockstep: AGENTS (the
+Session-19 contracts + the print-path law), CLAUDE (the baseline + the
+print-path line), PAD v1.17, README (badge + scripts + testing), the worklog
+entry, `docs/remediation-plan-session-19.md`, `docs/session_33.md`.
+Skill v2.15.0.

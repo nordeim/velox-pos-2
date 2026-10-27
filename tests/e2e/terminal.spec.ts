@@ -145,6 +145,34 @@ test.describe.serial("terminal checkout", () => {
     // audit browser and would render ar-SA digits on an ar-SA device).
     await expect(receipt.getByText(/T-000001 · \d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/)).toBeVisible();
     await expect(receipt.getByText("Thank you for your purchase!")).toBeVisible();
+
+    // F-114 (Session-19): the print path renders READABLE text. The print
+    // canvas is white; the receipt's white text utilities (text-white/60,
+    // /80, text-white) must be overridden to black under print — the
+    // pre-fix artifact printed ONLY the store name (every other line was
+    // white-on-white; the Total row computed rgb(255,255,255)). Emulated
+    // print media is the ground truth (the F-76 posture: computed styles).
+    await page.emulateMedia({ media: "print" });
+    await expect
+      .poll(async () =>
+        receipt.locator(".receipt-print").evaluate((el) => {
+          const total = Array.from(el.querySelectorAll("div")).find((d) =>
+            (d.textContent ?? "").trim().startsWith("Total"),
+          );
+          return total ? getComputedStyle(total).color : null;
+        }),
+      )
+      .toBe("rgb(0, 0, 0)");
+    await expect
+      .poll(async () =>
+        receipt.locator(".receipt-print").evaluate((el) => {
+          const line = el.querySelector("[class*='white\\/80']");
+          return line ? getComputedStyle(line).color : null;
+        }),
+      )
+      .toBe("rgb(0, 0, 0)");
+    await page.emulateMedia({ media: null });
+
     await receipt.getByRole("button", { name: "Close", exact: true }).first().click();
 
     // The cart resets after checkout.
@@ -156,6 +184,48 @@ test.describe.serial("terminal checkout", () => {
     await expect(page.getByRole("heading", { name: "Historial de Ventas" })).toBeVisible();
     await expect(page.getByRole("cell", { name: "T-000001", exact: true })).toBeVisible();
     await expect(page.getByText("Completada").first()).toBeVisible();
+  });
+
+  test("the Sales receipt viewer's Imprimir paints the receipt (F-115)", async ({ page }) => {
+    // Session-19 (F-115): the viewer's Imprimir button used to print a
+    // BLANK page — its dialog carried no .receipt-print wrapper, so under
+    // the print block's `body * { visibility: hidden }` nothing re-became
+    // visible (the emulation census: the dialog hidden, exactly ONE painted
+    // element). The wrapper mirrors the terminal receipt's structure; the
+    // Cerrar/Imprimir footer stays outside it (buttons must not print).
+    await page.goto("/Sales");
+    await page.getByRole("button", { name: "Ver T-000001" }).click();
+    const viewer = page.getByRole("dialog");
+    await expect(viewer.getByText("T-000001")).toBeVisible();
+    const wrapper = viewer.locator(".receipt-print");
+    await expect(wrapper).toHaveCount(1);
+
+    // Under print emulation the wrapper IS the printed page: fixed, white
+    // canvas, black text — and the Total row (text-white on screen) must
+    // compute black (the F-114 law applies to this surface too).
+    await page.emulateMedia({ media: "print" });
+    await expect
+      .poll(async () => wrapper.evaluate((el) => getComputedStyle(el).position))
+      .toBe("fixed");
+    await expect
+      .poll(async () => wrapper.evaluate((el) => getComputedStyle(el).backgroundColor))
+      .toBe("rgb(255, 255, 255)");
+    await expect
+      .poll(async () =>
+        wrapper.evaluate((el) => {
+          const total = Array.from(el.querySelectorAll("div")).find((d) =>
+            (d.textContent ?? "").trim().startsWith("Total"),
+          );
+          return total ? getComputedStyle(total).color : null;
+        }),
+      )
+      .toBe("rgb(0, 0, 0)");
+    await page.emulateMedia({ media: null });
+
+    // The footer buttons stay OUTSIDE the wrapper — they never print.
+    await expect(viewer.getByRole("button", { name: "Imprimir" })).toBeVisible();
+    await viewer.getByRole("button", { name: "Cerrar" }).click();
+    await expect(viewer).not.toBeVisible();
   });
 
   test("the stock decrement is reflected in Inventory", async ({ page }) => {

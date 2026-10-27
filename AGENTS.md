@@ -481,6 +481,38 @@ bite hardest here:
   (pointing at `#`), hexdump the exact line — an unterminated string can point three
   tokens away.
 
+## The receipt print-path contracts (Session-19 pins)
+
+- **The print canvas is WHITE — every receipt line must compute BLACK under print
+  emulation** (F-114): the `@media print` block in `tokens.css` sets `color: #000`
+  on `.receipt-print, .receipt-print *` — NOT just the container. A container-only
+  color loses to the receipt's explicit white text utilities (`text-white/60`,
+  `/80`, `text-white` — utilities beat INHERITANCE); the pre-fix receipt printed
+  only "My Store" (the Total row computed rgb(255,255,255) on rgb(255,255,255)).
+  The rule is unlayered plain CSS, so it beats Tailwind v4's `@layer utilities`
+  (the glass-* cascade law) — no `!important` needed. Any new white-text utility
+  inside a `.receipt-print` surface is covered by the same rule automatically.
+- **Every printable receipt surface wraps its content in `.receipt-print`**
+  (F-115): the terminal receipt dialog (terminal-view.tsx) AND the Sales receipt
+  viewer (sales-view.tsx). Without the wrapper, `body * { visibility: hidden }`
+  hides the whole dialog — the Sales viewer's Imprimir printed a BLANK page
+  until Session-19. The footer buttons (Close/Cerrar, Print/Imprimir) stay
+  OUTSIDE the wrapper — buttons must not print.
+- **The pins live in `tests/e2e/terminal.spec.ts` as print-media emulation**
+  (`page.emulateMedia({ media: "print" })` + `expect.poll` computed-color reads —
+  the F-76 posture): the F-114 pins ride the cash-checkout test (the Total row +
+  a line item compute rgb(0,0,0) under print); the F-115 pin is its own test
+  (the wrapper exists, computes fixed/white/black, the Total row black, the
+  footer outside). The whole print class is testable WITHOUT a print preview —
+  emulate the media, read the computed styles.
+- **`Bun.password.verify` REJECTS the app's `scrypt$salt$hash` shape**
+  (`PASSWORD_UNSUPPORTED_ALGORITHM`): credential-checker scripts must MIRROR
+  `src/lib/auth.ts` (`scryptSync` + `timingSafeEqual`), never Bun's password API.
+- **The SD-4 display artifact strikes in the Read tool too** (Session-19, the
+  second save): `const [method` renders as `const ethod` — the display eats the
+  two-byte `[m` sequence. tsc/build/e2e green is the counter-proof; hexdump or
+  grep-count before "fixing" any bracket-adjacent string a display showed you.
+
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
 `src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px

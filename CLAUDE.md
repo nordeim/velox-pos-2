@@ -195,6 +195,16 @@ No hosted CI exists; the local gate is the only gate.
   browser, ar-SA digits on an ar-SA device; the surface's own ledger cell is
   es-MX). Manual padStart, the `shiftTime` precedent; e2e-pinned on the
   checkout receipt.
+- **The receipt print path computes BLACK under print emulation** (Session-19,
+  F-114/F-115, e2e-pinned): `tokens.css`'s `@media print` block sets `color: #000`
+  on `.receipt-print, .receipt-print *` (a container-only color loses to the
+  receipt's white text utilities — the pre-fix Total row printed
+  rgb(255,255,255) on white), and EVERY printable receipt surface (the terminal
+  receipt dialog AND the Sales viewer) wraps its content in `.receipt-print`
+  with the footer buttons OUTSIDE (the pre-fix Sales viewer's Imprimir printed a
+  blank page). The pins are print-media emulation (`emulateMedia({ media:
+  "print" })` + polled computed colors) — never weaken the wrapper or the
+  descendant color rule.
 - **The chart internals are TWO measured contracts** (Session-14, F-95..F-106,
   e2e-pinned — do not restyle the charts from memory): the Dashboard chart is
   the indigo-500 `#6366f1` 2.5px SMOOTH line (`smoothPath` in
@@ -241,7 +251,7 @@ No hosted CI exists; the local gate is the only gate.
   (the gate fails until you do; history blocks keep their historical numbers by design).
 - **E2E** (`tests/e2e/**`, Playwright, production standalone on :3100): user journeys through the
   real UI. Two projects — `chromium` (1440×900) and `mobile` (390×844; runs only
-  `mobile-navigation.spec.ts`). **Baseline: 104 tests.** Auth once via `auth.setup.ts` +
+  `mobile-navigation.spec.ts`). **Baseline: 105 tests.** Auth once via `auth.setup.ts` +
   storageState (the rate limiter is 10/IP/15 min). The scratch db (`db/e2e.db`) is provisioned
   by the webServer command (kill-port → provision → boot) and never replaced while the server
   lives — replacing it after boot desynchronizes the login and page-render clients

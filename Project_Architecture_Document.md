@@ -1,9 +1,9 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.16
+# VeloxPOS — Master Project Architecture Document (PAD) v1.17
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
 **Companion documents:** `README.md` (tour) · `AGENTS.md` (agent invariants) · `CLAUDE.md` (Claude conventions) · `docs/veloxpos-implementation-plan.md` (the measured reference spec)
-**Last Updated:** 2026-10-27 (Session-18)
+**Last Updated:** 2026-10-28 (Session-19)
 **Audience:** Senior engineers, tech leads, DevOps, onboarding engineers, and AI coding agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -28,7 +28,7 @@ guardrail is enforced by tooling that runs in this checkout.
 **Scale & baselines (verified 2026-10-27, Session-16 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views (9 route spellings — the root `/` page is the
 terminal's reference-parity landing, Session-10 F-60)
-+ login/reset/404 · 149 unit tests (14 files) · 104 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 149 unit tests (14 files) · 105 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -297,7 +297,7 @@ lint → typecheck → unit → build → smoke → e2e
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 14 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 104/104):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 105/105):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
@@ -1225,3 +1225,66 @@ the three postures), CLAUDE.md (the tier-4 evidence line naming all three
 harnesses), this PAD v1.16, the SKILL v2.14.0 addendum, the worklog's Session-18
 entry, `docs/remediation-plan-session-18.md` (the full ledger + record), and
 `docs/session_31.md` (the narration).
+
+## Revision Block — v1.17 (2026-10-28, Session-19)
+
+**Scope:** the receipt print-path cycle on the Session-18 tree (`a94c105` — the
+push `c16900c` + the operator's session_32 raw-log commit; a FRESH CLONE this
+cycle, tree synced at origin/main, NO reset). Received-tree gate green (lint 0 ·
+tsc · unit 149/149 · build · smoke 13/13 · e2e 104/104 — the Session-16 lock
+held; the s17 browser-build lesson pre-applied: chromium-1243 installed before
+the e2e leg, the only environment act a fresh sandbox needed). THIRTEENTH
+consecutive drift-free reference cycle (every standing pin byte-exact — the
+login card, the F-76 alert, the sidebar, the Dashboard date line, the Spanish
+families, the reference's own mobile defect). The clone's mobile drawer
+re-verified live on the dev server at 390×844 (the operator's named priority):
+labeled hamburger, dialog semantics, focus management, Escape/backdrop/route
+close, scroll-lock release, zero horizontal overflow — plus the 13/13 mobile
+e2e. Playwright trace audit clean (the 2 unpinned raw reads are post-settled
+reads behind auto-retrying pins — no F-51 violations).
+
+**The NEW depth (the session_31 "Next" pointer's receipt print-path target) —
+TWO functional defects found and fixed in the clone's own superset surfaces:**
+
+1. **F-114 — the terminal receipt printed invisible text.** The `@media print`
+   block set `color: #000` only on the `.receipt-print` container; the
+   receipt's explicit white text utilities beat the inherited color — under
+   print-media emulation the Total row computed rgb(255,255,255) on the white
+   canvas, the items oklab-white/0.8, the ticket line white/0.6. Only the
+   store name (no explicit color utility) printed black. Cure: the
+   `.receipt-print, .receipt-print *` print rule gains `color: #000` —
+   unlayered plain CSS beats Tailwind v4's `@layer utilities` (the glass-*
+   cascade law), so no `!important`. **The print-path law recorded**: the
+   print canvas is white — every receipt line must compute black under print
+   emulation; a container-only color can never deliver that.
+2. **F-115 — the Sales receipt viewer's Imprimir printed a BLANK page.** The
+   `SaleDetailDialog` carried no `.receipt-print` wrapper, so under
+   `body * { visibility: hidden }` nothing re-became visible (the emulation
+   census: the dialog hidden, one painted element). Cure: the receipt content
+   wrapped in `.receipt-print` (the terminal receipt's structure; the
+   Cerrar/Imprimir footer stays outside — buttons must not print).
+
+**The verification posture:** the pins land in the e2e tier as print-media
+emulation (`page.emulateMedia({ media: "print" })` — computed styles are the
+ground truth, no print-preview dependency). The F-114 pins ride the EXISTING
+cash-checkout test (no count change, no shared-data-order risk); the F-115 pin
+is the one NEW test — **e2e 104 → 105 (90 → 91 desktop), the count-lockstep
+constants and every live-tense doc site moved in the SAME commit** (README
+badge/scripts/testing, CLAUDE baseline, this PAD, the SKILL v2.15.0 header/
+commands/testing, docs-counts.test.ts — the "Session-16 lock" literal becomes
+the **Session-19 lock**, the cycle that re-anchors the count owning the name).
+
+**The probe lessons:** the credential checker must MIRROR `src/lib/auth.ts`'s
+`scryptSync` + `timingSafeEqual` (`Bun.password.verify` rejects the app's own
+`scrypt$salt$hash` shape with PASSWORD_UNSUPPORTED_ALGORITHM); the SD-4 `[m`
+display artifact struck again in the Read tool (`const [method` → `const
+ethod`) — withdrawn pre-fix, the lesson's second save; a print-path probe
+needs the full UI checkout first (the amount-received gate is part of the
+fixture).
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **149/149**
+(14 files — UNMOVED) · build green · smoke **13/13** · e2e **105/105** (91
+desktop + 13 mobile + 1 setup). Screenshots 93–95. Docs lockstep: AGENTS (the
+Session-19 contracts + the print-path law), CLAUDE (the baseline + the
+print-path line), README, the SKILL v2.15.0 Session-19 addendum, the worklog
+entry, `docs/remediation-plan-session-19.md`, `docs/session_33.md`.

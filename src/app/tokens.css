@@ -299,6 +299,14 @@ button:not([disabled]),
 }
 
 /* The toast region's stacking (Radix viewport is fixed by the primitive). */
+/* F-114 (Session-19): the print canvas is WHITE — every receipt line must
+   compute BLACK under print. The container-only `color: #000` lost to the
+   receipt's white text utilities (text-white/60, /80, text-white — the
+   Total row printed rgb(255,255,255) on rgb(255,255,255)): explicit
+   utilities beat INHERITED colors. This rule is unlayered plain CSS, so it
+   beats Tailwind v4's @layer utilities in the cascade (the glass-* law) —
+   the descendant override needs no !important. Pinned by the terminal
+   receipt + Sales viewer print pins (tests/e2e/terminal.spec.ts). */
 @media print {
   body * {
     visibility: hidden;
@@ -306,6 +314,7 @@ button:not([disabled]),
   .receipt-print,
   .receipt-print * {
     visibility: visible;
+    color: #000;
   }
   .receipt-print {
     position: fixed;

@@ -1579,3 +1579,72 @@ remediation-plan-session-18 (the full ledger + record), session_31.md (the
 narration). Pushed via `docs/ssh_git_wrapper_v3.py` → main on
 `git@github.com:nordeim/velox-pos-2.git`, remote-verified; operator key
 shredded.
+
+## Session-19 — the receipt print-path pass (velox-pos-2)
+
+**Date:** 2026-10-28 · **Tree:** `a94c105` received (the Session-18 push `c16900c`
++ `87f88b2` + the operator's session_32 raw-log commit — a FRESH CLONE this
+cycle; the workspace had been reset) · **Cycle:** the session_31 "Next"
+pointer's receipt print-path target + the operator's mobile-navigation priority
+check.
+
+**The received tree**: gate FULLY GREEN on arrival — lint 0 (1 documented
+warning) · tsc · unit **149/149** (14 files) · build · smoke **13/13** · e2e
+**104/104** (2.4m). Fresh-clone environment acts: `.env` from `.env.example`
+(+ generated 64-hex AUTH_SECRET), `db:push`+`db:seed`, chromium-1243 installed
+BEFORE the e2e leg (the s17 lesson — only 1200 was cached). Static sweeps
+clean: zero dead files (the census's one convention flag:
+`src/instrumentation.ts`), secrets clean (test fixtures only), the documented
+credential VERIFIES (the checker MIRRORS `src/lib/auth.ts` —
+`Bun.password.verify` rejects the app's `scrypt$salt$hash` shape with
+PASSWORD_UNSUPPORTED_ALGORITHM), and the Session-18 code review clean
+(evidence scripts/docs only). One suspicion withdrawn pre-fix: the Read tool
+showed `const ethod` in terminal-view.tsx — the SD-4 `[m`-eating display
+artifact, second save.
+
+**Reference sweep #13: ALL STANDING PINS HOLD — the THIRTEENTH consecutive
+drift-free cycle** (login card blur(4px)/white/95/16px, F-76 byte-exact, the
+220px sidebar + violet pill + the `/` landing, the Dashboard date line, the
+Sales/Cashiers Spanish families, the reference's own mobile defect at
+390×844). **The clone's mobile drawer re-verified live on the dev server**
+(the operator's priority): labeled hamburger · dialog semantics + 8 labeled
+links · focus management (open→Close, Escape→hamburger + scroll-lock release)
+· route-close unmount · zero horizontal overflow — plus 13/13 mobile e2e. NO
+Tailwind v4 regression. Playwright trace audit clean (the 2 unpinned raw
+reads are post-settled behind auto-retrying pins).
+
+**The NEW depth — the receipt print-path, probed via print-media emulation**
+(`page.emulateMedia({ media: "print" })` + computed-style walks; a full UI
+checkout first): **TWO functional defects in the clone's own superset
+surfaces** — **F-114**: the terminal receipt printed only "My Store" (the
+`@media print` container-only `color: #000` lost to the receipt's explicit
+white utilities; the Total row computed rgb(255,255,255) on white; items
+oklab-white/0.8; ticket/footer /0.6) · **F-115**: the Sales viewer's
+Imprimir printed a BLANK page (no `.receipt-print` wrapper — the dialog
+itself hidden, ONE painted element).
+
+**TDD cure**: the pins landed FIRST (F-114 inside the existing cash-checkout
+test — no count change; F-115 as the one NEW test) → RED on the pre-fix build
+(`Received: "rgb(255, 255, 255)"`) → the two surgical cures (the print rule's
+`.receipt-print, .receipt-print *` gained `color: #000` — unlayered plain CSS
+beats `@layer utilities`, no `!important`; the Sales viewer's receipt content
+wrapped, footer buttons outside) → GREEN 12/12. **E2E 104 → 105** (91
+desktop) — the count-lockstep constants AND every live-tense doc site moved
+in the SAME commit (docs-counts gate + the "Session-16 lock" → "Session-19
+lock" literal, README badge/scripts/testing, CLAUDE baseline + the
+print-path law, PAD **v1.17**, SKILL **v2.15.0** + the Session-19 addendum,
+AGENTS the Session-19 contracts).
+
+**Gate on the final tree**: lint 0 (1 documented warning) · tsc · unit
+**149/149** (14 files — UNMOVED, the lockstep gate green with the re-anchored
+constant) · build · smoke **13/13** · e2e **105/105** (2.5m). Evidence:
+screenshots **93–95** (the remediated terminal receipt under print emulation,
+the Sales viewer printing, the mobile drawer) via the committed
+self-provisioning `scripts/capture-s19-evidence.mjs`; the STANDING protection
+for the print-path class lives in the e2e suite itself (the print path is
+e2e-visible by construction — every `bun run test:e2e` re-proves it). Docs
+lockstep: this worklog entry, remediation-plan-session-19 (the full ledger +
+record), session_33.md (the narration). `.env.example` verified against the
+working `.env`. Pushed via `docs/ssh_git_wrapper_v3.py` → main on
+`git@github.com:nordeim/velox-pos-2.git`, remote-verified; operator key
+shredded.

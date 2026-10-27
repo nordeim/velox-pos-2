@@ -82,10 +82,11 @@ const viewFiles = readdirSync(path.join(root, "src/components/pos/views")).filte
 // (the byte-stable receipt timestamp — reports.test.ts 24→27).
 const UNIT = 149;
 const UNIT_FILES = 14;
-// E2E 104 = the Session-14 102 + the Session-15 list-parity pins (the
-// Currency listbox's measured six + the Card Payment Provider listbox's
-// measured five — both in surfaces.spec, both NEW tests).
-const E2E = 104;
+// E2E 105 = the Session-15 104 + the Session-19 F-115 pin (the Sales
+// receipt viewer's Imprimir paints the receipt — the print-media emulation
+// test in terminal.spec; the F-114 print pins ride the EXISTING checkout
+// test, so only this one test moved the count).
+const E2E = 105;
 const E2E_SPECS = 7;
 const ROUTE_FILES = 26;
 const PRISMA_MODELS = 9;
@@ -165,8 +166,8 @@ describe("session-8 (F-52): the count-lockstep gate — every live-tense count s
   });
 
   it("the SKILL carries the live counts (header baselines, commands, data model, tiers)", () => {
-    expect(skillFlat).toContain(`Baselines at Session-16 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
-    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (90 desktop + 13 mobile + 1 setup)`);
+    expect(skillFlat).toContain(`Baselines at Session-19 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
+    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (91 desktop + 13 mobile + 1 setup)`);
     expect(skillFlat).toContain(`tests/unit/** (${UNIT})`);
     expect(skillFlat).toContain(`playwright (${E2E})`);
     expect(skillFlat).toContain(`${PRISMA_MODELS} models, user-scoped, cascade deletes`);

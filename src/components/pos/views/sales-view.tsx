@@ -39,28 +39,35 @@ function SaleDetailDialog({ sale, onClose }: { sale: Sale | null; onClose: () =>
   return (
     <Dialog open={!!sale} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>{sale.ticket}</DialogTitle>
-          <DialogDescription className="text-white/50">
-            {saleTimestamp(sale.createdAt)}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-1.5 font-mono text-sm">
-          {lines.map((l) => (
-            <div key={l.productId} className="flex justify-between text-white/80">
-              <span className="truncate">
-                {l.qty} × {l.name}
-              </span>
-              <span>{formatMoney(l.price * l.qty, currency)}</span>
+        {/* F-115 (Session-19): the receipt-print wrapper makes Imprimir
+            actually paint — without it the print block's `body * { visibility:
+            hidden }` hid the whole dialog (a blank page). The terminal
+            receipt's own structure; the footer buttons stay outside (they
+            must not print). Pinned in tests/e2e/terminal.spec.ts. */}
+        <div className="receipt-print">
+          <DialogHeader>
+            <DialogTitle>{sale.ticket}</DialogTitle>
+            <DialogDescription className="text-white/50">
+              {saleTimestamp(sale.createdAt)}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5 font-mono text-sm">
+            {lines.map((l) => (
+              <div key={l.productId} className="flex justify-between text-white/80">
+                <span className="truncate">
+                  {l.qty} × {l.name}
+                </span>
+                <span>{formatMoney(l.price * l.qty, currency)}</span>
+              </div>
+            ))}
+            <div className="mt-2 flex justify-between border-t border-dashed border-edge pt-2 font-bold text-white">
+              <span>Total</span>
+              <span>{formatMoney(sale.total, currency)}</span>
             </div>
-          ))}
-          <div className="mt-2 flex justify-between border-t border-dashed border-edge pt-2 font-bold text-white">
-            <span>Total</span>
-            <span>{formatMoney(sale.total, currency)}</span>
-          </div>
-          <div className="flex justify-between text-white/50">
-            <span>Método</span>
-            <span className="capitalize">{sale.paymentMethod}</span>
+            <div className="flex justify-between text-white/50">
+              <span>Método</span>
+              <span className="capitalize">{sale.paymentMethod}</span>
+            </div>
           </div>
         </div>
         <DialogFooter>
