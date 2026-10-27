@@ -9,14 +9,22 @@ import { cn } from "@/lib/utils";
 // emerald: the reference's success state is unmeasurable (its writes are
 // restricted), so the clone pairs the family by construction — a documented
 // superset. `role` stays overridable (the notice site passes role="status").
+//
+// Session-13 (F-92, measured live 2026-10-27): the reset-password surface
+// ships its OWN alert family — the stock shadcn rounded-lg (8px) +
+// bg-red-50/50 (0.5 alpha) + an inner 14px red-800 (#991b1b, measured
+// rgb(153,27,27) — NOT the login's 12px/0.7/red-700 panel; the reference
+// itself uses two distinct alert treatments on its two auth surfaces).
 
 const alertTones = {
-  error: "border-red-200 bg-red-50/70",
-  success: "border-emerald-200 bg-emerald-50/70",
+  error: "rounded-xl border-red-200 bg-red-50/70",
+  "error-soft": "rounded-lg border-red-200 bg-red-50/50",
+  success: "rounded-xl border-emerald-200 bg-emerald-50/70",
 } as const;
 
 const alertTextTones = {
   error: "text-red-700",
+  "error-soft": "text-red-800",
   success: "text-emerald-700",
 } as const;
 
@@ -29,7 +37,7 @@ const Alert = React.forwardRef<
   <div
     ref={ref}
     role="alert"
-    className={cn("rounded-xl border p-4", alertTones[tone], className)}
+    className={cn("border p-4", alertTones[tone], className)}
     {...props}
   >
     <div className={cn("text-sm", alertTextTones[tone])}>{children}</div>

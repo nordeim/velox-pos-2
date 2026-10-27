@@ -24,7 +24,9 @@ export async function POST(request: NextRequest) {
       select: { id: true, userId: true, usedAt: true, expiresAt: true },
     });
     if (!record || record.usedAt || record.expiresAt <= new Date()) {
-      return errorResponse(400, "That reset link is invalid or has expired. Request a new one.");
+      // Session-13 (F-94, measured live): the reference's own error copy —
+      // the UI surfaces it verbatim in the reset alert.
+      return errorResponse(400, "Invalid or expired reset token");
     }
 
     // The one-shot consumption rides the SAME transaction as the write —

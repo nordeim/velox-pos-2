@@ -233,6 +233,45 @@ bite hardest here:
   (app) layout) — guests never see the 404 (F-82, the reference's
   behavior); Next renders `/_not-found` Dynamic within the request scope.
 
+## The reset-password contracts (Session-13 pins)
+
+- **The reset surface is the GRAY family, never the login's slate family**: a
+  flat `bg-gray-50` canvas (`main.reset-canvas` + `.theme-light` — the scope
+  still owns the zinc-950 typed text), the stock shadcn Card `rounded-lg` (8px)
+  + `shadow-lg` + a **2px SOLID `h-0.5 bg-gray-900` top strip** (not the
+  login's 4px slate gradient), content padding `p-6 pt-12 pb-10 px-12`,
+  Title Case gray-700 labels, `rounded-md` (6px!) `border-gray-200
+  bg-gray-50/50` inputs (44px, Lock icons on BOTH fields,
+  `placeholder:text-zinc-500`), the "Must be at least 8 characters"
+  `text-xs text-gray-500` helper, and NO token field — the token arrives as a
+  PROP from the page's server-rendered `searchParams` (never a client URL
+  read — no hydration flip).
+- **Three server-rendered states**: tokenless → the "Invalid Reset Link"
+  dead-end (the 80px `bg-red-100` circle chip + `CircleAlert` 40px red-600 +
+  ZERO inputs — the reference never renders the form without a token); token
+  → the form; done → the clone's own "Password Updated" card (the reference's
+  success state is unmeasurable — documented superset on the measured card).
+- **The reset alert family is its own tone** (`Alert tone="error-soft"`:
+  `rounded-lg` + `bg-red-50/50` + inner `text-red-800` #991b1b — measured
+  rgb(153,27,27); hex-pinned in `@theme`), DIFFERENT from the login's
+  `error` panel (rounded-xl/0.7/red-700). The reference itself ships two
+  alert treatments on its two auth surfaces. Copy: the API's "Invalid or
+  expired reset token"; the client mismatch "Passwords do not match" (no
+  period) — checked BEFORE any fetch.
+- **The reference's demo account is CLIENT-SIDE write-gated** (Session-13,
+  live-proven): the New Register Create never enables even with both fields
+  genuinely typed; Settings Save never fires a toast (an armed
+  MutationObserver caught nothing). The checkout→receipt chain, the Sales
+  receipt viewer, and every toast contract are UNMEASURABLE on the reference
+  — documented superset surfaces; the clone's working flows own them.
+- **Never diagnose a source defect from a terminal echo** (Session-13, the
+  withdrawn SD-4): this sandbox's bash OUTPUT DISPLAY eats the literal
+  two-byte sequence `[h` — `echo "[health]"` renders as `ealth]"`, and the
+  first-pass Session-12 audit recorded a phantom "log typo" from exactly that
+  artifact. Confirm raw bytes via a second tool (the Read tool, or
+  `grep -c "health]"` counts) before "fixing" any string a terminal showed
+  you.
+
 ## The chrome + chart contracts (Session-6 pins)
 
 - **Nav items are `px-3 py-2.5` PADDING-DRIVEN** (40px inactive; the reference dropped its

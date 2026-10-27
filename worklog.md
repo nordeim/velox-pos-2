@@ -1004,3 +1004,124 @@ depth: the error state, both sub-views, the 404 (authenticated + gated),
 and the sign-in card's own skeleton — the surface every guest meets first.
 Standing debt: NONE identified. Baselines: unit **133/133**, e2e **93/93**,
 smoke **13/13**.
+
+## Session-13 — the reset-surface parity pass + the StudyFlow debt purge (velox-pos-2)
+
+**Received state**: `9caacf0` (Session-12's tree `5d75a61` + the operator's
+`docs/session_20.md` commit — the raw log of the Session-12 conversation).
+**Directive**: the standing audit→remediate→push cycle. **Result**: the
+seventh consecutive drift-free reference cycle; the NEW depth opened the last
+unmeasured auth surface; the standing static debt cured; one audit finding
+withdrawn as a display artifact.
+
+**The received-tree gate** came up green on the first run: lint 0 errors
+(1 documented warning) · tsc clean · unit 133/133 (13 files) · build green ·
+smoke 13/13 · e2e 93/93 — the Session-12 baseline held at the pulled HEAD.
+
+**The live re-measurement (agent-browser, computed styles — the SEVENTH
+consecutive drift check)**: every standing pin held byte-exact — the login
+card's internals (blur(4px), the halo/ring logo, the 30px/-0.75px h1, the
+48px inputs, the 54px SSO, the 48px/14px/500 button), the F-76 alert panel
+(red-50/70 + red-200 + 12px + red-700, no icon), the sidebar family (219px,
+8 items, the 42px violet active pill), the terminal's shift gate, the
+Spanish empty-state families (Sales/Inventory/Cashiers/Registers), the
+Dashboard's live date line (the clone's `todayLine()` renders the identical
+format at 14px/slate-500), and the reference's own mobile defect (no
+hamburger, the static 219px sidebar at 390×844 — the clone's drawer superset
+remains correct).
+
+**The NEW depth — the reset-password surface, never measured in any prior
+session, decoded live in all three states (findings F-86..F-94)**: the
+reference's reset page is NOT the login card's slate family — it is the
+stock shadcn GRAY family (the base44 default). A flat `bg-gray-50` canvas;
+the 8px `rounded-lg` shadow-lg card with a 2px SOLID gray-900 top strip;
+the "Set new password" h2 block (24px/700 gray-900, NO logo circle); Title
+Case gray-700 labels; 6px `rounded-md` gray-200 inputs (44px, Lock icons on
+BOTH fields, zinc-500 placeholders, the "Must be at least 8 characters"
+helper); NO token field (the URL carries it); the 44px gray-900 "Reset
+password" + the full-width "Back to login" text link; its OWN alert family
+(`rounded-lg` + `bg-red-50/50` + inner red-800 #991b1b — measured
+rgb(153,27,27) — distinct from the login's 12px/0.7/red-700 panel; the
+reference itself ships two alert treatments on its two auth surfaces); and
+a distinct TOKENLESS dead-end ("Invalid Reset Link": the 80px red-100
+circle chip + the 40px CircleAlert + ZERO inputs). The API's error copy:
+"Invalid or expired reset token"; the client mismatch copy: "Passwords do
+not match" (no period).
+
+**The write-gate verification (live-proven)**: the reference's demo account
+is CLIENT-SIDE write-gated — the New Register Create never enables even
+with both fields genuinely typed via CDP keyboard events, and an armed
+MutationObserver caught no toast on a Settings save. The checkout→receipt
+chain, the Sales receipt viewer (0 sales), and every toast contract are
+UNMEASURABLE on the reference — documented superset surfaces.
+
+**Plan**: `docs/remediation-plan-session-13.md` (the verification ledger
+V1–V20, the findings table F-86..F-94 + SD-1..SD-4, the TDD task list
+T-1…T-15, the risks). Validated at every insertion point before execution
+(the lucide CircleAlert export, the auth.spec tail, the twMerge override
+behavior on the Input primitive, the .theme-light typed-text resolution —
+the reference's reset typed text measures the same zinc-950 rgb(9,9,11) as
+the login's).
+
+**TDD execution:** RED pins first — four NEW auth.spec tests (the
+gray-family form card, the invalid-token alert + the API copy end-to-end,
+the client-side mismatch with a route interception asserting ZERO requests,
+the tokenless dead-end with the back-navigation). **RED proof: 4/4 targeted
+failures, zero collateral.** Then GREEN in one pass: the `error-soft` Alert
+tone (rounded-lg/red-50 at 0.5/red-800), `--color-red-800: #991b1b`
+hex-pinned in `@theme` (the F-62 doctrine), the 3-state surface rewrite
+(the token now a PROP from the async server page's `searchParams` — three
+server-rendered states, no hydration flip, `/reset-password` Dynamic), and
+the API copy. No v4 serialization surprises — the regex postures and hex
+pins were applied up front from the standing trap catalog.
+
+**The static sweep (the standing first-pass Session-12 findings, never
+remediated because the redo cycle's budget went to the lost auth work)**:
+**243 of 254 tracked scripts deleted** — the git-history census since the
+StudyFlow pivot `8e05a75` is the authoritative keep-list (exactly 11
+velox-pos-era files remain: `smoke-test.sh`, `capture-s7..s12-evidence.mjs`,
+`vlm-verify-s8/s9/s11.mjs`, `vlm-recheck-s9.mjs`); **4 dead src files
+deleted** (`src/lib/date.ts`, `dep-audit.ts`, `dev-preflight.ts`,
+`server/ai.ts` — zero-importer StudyFlow remnants); `omni-study1_SKILL.md`
+(124KB) archived to `docs/archive/omni-study1/` per the project's own
+convention; the `studyflow`-branded Docker trio deleted (zero Docker
+references in the velox-pos docs — the deployment story is the standalone
+build); 3 dead `outputFileTracingExcludes` entries dropped from
+next.config.ts.
+
+**SD-4 WITHDRAWN — the display-artifact lesson**: the first-pass Session-12
+audit's "`[health` log typo" was a FALSE POSITIVE. This sandbox's bash
+OUTPUT DISPLAY eats the literal two-byte sequence `[h` (control-proven:
+`echo "[health]"` renders `ealth]"`), so every terminal-echoed grep line
+showed the "typo" — while the raw-byte layer (the Read tool, `grep -c`)
+proved the source has always read `"[health] db probe failed:"`. The
+withdrawal is documented in the plan (V19), AGENTS.md, and the SKILL's
+debugging guide: never diagnose a source defect from a terminal echo —
+confirm raw bytes via a second tool.
+
+**Re-certification (all on the final cleaned tree):** lint ✓ (0 errors, 1
+documented warning) · tsc ✓ · unit **133/133** (13 files) · build ✓
+(hygiene-clean; `/reset-password` Dynamic) · smoke **13/13** · e2e
+**97/97** (+4 new, all NEW tests — no prior pin weakened). The
+docs-counts lockstep gate fired mid-cycle exactly as designed (the census
+read 97 against the constant's 93) — the constants re-anchored (E2E=97,
+"Session-13 lock", "83 desktop + 13 mobile + 1 setup") together with
+README, CLAUDE, PAD and the SKILL, including the two literal strings pinned
+inside the gate itself. Live evidence (`scripts/capture-s13-evidence.mjs`):
+**10/10** — including the FULL one-shot reset round-trip
+(forgot-password → resetUrl → reset → done, the owner's password rewritten
+to its current value — the dev db's credentials unchanged) and the
+login-surface sanity sweep. Screenshots **67–70** in `docs/screenshots/`.
+
+**Docs lockstep:** AGENTS.md (the reset-password contracts section + the
+write-gate and display-artifact lessons), CLAUDE.md (the reset-surface
+contracts), PAD v1.11 (the revision block + the title/last-updated bumps),
+velox-pos_SKILL.md v2.9.0 (the §6 theme-light scope update, the §14
+debugging row, the Session-13 addendum), this worklog entry, the plan's
+execution record, and the session narration (`docs/session_21.md`).
+
+**Stage summary.** The parity surface is stable (seven consecutive
+drift-free reference cycles) and the pin doctrine now covers every auth
+surface including the reset page's three states. The repo's StudyFlow debt
+is fully purged (scripts, src, root files, config). Standing debt: NONE
+identified. Baselines: unit **133/133**, e2e **97/97**, smoke **13/13**.

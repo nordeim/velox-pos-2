@@ -396,3 +396,187 @@ test("SSO buttons compute the reference's py-3.5 (54px)", async ({ page }) => {
   await expect(google).toBeVisible();
   await expect(google).toHaveCSS("height", "54px");
 });
+
+// ---------------------------------------------------------------------------
+// Session-13 pins (F-86..F-94, measured live 2026-10-27): the reset-password
+// surface — a design family no prior session had opened. The reference's
+// reset page is NOT the login card's slate family: it is the stock shadcn
+// GRAY family — a flat bg-gray-50 canvas, an 8px rounded-lg shadow-lg card
+// with a 2px SOLID gray-900 top strip (not the login's 4px slate gradient),
+// Title Case gray-700 labels, 6px rounded-md gray-200 inputs with Lock
+// icons on BOTH fields, the "Must be at least 8 characters" helper, NO
+// token field (the URL carries it), a 44px gray-900 "Reset password" plus a
+// full-width "Back to login" text button — its OWN alert family (8px
+// radius, red-50 at 0.5, inner red-800 #991b1b — distinct from the login's
+// 12px/0.7/red-700 panel), and a distinct tokenless dead-end ("Invalid
+// Reset Link" + the 80px red-100 circle chip).
+// ---------------------------------------------------------------------------
+
+test("the reset-password form card is the reference's gray-family shadcn surface (token present)", async ({
+  page,
+}) => {
+  await page.goto("/reset-password?token=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+  // F-86: the canvas — FLAT gray-50, never the login's slate gradient
+  const canvas = page.locator("main.reset-canvas");
+  await expect(canvas).toBeVisible();
+  await expect(canvas).toHaveCSS("background-color", "rgb(249, 250, 251)");
+  const bgImage = await canvas.evaluate((el) => getComputedStyle(el).backgroundImage);
+  expect(bgImage).toBe("none");
+  // F-87: the card — the shadcn 8px family + shadow-lg + the 2px gray-900 strip
+  const card = page.locator("main.reset-canvas > div");
+  await expect(card).toBeVisible();
+  await expect(card).toHaveCSS("border-radius", "8px");
+  const shadow = await card.evaluate((el) => getComputedStyle(el).boxShadow);
+  expect(shadow).toContain("10px 15px");
+  expect(shadow).toContain("0.1)");
+  const strip = card.locator("div.absolute.top-0.left-0.right-0.h-0\\.5");
+  await expect(strip).toHaveCSS("height", "2px");
+  await expect(strip).toHaveCSS("background-color", "rgb(17, 24, 39)");
+  // F-88: the heading block — NO logo circle, h2 gray-900, the measured desc
+  await expect(page.locator("main.reset-canvas img")).toHaveCount(0);
+  const h2 = page.getByRole("heading", { name: "Set new password" });
+  await expect(h2).toBeVisible();
+  await expect(h2).toHaveCSS("font-size", "24px");
+  await expect(h2).toHaveCSS("font-weight", "700");
+  await expect(h2).toHaveCSS("color", "rgb(17, 24, 39)");
+  await expect(
+    page.getByText("Enter your new password for VeloxPOS (Point Of Sale)"),
+  ).toBeVisible();
+  // F-89: Title Case labels in the gray-700 family
+  await expect(page.getByText("New Password", { exact: true })).toHaveCSS(
+    "color",
+    "rgb(55, 65, 81)",
+  );
+  await expect(page.getByText("Confirm New Password", { exact: true })).toBeVisible();
+  // the fields: 6px radius, gray-200 border, gray-50/50 fill, 44px, BOTH icon'd
+  const pw = page.getByLabel("New Password", { exact: true });
+  const confirm = page.getByLabel("Confirm New Password");
+  await expect(pw).toHaveCSS("height", "44px");
+  await expect(pw).toHaveCSS("border-radius", "6px");
+  await expect(pw).toHaveCSS("border-color", "rgb(229, 231, 235)");
+  // bg-gray-50/50: v4 serializes alpha-modified fills as oklab(.../0.5) —
+  // the reference's rgba(249,250,251,0.5) is the same color (trap #27).
+  const fill = await pw.evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(fill).toMatch(/rgba\(249, 250, 251, 0\.5\)|oklab\([^)]*\/\s*0\.5\)/);
+  await expect(confirm).toHaveCSS("height", "44px");
+  expect(
+    await confirm.evaluate((el) => !!el.parentElement?.querySelector("svg")),
+    "the reference carries Lock icons on BOTH fields",
+  ).toBe(true);
+  // the helper under the first field: text-xs gray-500
+  const helper = page.getByText("Must be at least 8 characters");
+  await expect(helper).toBeVisible();
+  await expect(helper).toHaveCSS("font-size", "12px");
+  await expect(helper).toHaveCSS("color", "rgb(107, 114, 128)");
+  // F-90: NO token field — the URL carries the token (never an input)
+  await expect(page.getByLabel("Reset token")).toHaveCount(0);
+  // F-91: the measured buttons — 44px/6px gray-900 primary + the back link
+  const reset = page.getByRole("button", { name: "Reset password" });
+  await expect(reset).toHaveCSS("height", "44px");
+  await expect(reset).toHaveCSS("border-radius", "6px");
+  await expect(reset).toHaveCSS("background-color", "rgb(17, 24, 39)");
+  await expect(reset).toHaveCSS("font-size", "14px");
+  await expect(reset).toHaveCSS("font-weight", "500");
+  // the back affordance: the reference renders a full-width text button;
+  // the clone ships the same geometry as a Link (the semantically-correct
+  // element for a page navigation — the reference's own element choice is
+  // its implementation detail; the VISUAL contract is what is measured)
+  const back = page.getByRole("link", { name: "Back to login" });
+  await expect(back).toBeVisible();
+  await expect(back).toHaveCSS("color", "rgb(75, 85, 99)");
+  await expect(back).toHaveCSS("font-size", "14px");
+});
+
+test("the reset-password invalid-token submit surfaces the reference's alert + API copy", async ({
+  page,
+}) => {
+  // A well-formed 48-hex token that does not exist: the route's not-found
+  // branch (reset-password has no rate limiter — only login/register/forgot).
+  await page.goto("/reset-password?token=" + "f".repeat(48));
+  await page.getByLabel("New Password", { exact: true }).fill("Abcd1234!");
+  await page.getByLabel("Confirm New Password").fill("Abcd1234!");
+  const submit = page.getByRole("button", { name: "Reset password" });
+  await expect(submit).toBeEnabled();
+  await submit.click();
+  // F-92: the reset alert family — 8px radius, red-50 at 0.5, red-200
+  // border, 16px padding, inner 14px red-800 (measured rgb(153,27,27) =
+  // #991b1b), no icon — and the root stays scoped to the reset canvas
+  // (trap #28: the route announcer also carries role=alert at body level).
+  const alert = page.locator("main.reset-canvas [role='alert']");
+  await expect(alert).toBeVisible();
+  await expect(alert).toHaveCSS("border-radius", "8px");
+  await expect(alert).toHaveCSS("border-color", "rgb(254, 202, 202)");
+  const alertBg = await alert.evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(alertBg).toMatch(/rgba\(254, 242, 242, 0\.5\)|oklab\([^)]*\/\s*0\.5\)/);
+  await expect(alert).toHaveCSS("padding", "16px");
+  await expect(alert.locator("svg")).toHaveCount(0);
+  const inner = alert.locator("div");
+  await expect(inner).toHaveCSS("font-size", "14px");
+  await expect(inner).toHaveCSS("color", "rgb(153, 27, 27)");
+  // F-94: the reference API's own error copy, end-to-end
+  await expect(alert).toContainText("Invalid or expired reset token");
+});
+
+test("the reset-password mismatch check fires client-side with the reference's copy", async ({
+  page,
+}) => {
+  await page.goto("/reset-password?token=" + "e".repeat(48));
+  let requests = 0;
+  await page.route("**/api/auth/reset-password", (route) => {
+    requests += 1;
+    return route.continue();
+  });
+  await page.getByLabel("New Password", { exact: true }).fill("Abcd1234!");
+  await page.getByLabel("Confirm New Password").fill("Different99!");
+  const submit = page.getByRole("button", { name: "Reset password" });
+  await expect(submit).toBeEnabled();
+  await submit.click();
+  // The equality check runs BEFORE any fetch — the API is never hit, the
+  // alert renders the reference's measured copy ("Passwords do not match",
+  // no trailing period), and the page stays put.
+  const alert = page.locator("main.reset-canvas [role='alert']");
+  await expect(alert).toBeVisible();
+  await expect(alert).toContainText("Passwords do not match");
+  expect(requests).toBe(0);
+  await expect(page).toHaveURL(/reset-password/);
+});
+
+test("the tokenless reset-password visit renders the reference's Invalid Reset Link dead-end", async ({
+  page,
+}) => {
+  await page.goto("/reset-password");
+  const h2 = page.getByRole("heading", { name: "Invalid Reset Link" });
+  await expect(h2).toBeVisible();
+  await expect(h2).toHaveCSS("font-size", "24px");
+  await expect(h2).toHaveCSS("color", "rgb(17, 24, 39)");
+  await expect(
+    page.getByText("This password reset link is invalid or has expired."),
+  ).toBeVisible();
+  // The 80px red-100 circle chip wrapping the 40px red-600 circle-alert
+  const chip = page.locator("main.reset-canvas div.bg-red-100");
+  await expect(chip).toBeVisible();
+  await expect(chip).toHaveCSS("width", "80px");
+  await expect(chip).toHaveCSS("height", "80px");
+  await expect(chip).toHaveCSS("background-color", "rgb(254, 226, 226)");
+  const radius = await chip.evaluate((el) => getComputedStyle(el).borderRadius);
+  expect(
+    parseFloat(radius),
+    "rounded-full: v4 computes calc(infinity * 1px) — trap #26 accepts it",
+  ).toBeGreaterThan(1000);
+  const icon = chip.locator("svg");
+  await expect(icon).toBeVisible();
+  await expect(icon).toHaveCSS("width", "40px");
+  await expect(icon).toHaveCSS("height", "40px");
+  await expect(icon).toHaveCSS("color", "rgb(220, 38, 38)");
+  // ZERO inputs — the dead-end never renders the form
+  await expect(page.locator("main.reset-canvas input")).toHaveCount(0);
+  // The 44px gray-900 back link navigates to /login
+  const back = page.getByRole("link", { name: "Back to Login" });
+  await expect(back).toHaveCSS("height", "44px");
+  await expect(back).toHaveCSS("background-color", "rgb(17, 24, 39)");
+  await back.click();
+  await page.waitForURL(/\/login/);
+  await expect(
+    page.getByRole("heading", { name: "Welcome to VeloxPOS (Point Of Sale)" }),
+  ).toBeVisible();
+});

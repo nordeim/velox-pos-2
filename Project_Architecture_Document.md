@@ -1,9 +1,9 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.10
+# VeloxPOS — Master Project Architecture Document (PAD) v1.11
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
 **Companion documents:** `README.md` (tour) · `AGENTS.md` (agent invariants) · `CLAUDE.md` (Claude conventions) · `docs/veloxpos-implementation-plan.md` (the measured reference spec)
-**Last Updated:** 2026-10-27 (Session-11)
+**Last Updated:** 2026-10-27 (Session-13)
 **Audience:** Senior engineers, tech leads, DevOps, onboarding engineers, and AI coding agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -25,10 +25,10 @@ reports, validation) underneath **server-gated thin routes**, a **single Zustand
 (lint → typecheck → unit → build → e2e) is the only gate — there is no hosted CI — so every
 guardrail is enforced by tooling that runs in this checkout.
 
-**Scale & baselines (verified 2026-10-27, Session-10 re-certification):** 9 Prisma models · 26 API
+**Scale & baselines (verified 2026-10-27, Session-13 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views (9 route spellings — the root `/` page is the
 terminal's reference-parity landing, Session-10 F-60)
-+ login/reset/404 · 133 unit tests (13 files) · 93 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 133 unit tests (13 files) · 97 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -295,7 +295,7 @@ lint → typecheck → unit → build → smoke → e2e
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 13 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 93/93):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 97/97):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
@@ -780,6 +780,77 @@ wrong-creds and 404 contracts EXTENDED existing tests; one parity correction —
 label pin moved from the literal "OR" to the reference's lowercase "or" + CSS uppercase).
 Live evidence (`scripts/capture-s12-evidence.mjs`): **8/8**. The count constants
 re-anchored (E2E=93, "Session-12 lock", "79 desktop + 13 mobile + 1 setup").
+
+## Revision Block — v1.11 (2026-10-27, Session-13)
+
+**Scope:** the standing audit→remediate→push cycle on the Session-12 tree (HEAD `9caacf0`;
+the ledger is `docs/remediation-plan-session-13.md`). The reference did NOT drift for the
+SEVENTH consecutive cycle (every pinned surface re-measured byte-exact — the login card
+internals, the failed-login alert, the sidebar family, the terminal gate, the Spanish
+empty-state families, the Dashboard date line, and the reference's own mobile defect).
+This cycle's NEW depth opened the one auth surface no prior session had ever measured —
+**the reset-password page, in all three of its states** — and the repo-hygiene sweep
+cured the standing static debt the first-pass Session-12 audit had proven but never
+remediated (the redo cycle's budget went to the lost auth work).
+
+- **F-86..F-93 (visual + functional parity — the reset-password surface)**: the
+  reference's reset page is NOT the login card's slate family — it is the stock shadcn
+  GRAY family, live-measured in every state: a flat `bg-gray-50` canvas (never the slate
+  gradient), the 8px `rounded-lg` shadow-lg card with a **2px solid gray-900 top strip**
+  (not the login's 4px slate gradient), the h2 "Set new password" block with NO logo
+  circle, Title Case gray-700 labels, **6px `rounded-md`** gray-200 inputs (44px, Lock
+  icons on BOTH fields, zinc-500 placeholders, the "Must be at least 8 characters"
+  helper), **NO token field** (the URL carries it), the 44px gray-900 "Reset password" +
+  the full-width "Back to login" text link — and a tokenless URL renders a DISTINCT
+  dead-end ("Invalid Reset Link": the 80px red-100 circle chip + the 40px circle-alert +
+  ZERO inputs + the 44px back button). The clone had shipped a login-styled surface with
+  an editable token field and no dead-end. Cured by the 3-state rewrite
+  (`reset-password-surface.tsx` + the async server `page.tsx` passing the token from
+  `searchParams` — three server-rendered states, no hydration flip).
+- **F-92 (the reset alert family)**: the reference's reset surface ships its OWN alert
+  treatment — `rounded-lg` (8px) + `bg-red-50/50` (0.5 alpha) + an inner 14px
+  **red-800 #991b1b** — distinct from the login's F-76 panel (12px/0.7/red-700); the
+  reference itself uses two alert families on its two auth surfaces. The Alert primitive
+  gained `tone="error-soft"`; `--color-red-800: #991b1b` is hex-pinned in `@theme` (the
+  F-62 doctrine — the measured computed is rgb(153,27,27)).
+- **F-94 (copy parity)**: the reset API's error copy moved to the reference's own
+  "Invalid or expired reset token" (surfaced verbatim through the alert, pinned
+  end-to-end); the client mismatch copy is the measured "Passwords do not match" (no
+  period, checked BEFORE any fetch — the e2e intercepts the route and asserts ZERO
+  requests).
+- **SD-1..SD-3 (the standing static debt, cured)**: **243 of 254 tracked scripts
+  deleted** (the git-history census since the StudyFlow pivot `8e05a75` is the
+  authoritative keep-list — exactly 11 velox-pos-era files remain: `smoke-test.sh`,
+  `capture-s7..s12-evidence.mjs`, `vlm-verify-s8/s9/s11.mjs`, `vlm-recheck-s9.mjs`);
+  **4 dead src files deleted** (`src/lib/date.ts`, `dep-audit.ts`, `dev-preflight.ts`,
+  `server/ai.ts` — all zero-importer StudyFlow remnants); **the root StudyFlow leftovers
+  cleared** (`omni-study1_SKILL.md` → `docs/archive/omni-study1/` per the archive
+  convention; the `studyflow`-branded Docker trio deleted — zero Docker references in
+  the velox-pos docs, the deployment story is the standalone build; the 3 dead
+  `outputFileTracingExcludes` entries dropped from next.config.ts).
+- **SD-4 WITHDRAWN (the display-artifact lesson)**: the first-pass Session-12 audit's
+  "`[health` log typo" was a FALSE POSITIVE — the source has always read
+  `"[health] db probe failed:"`. This sandbox's bash OUTPUT DISPLAY eats the literal
+  two-byte sequence `[h` (`echo "[health]"` renders `ealth]"`), so every terminal-echoed
+  grep line showed the "typo". Control-proven and withdrawn; the lesson is now in
+  AGENTS.md and the SKILL's debugging guide: never diagnose a source defect from a
+  terminal echo — confirm raw bytes via a second tool.
+- **The write-gate verification (V8, live-proven)**: the reference's demo account is
+  CLIENT-SIDE write-gated — the New Register Create never enables (both fields genuinely
+  typed via CDP), and no writable action fires a toast (an armed MutationObserver caught
+  nothing on a Settings save). The checkout→receipt chain, the Sales receipt viewer, and
+  every toast contract are UNMEASURABLE on the reference — documented superset surfaces.
+
+**Re-certification (all on the final cleaned tree):** lint ✓ (0 errors, 1 documented
+warning) · tsc ✓ · unit **133/133** (13 files) · build ✓ (hygiene-clean;
+`/reset-password` Dynamic) · smoke **13/13** · e2e **97/97** (+4 new: the gray-family
+form card, the invalid-token alert + API copy, the client-side mismatch check, the
+tokenless dead-end — all NEW tests, no prior pin weakened). Live evidence
+(`scripts/capture-s13-evidence.mjs`): **10/10** — including the FULL one-shot reset
+round-trip (forgot-password → resetUrl → reset → done, the owner's password rewritten
+to its current value) and the login-surface sanity sweep. Screenshots **67–70**. The
+count constants re-anchored (E2E=97, "Session-13 lock", "83 desktop + 13 mobile + 1
+setup").
 
 ## Revision Block — v1.8 (2026-10-27, Session-10)
 

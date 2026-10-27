@@ -153,6 +153,22 @@ No hosted CI exists; the local gate is the only gate.
   `redirect("/login")`, F-82).
 - **Key-based modal resets** (`key={editing?.id ?? "new"}`) — no setState-in-effect dialog resets
   (React 19 lint rule `react-hooks/set-state-in-effect`).
+- **The reset-password surface (Session-13, the GRAY family)**: NOT the
+  login card's slate design — a flat `bg-gray-50` canvas, the shadcn
+  `rounded-lg` (8px) shadow-lg card with a 2px solid gray-900 top strip,
+  Title Case gray-700 labels, `rounded-md` gray-200 inputs (44px, Lock
+  icons, zinc-500 placeholders), the "Must be at least 8 characters"
+  helper, NO token field (the token is a PROP from server-rendered
+  `searchParams` — three server-rendered states: the tokenless "Invalid
+  Reset Link" dead-end with the 80px red-100 circle chip / the form / the
+  done card). Its alert is its OWN family — `Alert tone="error-soft"`
+  (rounded-lg, red-50/50, inner red-800 #991b1b, hex-pinned), not the
+  login's rounded-xl/0.7/red-700 panel; the API copy "Invalid or expired
+  reset token", the client mismatch copy "Passwords do not match" (no
+  period, checked before any fetch). The reference's demo account is
+  client-side write-gated (Create never enables) — the checkout/receipt
+  and toast surfaces are unmeasurable there and stay the clone's
+  documented supersets.
 - **Toasts via `useToast()`** → `toast.success/error/info(message)` — never `alert()`.
 - **Chart axes render `niceTicks`** (`src/lib/reports.ts`, unit-pinned): ~5 nice
   1/2/2.5/5×10^k steps, NEVER one grid line per unit of the domain — the
@@ -191,7 +207,7 @@ No hosted CI exists; the local gate is the only gate.
   (the gate fails until you do; history blocks keep their historical numbers by design).
 - **E2E** (`tests/e2e/**`, Playwright, production standalone on :3100): user journeys through the
   real UI. Two projects — `chromium` (1440×900) and `mobile` (390×844; runs only
-  `mobile-navigation.spec.ts`). **Baseline: 93 tests.** Auth once via `auth.setup.ts` +
+  `mobile-navigation.spec.ts`). **Baseline: 97 tests.** Auth once via `auth.setup.ts` +
   storageState (the rate limiter is 10/IP/15 min). The scratch db (`db/e2e.db`) is provisioned
   by the webServer command (kill-port → provision → boot) and never replaced while the server
   lives — replacing it after boot desynchronizes the login and page-render clients

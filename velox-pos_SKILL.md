@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.8.0
+version: 2.9.0
 last_updated: 2026-10-27
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-12 lock: unit **133/133** (13 files) · e2e **93/93**
-(79 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-13 lock: unit **133/133** (13 files) · e2e **97/97**
+(83 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -68,7 +68,7 @@ bun run lint                   # eslint flat config — 0 errors, 1 documented w
 bun run typecheck              # tsc --noEmit — strict
 bun run test                   # vitest — tests/unit/** (133)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               playwright (93) — NEEDS the build first (:3100)
+bun run test:e2e               playwright (97) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -162,7 +162,12 @@ is a loss machine.
   class names verbatim from the reference stylesheet.
 - Shadcn tokens are raw HSL triplets in `:root`, consumed as `hsl(var(--x))`
   inside **`@theme inline`** (the trap-1 routing); `.theme-light` re-points them
-  for the login card only. The app shell is permanently dark. **The `inline`
+  for the light auth surfaces — the login card AND the reset-password page
+  (Session-13: the reset surface keeps the scope for its zinc-950 typed text
+  but is NOT the slate design — it is the stock shadcn GRAY family: flat
+  `bg-gray-50` canvas, 8px `rounded-lg` card + the 2px gray-900 strip, 6px
+  `rounded-md` gray-200 inputs, its own `error-soft` alert family). The app
+  shell is permanently dark. **The `inline`
   keyword is load-bearing** (Session-5 trap 13): non-inline `@theme` bakes the
   var substitution at `:root` and scoped re-pointing never reaches utilities.
 - Sidebar geometry (measured): brand row `px-4 py-5 border-b` (73px), logo chip
@@ -427,7 +432,7 @@ SUPERSET instead:
 1. **Unit (Vitest, 133/133, 13 files)** — the pure seams only (plus the docs-counts
    lockstep gate). New `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 93/93)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 97/97)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -470,6 +475,7 @@ toasts above (viewport primitive). No `z-[9999]`.
 | Hydration mismatch / lint error `set-state-in-effect` | Effect copying props into state | Remount-via-key or adjust-during-render |
 | Strict-mode "2 elements found" | `hidden md:*` duplicate subtrees | Scope locators or `.filter({ visible: true })` |
 | `next build` warns `process.exit` in instrumentation.ts | Statically analyzed for the Edge runtime | BENIGN — the `NEXT_RUNTIME === "nodejs"` guard owns it |
+| A grep hit shows a "typo" like `"ealth]…"` in a `[health]`-style string | The bash OUTPUT DISPLAY eats the literal `[h` sequence — the SOURCE is fine | Never diagnose from a terminal echo: confirm raw bytes via a second tool (the Read tool, or `grep -c "health\]"`) before editing (Session-13's withdrawn SD-4) |
 
 ## 15. Anti-patterns (each traces to a real bug)
 
@@ -904,3 +910,82 @@ swap, the signup card, the 404, the guest gate, and the mobile 390px sign-in
 (80px logo, 24px h1, 44px inputs, links column, no horizontal overflow).
 Screenshots 61–66. The count constants re-anchored (E2E=93, "Session-12
 lock", "79 desktop + 13 mobile + 1 setup"). Skill v2.8.0.
+
+## Session history addendum — Session-13
+
+**The seventh consecutive drift-free reference cycle; the audit opened the
+last unmeasured auth surface (the reset-password page, all three states) and
+cured the standing StudyFlow static debt; one audit finding withdrawn as a
+display artifact.**
+
+The received tree gated green on first run (133/133 · 93/93 · 13/13). The
+live re-measurement held EVERY standing pin byte-exact for the seventh cycle.
+The NEW depth — the reset-password surface no prior session had ever opened —
+revealed a COMPLETELY different design family from the login card: the
+reference's reset page is the stock shadcn GRAY family (the base44 default),
+measured live in all three states.
+
+- **F-86..F-91 (MEDIUM)**: the form state — a flat `bg-gray-50` canvas (never
+  the login's slate gradient), the 8px `rounded-lg` shadow-lg card with a 2px
+  SOLID gray-900 top strip (not the login's 4px slate gradient), the
+  `text-center space-y-2` h2 block ("Set new password", 24px/700 gray-900,
+  NO logo circle), Title Case gray-700 labels ("New Password"/"Confirm New
+  Password"), 6px `rounded-md` gray-200 `bg-gray-50/50` inputs (44px, Lock
+  icons on BOTH fields, zinc-500 placeholders, the "Must be at least 8
+  characters" helper), NO token field (the URL carries it), the 44px gray-900
+  "Reset password" + the full-width "Back to login" text link.
+- **F-92 (MEDIUM)**: the reset surface's OWN alert family — `rounded-lg` (8px)
+  + `bg-red-50/50` (0.5 alpha) + inner 14px **red-800 #991b1b** (measured
+  rgb(153,27,27); hex-pinned in `@theme` per the F-62 doctrine) — distinct
+  from the login's F-76 panel (12px/0.7/red-700); the reference itself ships
+  two alert treatments on its two auth surfaces. The Alert primitive gained
+  `tone="error-soft"`.
+- **F-93 (MEDIUM)**: the tokenless dead-end — the reference NEVER renders the
+  form without a token: an 80px `bg-red-100` circle chip + the 40px lucide
+  CircleAlert (red-600) + h2 "Invalid Reset Link" + "This password reset link
+  is invalid or has expired." + the 44px gray-900 "Back to Login" button,
+  ZERO inputs. The clone now ships three SERVER-RENDERED states (the token
+  arrives as a prop from the async page's `searchParams` — no client URL
+  read, no hydration flip; `/reset-password` renders Dynamic).
+- **F-94 (LOW)**: the reset API's error copy moved to the reference's own
+  "Invalid or expired reset token"; the client mismatch copy is the measured
+  "Passwords do not match" (no period) — checked BEFORE any fetch (the e2e
+  intercepts the route and asserts ZERO requests).
+- **SD-1..SD-3 (the standing static debt, cured)**: 243 of 254 tracked
+  scripts deleted (the git-history census since the StudyFlow pivot is the
+  keep-list: `smoke-test.sh` + `capture-s7..s12-evidence.mjs` +
+  `vlm-verify-s8/s9/s11.mjs` + `vlm-recheck-s9.mjs` = exactly 11 velox-pos-era
+  files); 4 dead src files deleted (`src/lib/date.ts`, `dep-audit.ts`,
+  `dev-preflight.ts`, `server/ai.ts` — zero-importer StudyFlow remnants);
+  `omni-study1_SKILL.md` archived to `docs/archive/omni-study1/`; the
+  `studyflow`-branded Docker trio deleted (zero Docker references in the
+  velox-pos docs — the deployment story is the standalone build); 3 dead
+  `outputFileTracingExcludes` entries dropped.
+- **SD-4 WITHDRAWN (the display-artifact lesson)**: the first-pass Session-12
+  audit's "`[health` log typo" was a FALSE POSITIVE — this sandbox's bash
+  OUTPUT DISPLAY eats the literal two-byte sequence `[h` (`echo "[health]"`
+  renders `ealth]"`). The source was always correct; control-proven and
+  withdrawn. The debugging guide now carries the rule: never diagnose a
+  source defect from a terminal echo — confirm raw bytes via a second tool.
+- **The write-gate verification (live-proven)**: the reference's demo account
+  is CLIENT-SIDE write-gated — the New Register Create never enables (both
+  fields genuinely typed via CDP keyboard events), and no writable action
+  fires a toast. The checkout→receipt chain, the Sales receipt viewer, and
+  every toast contract are UNMEASURABLE on the reference — documented
+  superset surfaces the clone's own flows own.
+
+**TDD:** all pins red-first — RED proof 4/4 targeted failures, zero
+collateral (the setup project's sign-in passes alongside). No v4
+serialization surprises this time — the regex postures (trap #27) and the
+hex pins (the F-62 doctrine, incl. the new `--color-red-800: #991b1b`) were
+applied UP FRONT from the standing trap catalog.
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **133/133**
+(13 files) · build green (hygiene-clean; `/reset-password` Dynamic) · smoke
+**13/13** · e2e **97/97** (+4 new tests, all NEW — no prior pin weakened).
+Live evidence (`scripts/capture-s13-evidence.mjs`): **10/10** — including the
+FULL one-shot reset round-trip (forgot-password → resetUrl → reset → done,
+the owner's password rewritten to its current value — the dev db's
+credentials unchanged) and the login-surface sanity sweep. Screenshots
+67–70. The count constants re-anchored (E2E=97, "Session-13 lock", "83
+desktop + 13 mobile + 1 setup"). Skill v2.9.0.

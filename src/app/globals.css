@@ -178,6 +178,7 @@
   --color-red-500: #ef4444;
   --color-red-600: #dc2626;
   --color-red-700: #b91c1c;
+  --color-red-800: #991b1b; /* Session-13 (F-92): the reset-password alert's measured inner tone rgb(153,27,27) — v4's oklab default serializes differently, so the hex is pinned (the F-62 doctrine) */
   --color-red-900: #7f1d1d;
   --color-red-950: #450a0a; /* the darkest red key surfaces — trap 10 (the dark-pill family renders the stable v3 hex now) */
 
