@@ -1462,3 +1462,120 @@ line), PAD v1.15, SKILL v2.13.0 (+Session-17 addendum), README untouched
 session_29.md (the narration). Pushed via `docs/ssh_git_wrapper_v3.py` →
 main on `git@github.com:nordeim/velox-pos-2.git`, remote-verified; operator
 key shredded.
+
+## Session-18 — the with-data StoreSettings/Dashboard evidence pass (velox-pos-2)
+
+**Date:** 2026-10-27 · **Tree:** `e67a997` received (the Session-17 push `b1c6e9a`
++ the operator's session_30 raw-log commit — synced by fast-forward pull, NO
+reset this cycle) · **Cycle:** the session_29 "Next" pointer's target.
+
+**The received tree**: gate FULLY GREEN on arrival — lint 0 (1 documented
+warning) · tsc · unit **149/149** (14 files) · build · smoke **13/13** · e2e
+**104/104** (2.4m). Zero environment defects (the s17 Playwright browser-build
+lesson pre-applied: chromium-1243 already cached). The static sweep: zero-importer
+census CLEAN (the one flag is Next.js's auto-registered `instrumentation.ts`
+convention entry; deps carry only the known type-level withdrawals;
+`@radix-ui/react-toast` + `axe-core` remain gone), secrets clean (the AUTH_SECRET
+hits are the documented throwaway test constant), the documented credential
+VERIFIES (note: the checker is a bun script — plain node fails on `bun:sqlite`),
+and the Session-17 code review clean (the commits touched only evidence
+scripts/docs/screenshots; the harness adopts all four recorded postures).
+
+**Reference sweep #12: ALL STANDING PINS HOLD — the TWELFTH consecutive
+drift-free cycle.** The login card (blur(4px) · white/95 · 16px · h1 30px/700 ·
+inputs 48px/12px · SSO 54px), the F-76 alert byte-exact ("Invalid email or
+password" · 12px · red-50/0.7 · 1px red-200 · 16px pad · 14px red-700 — probe
+note: the reference's `<main>` lacks the clone's `login-canvas` class), the 220px
+sidebar + 8 links + the 42px violet-600/0.2 Terminal pill + the `/` landing
+(F-60), the Dashboard date line (en-US "Tuesday, October 27, 2026" 14px
+slate-500) + both chart h3s 16px/700, the Sales family ("Historial de Ventas"
+24px/700 · 7 ledger headers · the byte-exact search placeholder · the slate-400
+"Sin ventas" leaf), the Cashiers family ("Cajeros" + "Turnos Recientes" as H3
+16px — the F-57 level contract re-proven live), and the reference's own mobile
+defect (no hamburger at 390×844, the 220px z-50 STATIC sidebar). The clone's
+drawer superset stays correct (13/13 mobile e2e).
+
+**The NEW depth #1 — the reference-side StoreSettings internals**, measured at
+FULL structure for the first time since the s15 listbox enumerations: h1 "Store
+Settings" + "Customize your business" 14px slate-500; SIX H3/16px sections
+(Business Information / Branding / Receipt / Fiscal / Tax Data / Card Payment
+Provider / Product Categories) with the bare 20px icons at the measured colors
+(store indigo-500 rgb(99,102,241) · palette purple-500 · file-text green-500 ·
+receipt orange-500 · credit-card blue-500 · tag amber-500) in `flex items-center
+gap-2` header rows; labels 14px/500 #e7e9ef (F-66); inputs 36px/12px; the
+Business Information card (Store name "My Store" + the Upload logo glass button
++ Address/Phone/Email + Tax ID / EIN + the Currency trigger "USD - US Dollar");
+Branding (Primary/Secondary color); the Receipt footer textarea (rows=2, 60px,
+12px); the Fiscal card (the pinned 4 labels + the `lucide-toggle-left w-6 h-6
+text-slate-400` icon-button "Hidden on receipt", NO role=switch — the s15
+posture); the Provider trigger "None"; Categories (Add 34px/8px + "No
+categories" slate-400); Save Changes 54px/12px. BOTH listbox enumerations
+re-verified byte-exact (F-108: the 6 currencies @ the #161922/6px panel;
+F-109: [None, Stripe, PayPal, Clip, Mercado Pago]). The "None" capitalization
+suspicion WITHDRAWN — the clone's `cardProviderLabel` renders the identical
+display label while storing the code form "none" (the s15 record's lowercase
+list was the STORED-VALUE list, not a display pin).
+
+**The NEW depth #2 — the with-data audit on the demo seed** (the settings row +
+5 categories + 15 products + 33 sales → standalone :3419):
+**16/16, no with-data defects.** StoreSettings — the header pair, the 6 sections
++ computed icon colors, the form materializing the row (store name, currency
+"USD - US Dollar" @ 36px/12px), the Branding pickers + hex inputs (#6366f1 /
+#8b5cf6 — pickers and inputs agree), the Receipt footer ("Thank you for your
+purchase!" @ rows=2/60px/12px), the Provider "None", the fiscal switch
+checked=false + "Hidden on receipt" (the seeded hidden default), the 5 category
+chips with EXACT dot colors (Beverages #8b5cf6 · Groceries #10b981 · Personal
+Care #3b82f6 · Snacks #f59e0b · Electronics #ef4444), Save Changes 54px.
+Dashboard — the 4 stats carry the db truth (**Today's Sales $0.00 / Transactions
+0** — the HONEST calendar-bucket empty-today on a morning-seeded db; the seed's
+day-0 sales land 16-20h before seed time, i.e. YESTERDAY's bucket — while the
+7-day chart carries 28 sales; the seam working exactly as unit-pinned —
+**Products 15 / Low Stock 3**), the stat family styles (labels 600/12px
+uppercase slate-500; values 700/24px white/90 BY ALPHA), both h3s 16px, the
+with-data chart (2 paths, 13 grid lines, y ticks [0,20,40,60,80,100] + weekday
+labels, **topTick 100 ≥ the $94.43 peak** — the F-107 niceScale law re-proven on
+real data), and the category breakdown (5 rows, counts 3, bars 20%, exact dots).
+
+**The structural find — F-113**: the with-data StoreSettings/Dashboard
+contracts had NO standing tier — the settings SAVE round-trip, the section
+headings, the form controls, and the listbox enumerations are e2e-pinned, and
+the empty-state stats/chart are e2e-pinned, but the live WITH-DATA rendering is
+invisible to the empty-store e2e by construction (the V24 doctrine), the s16
+harness covers Registers/Sales/Cashiers, and the s17 covers Inventory/Reports.
+Cure: **`scripts/capture-s18-evidence.mjs`** (the s16/s17-pattern successor,
+port 3419) — **20/20** (the 2 db-truth derivation checks + the 16 with-data
+contracts + the F-76 spot-check — the oklab form `oklab(0.970522 … / 0.7)`
+surfacing live again, the either-form posture working — + the mobile drawer).
+Screenshots **90–92**. **The structural law recorded**: volatile with-data
+expectations (the Dashboard's today-bucket pair) are DERIVED FROM THE DB AT
+RUNTIME (a read-only `bun -e` JSON dump before the probes) — a hardcoded
+"$X.NN today" pin rots within hours of any re-seed; the re-seed-stable
+constants (Products 15, Low Stock 3, the settings row, the 5 category colors)
+stay literal.
+
+**Three more measurement postures recorded in AGENTS.md** (all audit-probe
+bugs — the clone code was correct every time): (1) **pin COMPUTED styles, never
+class-string order** — the clone's section icons render `h-5 w-5` (height-first)
+while the reference's measured string is `w-5 h-5` (width-first); identical
+computed styles. (2) **the oklab-alpha SPACE** — v4 serializes white/90 as
+`oklab(0.999994 … / 0.9)` WITH a space after the slash; the generalized
+either-form regex is `/\/\s*([\d.]+)\)$/` (the no-space form nulls). (3)
+**mixed tick arrays** — the Dashboard chart's tick texts mix numbers and weekday
+labels; filter to numeric before reducing (`Math.max` over `Number("Wed")` is
+NaN). Plus the authoring lesson: when a SyntaxError caret makes no sense
+(pointing at `#`), hexdump the exact line — an unterminated string can point
+three tokens away (the audit script's `]')` typo for `]")]`, caught by
+`node --check` before any server ran).
+
+**Gate on the final tree**: lint 0 (1 documented warning) · tsc · unit
+**149/149** (14 files) · build · smoke **13/13** · e2e **104/104** — the count
+constants UNMOVED (the evidence tier rides outside the unit/e2e counts per the
+V24 doctrine; the "Session-16 lock" literal stays by design). Evidence
+**20/20**; VLM cross-check **3/3**. Screenshots 90–92. Docs lockstep: AGENTS
+(the Session-18 contracts + the three postures + the db-derived-expectation
+law), CLAUDE (the tier-4 evidence line naming all three harnesses), PAD v1.16,
+SKILL v2.14.0 (+Session-18 addendum), README untouched (no count changes),
+remediation-plan-session-18 (the full ledger + record), session_31.md (the
+narration). Pushed via `docs/ssh_git_wrapper_v3.py` → main on
+`git@github.com:nordeim/velox-pos-2.git`, remote-verified; operator key
+shredded.

@@ -1,9 +1,9 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.15
+# VeloxPOS — Master Project Architecture Document (PAD) v1.16
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
 **Companion documents:** `README.md` (tour) · `AGENTS.md` (agent invariants) · `CLAUDE.md` (Claude conventions) · `docs/veloxpos-implementation-plan.md` (the measured reference spec)
-**Last Updated:** 2026-10-27 (Session-17)
+**Last Updated:** 2026-10-27 (Session-18)
 **Audience:** Senior engineers, tech leads, DevOps, onboarding engineers, and AI coding agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -1165,3 +1165,63 @@ the Spanish families, and the reference's own mobile defect).
 CLAUDE.md (the tier-4 evidence line), this PAD v1.15, the SKILL v2.13.0 addendum,
 the worklog's Session-17 entry, `docs/remediation-plan-session-17.md` (the full
 ledger + record), and `docs/session_29.md` (the narration).
+
+## Revision Block — v1.16 (2026-10-27, Session-18)
+
+**Scope:** the with-data StoreSettings/Dashboard evidence cycle on the Session-17
+tree (`e67a997` — the push `b1c6e9a` + the operator's session_30 raw-log commit; the
+workspace synced by fast-forward pull, NO reset this cycle). Received-tree gate green
+(lint 0 · tsc · unit 149/149 · build · smoke 13/13 · e2e 104/104 — the Session-16
+lock held; zero environment defects: the s17 browser-build lesson pre-applied).
+TWELFTH consecutive drift-free reference cycle (every standing pin byte-exact — the
+login card, the F-76 alert, the 220px sidebar + the 42px violet-600/0.2 Terminal
+pill, the `/` landing, the Dashboard date line, the Spanish families incl. the
+"Turnos Recientes" H3 level, and the reference's own mobile defect).
+
+**The NEW depth (the session_29 "Next" pointer's target):**
+
+1. **The reference-side StoreSettings internals, measured at full structure for the
+   first time since the s15 listbox enumerations**: the h1 + "Customize your
+   business" sub, the SIX H3/16px sections with their bare 20px icons at the measured
+   colors (store indigo-500 · palette purple-500 · file-text green-500 · receipt
+   orange-500 · credit-card blue-500 · tag amber-500), labels 14px/500 #e7e9ef,
+   inputs 36px/12px, the Business Information card (Store name "My Store" + Logo +
+   Address/Phone/Email + Tax ID / EIN + Currency "USD - US Dollar"), Branding
+   (Primary/Secondary color), the Receipt footer textarea (rows=2/60px/12px), the
+   Fiscal card (the pinned 4 labels + the `lucide-toggle-left` icon-button posture),
+   the Provider "None" trigger, Categories (Add 34px/8px + "No categories"), Save
+   Changes 54px/12px — parity everywhere. Both listbox enumerations re-verified
+   byte-exact (F-108/F-109); the "None" capitalization suspicion WITHDRAWN (the
+   clone's `cardProviderLabel` renders the identical display label).
+2. **The with-data audit on the demo seed** (the settings row + 5 categories + 15
+   products + 33 sales → standalone boot): **16/16, no with-data defects** — the
+   Settings form census (the materialized row, the pickers + hex inputs, the footer
+   textarea, the "None" provider, the fiscal switch + label, the 5 category chips
+   with EXACT dot colors, the 54px Save CTA) and the Dashboard family (the 4 stats
+   carrying the db truth — the today pair $0.00/0, the HONEST calendar-bucket
+   empty-today on a morning-seeded db; Products 15; Low Stock 3 — the stat-family
+   styles, both h3s, the with-data chart with the niceScale topTick 100 ≥ the $94.43
+   peak, the 5 category-breakdown rows at 3/20% each).
+3. **F-113 — the with-data evidence tier extended** (`scripts/capture-s18-evidence.mjs`,
+   the s16/s17-pattern successor on :3419): the StoreSettings/Dashboard with-data
+   contracts + the db-truth derivation checks + the standing F-76/drawer spot-checks
+   pinned live (**20/20**), screenshots 90–92 — future cycles inherit the THREE-harness
+   with-data tier. **The structural law**: volatile with-data expectations (the
+   Dashboard's today-bucket pair) are DERIVED FROM THE DB AT RUNTIME — a hardcoded
+   "$X.NN today" pin rots within hours of any re-seed.
+4. **Three measurement lessons** (all audit-probe bugs — the clone code was correct
+   every time): pin COMPUTED styles, never class-string order (the icons' `h-5 w-5`
+   vs the reference's `w-5 h-5` — identical computed); the oklab-alpha SPACE (v4
+   serializes white/90 as `oklab(… / 0.9)` — the either-form regex is
+   `/\/\s*([\d.]+)\)$/`); and mixed tick arrays filter to numeric before reducing
+   (Math.max over ["0","Wed"] is NaN).
+
+**Gate on the final tree:** lint 0 (1 documented warning) · tsc · unit **149/149**
+(14 files) · build · smoke **13/13** · e2e **104/104** — the count constants UNMOVED
+(the evidence tier rides outside the unit/e2e counts per the V24 doctrine; the
+"Session-16 lock" literal stays by design). Evidence **20/20**; VLM cross-check
+**3/3**. Screenshots 90–92. Docs lockstep: AGENTS.md (the Session-18 contracts +
+the three postures), CLAUDE.md (the tier-4 evidence line naming all three
+harnesses), this PAD v1.16, the SKILL v2.14.0 addendum, the worklog's Session-18
+entry, `docs/remediation-plan-session-18.md` (the full ledger + record), and
+`docs/session_31.md` (the narration).

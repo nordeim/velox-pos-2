@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.13.0
+version: 2.14.0
 last_updated: 2026-10-27
 ---
 
@@ -1203,3 +1203,63 @@ collateral). Live evidence **19/19**; VLM cross-check **3/3**. Screenshots 87–
 Docs lockstep: AGENTS (the Session-17 contracts + the four postures), CLAUDE (the
 tier-4 evidence line), PAD v1.15, this addendum, the worklog entry,
 `docs/remediation-plan-session-17.md`, `docs/session_29.md`. Skill v2.13.0.
+
+## Session-18 addendum (the with-data StoreSettings/Dashboard cycle)
+
+The TWELFTH consecutive drift-free reference cycle (every standing pin byte-exact,
+including the reference's own mobile defect). The NEW depth (the session_29 "Next"
+pointer's target): the reference-side StoreSettings internals measured at FULL
+structure for the first time since the s15 listbox enumerations — the six H3/16px
+sections with their bare 20px icons at the measured colors (store/indigo ·
+palette/purple · file-text/green · receipt/orange · credit-card/blue · tag/amber),
+labels 14px/500 #e7e9ef, inputs 36px/12px, the Business Information card carrying
+Store name ("My Store") + Logo + Address/Phone/Email + Tax ID / EIN + Currency, the
+Branding color pickers, the Receipt footer textarea (rows=2/60px/12px), the Fiscal
+card's four pinned labels + the `lucide-toggle-left` icon-button posture, the
+Provider "None" trigger, Categories (Add 34px/8px + "No categories" slate-400),
+Save Changes 54px — parity everywhere; both listbox enumerations re-verified
+byte-exact; the "None" capitalization suspicion WITHDRAWN (the clone's
+`cardProviderLabel` already renders the identical display label while storing the
+code form "none").
+
+Then the WITH-DATA audit on the demo seed: **16/16, no defects** — the Settings
+form census (the materialized settings row: store name, currency "USD - US Dollar"
+@ 36px/12px, the Branding pickers + hex inputs #6366f1/#8b5cf6, the Receipt footer
+"Thank you for your purchase!", the "None" provider trigger, the fiscal switch
+checked=false + "Hidden on receipt", the 5 category chips with EXACT dot colors,
+the 54px Save CTA) and the Dashboard family (the 4 stats carrying the db truth —
+**Today's Sales $0.00 / Transactions 0** (the HONEST calendar-bucket empty-today on
+a morning-seeded db), Products 15, Low Stock 3 — the stat-family styles, both h3s,
+the with-data chart (13 grid lines, y ticks 0..100, the niceScale **topTick 100 ≥
+the $94.43 peak** — the F-107 law re-proven on real data), the 5 category-breakdown
+rows at 3/20% each).
+
+**F-113 — the evidence tier extended to THREE harnesses**:
+`scripts/capture-s18-evidence.mjs` (port 3419) pins the with-data
+StoreSettings/Dashboard contracts + the db-truth derivation checks + the standing
+F-76/drawer spot-checks — **20/20**, screenshots 90–92. **The structural law**:
+volatile with-data expectations (the Dashboard's today-bucket pair) are DERIVED
+FROM THE DB AT RUNTIME via a read-only `bun -e` JSON dump BEFORE the probes — a
+hardcoded "$X.NN today" pin rots within hours of any re-seed (the seed's day-0
+sales land 16–20h before seed time, so a morning-seeded db carries them on
+YESTERDAY's calendar bucket). Re-seed-stable constants (Products 15, Low Stock 3,
+the settings row, the 5 category colors) stay literal.
+
+**Three more measurement postures recorded** (all audit-probe bugs — the clone code
+was correct every time): (1) pin COMPUTED styles, never class-string order — the
+clone's icons render `h-5 w-5` (height-first) while the reference's measured string
+is `w-5 h-5`; identical computed styles. (2) The oklab-alpha SPACE — v4 serializes
+white/90 as `oklab(0.999994 … / 0.9)` WITH a space after the slash; the generalized
+either-form regex is `/\/\s*([\d.]+)\)$/`. (3) Mixed tick arrays (numbers + weekday
+labels) filter to numeric before reducing — `Math.max` over `Number("Wed")` is
+NaN. Plus the authoring lesson: when a SyntaxError caret makes no sense, hexdump
+the exact line — an unterminated string points three tokens away.
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **149/149** (14
+files) · build green · smoke **13/13** · e2e **104/104** — the count constants
+UNMOVED (the evidence tier rides outside the unit/e2e counts per the V24 doctrine;
+zero lockstep collateral). Live evidence **20/20**; VLM cross-check **3/3**.
+Screenshots 90–92. Docs lockstep: AGENTS (the Session-18 contracts + the three
+postures + the db-derived-expectation law), CLAUDE (the tier-4 evidence line
+naming all three harnesses), PAD v1.16, this addendum, the worklog entry,
+`docs/remediation-plan-session-18.md`, `docs/session_31.md`. Skill v2.14.0.

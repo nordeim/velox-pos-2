@@ -447,6 +447,40 @@ bite hardest here:
   (`/([\d.]+)\)$/`), never pin the full computed string (the F-76 either-form regex
   posture, generalized).
 
+## The with-data evidence + measurement contracts (Session-18 pins — F-113)
+
+- **The with-data evidence tier is THREE harnesses now**: `scripts/capture-s16-evidence.mjs`
+  (Registers/Sales/Cashiers) + `scripts/capture-s17-evidence.mjs` (Inventory/Reports) +
+  **`scripts/capture-s18-evidence.mjs` (StoreSettings/Dashboard — F-113)**. The s18
+  harness pins the demo-seeded Settings form census (the materialized settings row —
+  store name, currency trigger, the Branding pickers + hex inputs, the Receipt footer
+  textarea, the "None" provider trigger, the fiscal switch + its label pair, the 5
+  category chips with exact dot colors, the 54px Save CTA) and the Dashboard family
+  (the 4 db-truth stats, the stat-family styles, both h3s, the with-data chart + the
+  niceScale top tick on real data, the category-breakdown rows/bars), plus the
+  db-truth derivation checks and the standing F-76/drawer spot-checks — **20/20,
+  screenshots 90–92**. Run ALL THREE before pushing when any with-data surface changes.
+- **Volatile with-data expectations are DERIVED FROM THE DB AT RUNTIME** (the s18
+  structural law): the Dashboard's today-bucket pair (Today's Sales / Transactions)
+  is computed from the db's own Sale rows with the seam's calendar-bucket semantics —
+  a morning-seeded demo db carries its day-0 sales on YESTERDAY's bucket, so a
+  hardcoded "$X.NN today" pin rots within hours of any re-seed. The re-seed-stable
+  constants (Products 15, Low Stock 3, the settings row, the 5 category colors) may
+  stay literal. The harness derives via a read-only `bun -e` JSON dump BEFORE the
+  probes run.
+- **Three more measurement postures** (all audit-probe bugs — the clone code was
+  correct every time): (1) **Pin COMPUTED styles, never class-string order** — the
+  clone's section icons render `h-5 w-5 text-indigo-500` (height-first) while the
+  reference's measured string is `w-5 h-5` (width-first); identical computed styles;
+  pin the computed color/size + the icon NAME. (2) **The oklab-alpha SPACE** — v4
+  serializes white/90 as `oklab(0.999994 … / 0.9)` WITH a space after the slash; the
+  generalized either-form regex is `/\/\s*([\d.]+)\)$/` (the no-space form NaNs/nulls).
+  (3) **Mixed tick arrays** — the Dashboard chart's tick texts mix numbers and weekday
+  labels; filter to numeric before reducing (`Math.max(...["0","Wed"].map(Number))`
+  is NaN). Plus the authoring lesson: when a SyntaxError caret makes no sense
+  (pointing at `#`), hexdump the exact line — an unterminated string can point three
+  tokens away.
+
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
 `src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px
