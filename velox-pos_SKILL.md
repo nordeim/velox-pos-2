@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.11.0
+version: 2.12.0
 last_updated: 2026-10-27
 ---
 
@@ -28,7 +28,7 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-15 lock: unit **146/146** (14 files) · e2e **104/104**
+Baselines at Session-16 lock: unit **149/149** (14 files) · e2e **104/104**
 (90 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
@@ -66,7 +66,7 @@ removed `quill`, `web-vitals`, `tailwindcss-animate`, `@radix-ui/react-radio-gro
 bun run dev                    # :3000 (output teed to dev.log)
 bun run lint                   # eslint flat config — 0 errors, 1 documented warning
 bun run typecheck              # tsc --noEmit — strict
-bun run test                   # vitest — tests/unit/** (146)
+bun run test                   # vitest — tests/unit/** (149)
 bun run build                  # standalone build + static/public copy
 bun run test:e2e               playwright (104) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
@@ -112,7 +112,7 @@ Prisma; `src/lib/server/**` may import both; views import client seams only.
 | `money.ts` | integer-cents math, `formatMoney`, `round2` | The ONLY place amounts are computed; never `parseFloat` arithmetic in components |
 | `cart.ts` | immutable reducer, `cartTotals`, the CHARGE gate, `ticketLabel` | Client totals are display-only; checkout recomputes server-side |
 | `shift.ts` | `canOpenShift` (one ACTIVE per register), `expectedCash`, `shiftVariance` | Open/close state machine |
-| `reports.ts` | 7/14/30/90 period windows, `dailySeries`, `byMethod`, `categorySlices`, `niceScale` (F-107: domain top = the nice multiple ≥ max — the peak never overshoots the top gridline; `niceScale(4,5)` = the measured empty contract) | Feeds Dashboard + Reports |
+| `reports.ts` | 7/14/30/90 period windows, `dailySeries`, `byMethod`, `categorySlices`, `niceScale` (F-107: domain top = the nice multiple ≥ max — the peak never overshoots the top gridline; `niceScale(4,5)` = the measured empty contract), `saleTimestamp` (F-110: the byte-stable `DD/MM/YYYY HH:MM` receipt stamp — never bare `toLocaleString()`) | Feeds Dashboard + Reports + both receipt headers |
 | `inventory-status.ts` | `stockStatus` (ok/low/out), `lowStockCount`, the CSV round-trip | Low = ≤ minStock |
 | `currency.ts` | the MEASURED lists + guards (F-108/F-109, Session-15) | Currency = [USD - US Dollar, EUR - Euro, GBP - British Pound, MXN - Mexican Peso, COP - Colombian Peso, ARS - Argentine Peso]; Provider = [none, Stripe, PayPal, Clip, Mercado Pago] — the lists ARE the Zod gate; e2e-pinned by exact enumeration |
 | `router.ts` | the 8 reference paths + `viewFromPath` (unknown → null → Spanish 404) | `/Settings` 404s BY DESIGN (the sidebar href is `/StoreSettings`) |
@@ -429,7 +429,7 @@ SUPERSET instead:
 
 ## 12. Testing strategy (three tiers)
 
-1. **Unit (Vitest, 146/146, 14 files)** — the pure seams only (plus the docs-counts
+1. **Unit (Vitest, 149/149, 14 files)** — the pure seams only (plus the docs-counts
    lockstep gate). New `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
 2. **E2E (Playwright, 104/104)** — against the PRODUCTION standalone build on :3100
@@ -1094,3 +1094,53 @@ both listboxes byte-exact, the dead-dep census, the F-76 spot-check (oklab postu
 the mobile drawer. VLM cross-check **4/4**. Screenshots 75–80 (75/76 the pre-fix audit
 record). The count constants re-anchored (UNIT=146, E2E=104, "Session-15 lock",
 "90 desktop + 13 mobile + 1 setup"). Skill v2.11.0.
+
+## Session history addendum — Session-16
+
+**The with-data Registers/Sales pass + the receipt-stamp cure (F-110) + the evidence
+harness (F-111).** The workspace was RESET — a fresh clone re-established the tree at
+`3a0594c`, and the fresh sandbox needed `bunx playwright install chromium`
+(environment-only; recorded so the next fresh-clone cycle runs it before the gate).
+The received-tree gate came up green on the first run (lint 0 · tsc · unit 146/146 ·
+build · smoke 13/13 · e2e 104/104 — the Session-15 lock held).
+
+**The drift sweep** (agent-browser): every standing pin byte-exact for the TENTH
+consecutive cycle — the login card, the F-76 alert, the sidebar/pill, the terminal
+gate, the Dashboard date line, the Spanish families, and the reference's own mobile
+defect (no hamburger at 390×844; the clone's drawer superset stays correct).
+
+**The NEW depth (the session_26 "Next" pointer's target)**: the reference-side
+Registers/Sales internals measured at LEAF precision — the New Register dialog at
+byte parity (panel `max-w-lg` = 512px — the 462 first-read was the content-box
+artifact; #0f121a/8px/p-6/h-9/42px buttons; the reference literally ships the clone's
+vendored `glass-*` class strings), the Sales search input (the "Buscar por ticket,
+cliente o cajero..." placeholder byte-exact), and the empty cell
+(`text-slate-400` at the leaf TD — a wrapper-div probe first misread #e7e9ef; the
+TreeWalker leaf technique is the recorded measurement lesson). Then the WITH-DATA
+audit on the demo seed: the Registers cards + Open-shift dialog, the Sales ledger
+(33 rows) + ticket search + receipt viewer, the Cashiers shift ledger, the POS gate,
+the Dashboard stats — **all green, no with-data defects**, the s15 F-107 peak
+re-proven.
+
+**The one real find — F-110**: both receipt headers shipped bare
+`toLocaleString()` — client-locale-dependent (en-US on the audit browser, ar-SA
+digits on an ar-SA device) inside the Spanish-mixed surface whose ledger cell is
+es-MX. Cured with the `saleTimestamp` pure seam (byte-stable `DD/MM/YYYY HH:MM`,
+manual padStart — the `shiftTime` precedent), unit-pinned ×3 (the no-Z ISO pin is
+tz-safe), adopted at both sites, e2e-pinned as an ADDED assertion on the existing
+checkout receipt (the count stays 104). **F-111**: the with-data contracts pinned in
+the evidence tier (`scripts/capture-s16-evidence.mjs`) — the empty-store e2e can
+never see this class (the s15 V24 doctrine); future cycles inherit the harness.
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **149/149** (14
+files; +3 saleTimestamp pins) · build green · smoke **13/13** · e2e **104/104** (the
+F-110 regex riding the existing checkout test — zero collateral). Live evidence
+(`scripts/capture-s16-evidence.mjs`, the demo-db boot): **13/13** — the with-data
+Registers card census + Open-shift dialog family, the Sales ledger + search +
+receipt (the F-110 stamp "26/10/2026 14:41" live), the Cashiers shift ledger, the
+POS gate, the Dashboard stat family + the re-proven F-107 peak, the F-76 spot-check
+(oklab posture), the mobile drawer. VLM cross-check **5/5**. Screenshots 81–86. Two
+evidence-infra lessons recorded in AGENTS.md: `visible` ≠ animation-settled (Radix
+zoom-in reads 384×0.95 ≈ 365 mid-flight), and bootstrap races on cold routes (wait
+for the SETTLED state, not a timer) — both fixed without weakening a check. The
+count constants re-anchored (UNIT=149, E2E=104, "Session-16 lock"). Skill v2.12.0.

@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/pos/shared";
 import { usePosStore, type Sale } from "@/lib/store";
 import { formatMoney } from "@/lib/money";
+import { saleTimestamp } from "@/lib/reports";
 import type { CartLine } from "@/lib/cart";
 
 function saleDate(iso: string): string {
@@ -41,7 +42,7 @@ function SaleDetailDialog({ sale, onClose }: { sale: Sale | null; onClose: () =>
         <DialogHeader>
           <DialogTitle>{sale.ticket}</DialogTitle>
           <DialogDescription className="text-white/50">
-            {new Date(sale.createdAt).toLocaleString()}
+            {saleTimestamp(sale.createdAt)}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-1.5 font-mono text-sm">

@@ -139,6 +139,11 @@ test.describe.serial("terminal checkout", () => {
     // The receipt dialog: ticket T-000001, totals, footer.
     const receipt = page.getByRole("dialog");
     await expect(receipt.getByText("T-000001")).toBeVisible();
+    // F-110 (Session-16): the receipt timestamp is BYTE-STABLE — the
+    // es-convention DD/MM/YYYY HH:MM via the saleTimestamp seam, never the
+    // client's locale (the bare toLocaleString() rendered en-US on the
+    // audit browser and would render ar-SA digits on an ar-SA device).
+    await expect(receipt.getByText(/T-000001 · \d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/)).toBeVisible();
     await expect(receipt.getByText("Thank you for your purchase!")).toBeVisible();
     await receipt.getByRole("button", { name: "Close", exact: true }).first().click();
 

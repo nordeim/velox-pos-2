@@ -188,6 +188,13 @@ No hosted CI exists; the local gate is the only gate.
   enumeration. The reference's fiscal toggle is a `lucide-toggle-left`
   icon-button with NO switch semantics — the clone's labeled Radix Switch is
   the documented a11y superset (the drawer posture).
+- **Receipt timestamps are `saleTimestamp`** (`src/lib/reports.ts`, unit-pinned —
+  Session-16, F-110): both receipt headers (terminal post-checkout + the Sales
+  receipt viewer) render the byte-stable es-convention `DD/MM/YYYY HH:MM` —
+  NEVER bare `toLocaleString()` (client-locale-dependent: en-US on the audit
+  browser, ar-SA digits on an ar-SA device; the surface's own ledger cell is
+  es-MX). Manual padStart, the `shiftTime` precedent; e2e-pinned on the
+  checkout receipt.
 - **The chart internals are TWO measured contracts** (Session-14, F-95..F-106,
   e2e-pinned — do not restyle the charts from memory): the Dashboard chart is
   the indigo-500 `#6366f1` 2.5px SMOOTH line (`smoothPath` in
@@ -228,7 +235,7 @@ No hosted CI exists; the local gate is the only gate.
 
 - **Unit** (`tests/unit/**`, vitest): only the pure seams. If you add a `src/lib` seam, add its
   file here — red → green (TDD) for new logic, regression tests for fixes. Expected baseline:
-  146 tests / 14 files. **`docs-counts.test.ts` is the lockstep gate** (Session-8, F-52): it
+  149 tests / 14 files. **`docs-counts.test.ts` is the lockstep gate** (Session-8, F-52): it
   LIVE-censuses the test/source tree and pins every live-tense count site in the docs to the
   constants — when a suite grows, update the constants AND every doc site in the SAME commit
   (the gate fails until you do; history blocks keep their historical numbers by design).

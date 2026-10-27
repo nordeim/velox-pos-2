@@ -1,9 +1,9 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.13
+# VeloxPOS — Master Project Architecture Document (PAD) v1.14
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
 **Companion documents:** `README.md` (tour) · `AGENTS.md` (agent invariants) · `CLAUDE.md` (Claude conventions) · `docs/veloxpos-implementation-plan.md` (the measured reference spec)
-**Last Updated:** 2026-10-27 (Session-15)
+**Last Updated:** 2026-10-27 (Session-16)
 **Audience:** Senior engineers, tech leads, DevOps, onboarding engineers, and AI coding agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -25,10 +25,10 @@ reports, validation) underneath **server-gated thin routes**, a **single Zustand
 (lint → typecheck → unit → build → e2e) is the only gate — there is no hosted CI — so every
 guardrail is enforced by tooling that runs in this checkout.
 
-**Scale & baselines (verified 2026-10-27, Session-15 re-certification):** 9 Prisma models · 26 API
+**Scale & baselines (verified 2026-10-27, Session-16 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views (9 route spellings — the root `/` page is the
 terminal's reference-parity landing, Session-10 F-60)
-+ login/reset/404 · 146 unit tests (14 files) · 104 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 149 unit tests (14 files) · 104 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -292,7 +292,7 @@ auth-support pair — `VerificationToken` (6-digit OTP, 15-minute window) and
 lint → typecheck → unit → build → smoke → e2e
 ```
 
-1. **Unit (Vitest, 146/146):** the pure seams — money (cents math, formatting), cart (reducer,
+1. **Unit (Vitest, 149/149):** the pure seams — money (cents math, formatting), cart (reducer,
    totals, charge gate), shift (state machine, variance), reports (bucketing, shares),
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
@@ -1054,3 +1054,59 @@ data scale contracts (peaks at 25.9/20.2 BELOW their 100-gridlines at 5.0/4.0, t
 covering the domain 0..100), both listboxes byte-exact, the dead-dep census, the F-76
 spot-check (oklab posture), the mobile drawer. VLM cross-check **4/4** on the post-fix
 captures. Screenshots 75–80 (75/76 the pre-fix audit record, 77–80 the cured state).
+
+## Revision Block — v1.14 (2026-10-27, Session-16)
+
+**Scope:** the with-data Registers/Sales remediation cycle on the Session-15 tree
+(`3a0594c`; the workspace was RESET — a fresh clone re-established it, and the fresh
+sandbox needed `bunx playwright install chromium`, environment-only). Received-tree
+gate green on the first run (lint 0 · tsc · unit 146/146 · build · smoke 13/13 · e2e
+104/104 — the Session-15 lock held). TENTH consecutive drift-free reference cycle
+(every standing pin byte-exact: the login card, the F-76 alert, the sidebar/pill, the
+terminal gate, the Dashboard date line, the Spanish families — and the reference's own
+mobile defect, still no hamburger at 390×844).
+
+**The NEW depth (the session_26 "Next" pointer's target — the with-data surfaces the
+empty-store e2e can never see):**
+
+1. **The reference-side Registers/Sales internals, measured at leaf precision**: the
+   Registers empty state (h1 24px/700, the "0 registers configured" subline 14px
+   slate-500, the 42px gradient New Register button) and the New Register dialog at
+   BYTE PARITY — panel `max-w-lg` = **512px** (a first read of 462 was the
+   content-box artifact), #0f121a, 1px #262a36, 8px radius, p-6, no blur, the 18px/600
+   #e7e9ef title, h-9 inputs, 42px Cancel/Create — and the reference literally ships
+   the clone's vendored class strings (`glass-button`/`glass-button-primary`). The
+   Sales search input (h-9/12px/transparent, the "Buscar por ticket, cliente o
+   cajero..." placeholder byte-exact) and the empty cell (`text-center py-12
+   text-slate-400` at the LEAF TD). **Measurement lesson recorded**: probe the text
+   node's `parentElement` (a TreeWalker), never the first ancestor matching the copy —
+   a wrapper div's inherited color misread "Sin ventas" as #e7e9ef until the leaf TD
+   showed its own slate-400 (byte-identical to the clone; no drift).
+2. **The with-data audit on the demo seed** (15 products, 5 categories, 1 register, 1
+   closed shift, 33 sales → standalone boot): the Registers card census, the
+   Open-shift dialog family, the Sales ledger (33 rows, the ticket search, the
+   receipt viewer), the Cashiers Turnos Recientes row ($410.64 (33) · Cerrado), the
+   POS gate, and the Dashboard stat family — **all green, no with-data defects**,
+   with the s15 F-107 peak contract re-proven (25.9 below the 100-gridline at 5.0).
+3. **F-110 — the receipt timestamp's locale dependence** (the one real find, LOW):
+   both receipt headers rendered `{new Date(sale.createdAt).toLocaleString()}` —
+   client-locale-dependent (en-US on the audit browser; ar-SA digits on an ar-SA
+   device) inside the Spanish-mixed surface whose own ledger cell is es-MX. Cured with
+   the `saleTimestamp(at: string | Date)` pure seam in `src/lib/reports.ts`: the
+   byte-stable es-convention `DD/MM/YYYY HH:MM` via manual padStart (the `shiftTime`
+   precedent), unit-pinned ×3 (format bytes, zero-padding, the no-Z ISO string path —
+   tz-safe), adopted at both sites, e2e-pinned as an added assertion on the checkout
+   receipt (the count stays 104).
+4. **F-111 — the with-data evidence tier** (`scripts/capture-s16-evidence.mjs`, the
+   s15-pattern successor): the demo-seeded Registers/Sales/Cashiers contracts, the
+   F-110 stamp, the POS gate, the Dashboard stat family + the re-proven F-107 peak,
+   the F-76 drift spot-check, and the mobile drawer — pinned live so future cycles
+   inherit the standing with-data harness.
+
+**Gate on the final tree:** lint 0 (1 documented warning) · tsc · unit **149/149**
+(14 files; +3 saleTimestamp pins) · build · smoke **13/13** · e2e **104/104** (the
+F-110 pin riding the existing checkout test — zero collateral). Evidence **13/13**;
+VLM cross-check **5/5**. Screenshots 81–86. Two evidence-infra lessons recorded in
+AGENTS.md: `visible` ≠ animation-settled (Radix zoom-in reads 384×0.95 ≈ 365
+mid-flight), and bootstrap races on cold routes (wait for the SETTLED state, not a
+timer) — both fixed without weakening a single check.

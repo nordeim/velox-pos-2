@@ -25,6 +25,7 @@ import { useToast } from "@/components/ui/toast";
 import { apiGet, apiSend, usePosStore, type Product, type Sale } from "@/lib/store";
 import { changeDue, cartTotals, type CartLine } from "@/lib/cart";
 import { formatMoney, round2 } from "@/lib/money";
+import { saleTimestamp } from "@/lib/reports";
 import { stockStatus } from "@/lib/inventory-status";
 
 // ---- the shift gate (the measured empty state) --------------------------------
@@ -215,7 +216,7 @@ function ReceiptDialog({ sale, onClose }: { sale: Sale | null; onClose: () => vo
           <DialogHeader>
             <DialogTitle>{settings?.storeName ?? "My Store"}</DialogTitle>
             <DialogDescription className="font-mono text-white/60">
-              {sale.ticket} · {new Date(sale.createdAt).toLocaleString()}
+              {sale.ticket} · {saleTimestamp(sale.createdAt)}
             </DialogDescription>
           </DialogHeader>
           <div className="my-3 space-y-1.5 border-y border-dashed border-edge py-3 font-mono text-sm">

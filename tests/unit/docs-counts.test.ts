@@ -78,10 +78,9 @@ const viewFiles = readdirSync(path.join(root, "src/components/pos/views")).filte
 ).length;
 
 // ---- the constants (re-anchored in the same commit as any suite growth) ----
-// UNIT 146 = the Session-14 138 + the F-107 niceScale seam's 6 its + the
-// F-108/F-109 measured-list pins (currency.test.ts 3→5 its; the flipped
-// provider assertions ride the same tests).
-const UNIT = 146;
+// UNIT 149 = the Session-15 146 + the F-110 saleTimestamp seam's 3 its
+// (the byte-stable receipt timestamp — reports.test.ts 24→27).
+const UNIT = 149;
 const UNIT_FILES = 14;
 // E2E 104 = the Session-14 102 + the Session-15 list-parity pins (the
 // Currency listbox's measured six + the Card Payment Provider listbox's
@@ -166,7 +165,7 @@ describe("session-8 (F-52): the count-lockstep gate — every live-tense count s
   });
 
   it("the SKILL carries the live counts (header baselines, commands, data model, tiers)", () => {
-    expect(skillFlat).toContain(`Baselines at Session-15 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
+    expect(skillFlat).toContain(`Baselines at Session-16 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
     expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (90 desktop + 13 mobile + 1 setup)`);
     expect(skillFlat).toContain(`tests/unit/** (${UNIT})`);
     expect(skillFlat).toContain(`playwright (${E2E})`);

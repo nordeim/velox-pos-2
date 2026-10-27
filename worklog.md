@@ -1287,3 +1287,78 @@ measured-list lines, `docs/remediation-plan-session-15.md` (the ledger V1–V25
 + the execution record), and `docs/session_25.md` (the narration). The count
 constants re-anchored: UNIT 146/14 files · E2E 104 ("Session-15 lock",
 "90 desktop + 13 mobile + 1 setup").
+
+## Session-16 — the with-data Registers/Sales pass + the receipt-stamp cure (velox-pos-2)
+
+**Received state**: `3a0594c` (the Session-15 push `705001b` + the operator's
+session_26 raw-log commit — the workspace was RESET, so a fresh
+`git clone` re-established the tree; the fresh sandbox needed
+`bunx playwright install chromium`, environment-only). **Result**: the TENTH
+consecutive drift-free reference cycle; both NEW-depth targets decoded (the
+reference-side Registers/Sales internals at leaf precision + the with-data
+audit on the demo seed — all green, no with-data defects); one real find
+cured (F-110); the with-data evidence harness landed (F-111); the full gate
+green at the new baselines.
+
+**The received-tree gate** green on the first run: lint 0 (1 documented
+warning) · tsc · unit 146/146 (14 files) · build · smoke 13/13 · e2e
+**104/104** (after the browser install — the Session-15 lock held).
+
+**The live re-measurement** (agent-browser, computed styles): every standing
+pin byte-exact for the TENTH consecutive cycle — the login card (blur(4px),
+white/95, 16px, the 4px slate strip, h1 30px/700, SSO 54px, inputs 48px), the
+F-76 alert ("Invalid email or password", 12px radius, red-50/0.7, red-200,
+p-4, inner 14px red-700), the 220px sidebar + the 42px violet pill, the
+terminal gate + CART, the Dashboard date line + both chart h3s, the
+Sales/Cashiers Spanish families, and the reference's own mobile defect (no
+hamburger, 220px static sidebar at 390×844 — the clone's drawer superset
+stays correct).
+
+**The NEW depth #1 — the reference-side Registers/Sales internals**: the
+Registers empty state (h1 24px/700, the "0 registers configured" subline,
+the 42px gradient New Register button) and the New Register dialog at BYTE
+PARITY (panel `max-w-lg` = 512px — a first read of 462 was the content-box
+artifact; #0f121a, 8px, p-6, no blur, the 18px/600 #e7e9ef title, h-9
+inputs, 42px buttons — the reference literally ships the clone's vendored
+`glass-*` class strings). The Sales search input (h-9/12px/transparent, the
+"Buscar por ticket, cliente o cajero..." placeholder byte-exact) and the
+empty cell (`text-slate-400` at the LEAF TD — a wrapper-div probe first
+misread #e7e9ef; the TreeWalker leaf technique recorded as the measurement
+lesson). No drift anywhere.
+
+**The NEW depth #2 — the with-data audit on the demo seed** (15 products, 5
+categories, 1 register, 1 closed shift, 33 sales → standalone boot): the
+Registers card census + the Open-shift dialog family, the Sales ledger (33
+rows) + ticket search + receipt viewer, the Cashiers Turnos Recientes row
+($410.64 (33) · Cerrado), the POS gate, the Dashboard stat family — **all
+green, no with-data defects**, the s15 F-107 peak re-proven. The one real
+find: **F-110** — both receipt headers shipped bare `toLocaleString()`
+(client-locale-dependent: en-US on the audit browser, ar-SA digits on an
+ar-SA device) inside the Spanish-mixed surface whose ledger cell is es-MX.
+Cured with the `saleTimestamp` pure seam in `src/lib/reports.ts` (byte-stable
+`DD/MM/YYYY HH:MM`, manual padStart — the `shiftTime` precedent), unit-pinned
+×3, adopted at both sites, e2e-pinned as an ADDED assertion on the existing
+checkout receipt (the count stays 104). **F-111**: the with-data contracts
+pinned in the evidence tier (`scripts/capture-s16-evidence.mjs`) — the class
+the empty-store e2e can never see (the s15 V24 doctrine); future cycles
+inherit the harness.
+
+**The static sweep**: the zero-importer FILE census clean (45/45 live), the
+dep census clean (the s15 removals hold — toast/axe gone; the 8 flags are
+the known config/CLI withdrawals), the dev-db credential verifies
+(`$Abcd1234`), the secrets scan clean, and the Session-15 code review clean
+(the Reports chart's `Math.max(4, scale.top)` noted as harmless redundancy).
+
+**Gate on the final tree**: lint 0 · tsc · unit **149/149** (14 files; +3
+saleTimestamp pins, the count-lockstep re-anchored — README/CLAUDE/PAD/SKILL
++ the "Session-16 lock" literal) · build · smoke **13/13** · e2e
+**104/104**. Evidence **13/13** (the with-data contracts + the F-110 stamp
+live + the F-76/drawer spot-checks) with two infra lessons recorded in
+AGENTS.md (visible ≠ animation-settled; bootstrap races need settled-state
+waits) — zero checks weakened. VLM cross-check **5/5**. Screenshots 81–86.
+Docs lockstep: AGENTS (Session-16 contracts), CLAUDE (the receipt-timestamp
+law), PAD v1.14, SKILL v2.12.0 (+Session-16 addendum), README (counts),
+remediation-plan-session-16 (the full ledger + record), session_27.md (the
+narration). Pushed via `docs/ssh_git_wrapper_v3.py` → main on
+`git@github.com:nordeim/velox-pos-2.git`, remote-verified; operator key
+shredded.

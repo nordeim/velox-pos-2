@@ -4,7 +4,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6)
-![Tests](https://img.shields.io/badge/unit%20tests-146%20%2F%20146-brightgreen)
+![Tests](https://img.shields.io/badge/unit%20tests-149%20%2F%20149-brightgreen)
 ![E2E](https://img.shields.io/badge/e2e-104%20%2F%20104-brightgreen)
 ![License](https://img.shields.io/badge/license-Proprietary-lightgrey)
 
@@ -97,7 +97,7 @@ register, a closed shift, and a week of sales).
 | `bun run build` | Standalone production build (`next build` + static/public copy) |
 | `bun run lint` | ESLint (flat config) |
 | `bun run typecheck` | `tsc --noEmit` (strict) |
-| `bun run test` | Vitest unit suite — the pure domain seams (146 tests / 14 files) |
+| `bun run test` | Vitest unit suite — the pure domain seams (149 tests / 14 files) |
 | `bun run test:e2e` | Playwright suite against the production standalone build (104 tests; desktop 1440×900 + mobile 390×844 projects) |
 | `bun run smoke` | The 13-step API smoke ladder against the standalone artifact on :3210 (own scratch `db/smoke.db`; health → auth wall → Zod seam → CRUD → rate limit → boot gate → artifact hygiene) |
 | `bun run gate` | The full pre-push gate: `lint → typecheck → test → build → smoke → e2e` |
@@ -186,7 +186,7 @@ All endpoints return domain JSON; errors use `{ error: string }` with the docume
 ## Testing
 
 ```bash
-bun run test            # unit: 146 tests / 14 files — the pure seams (money, cart, shift,
+bun run test            # unit: 149 tests / 14 files — the pure seams (money, cart, shift,
                         # reports, inventory-status, currency, router, validation, auth,
                         # db-path, env-check, site) + the docs-counts lockstep gate
 bun run test:e2e        # e2e: 104 tests — needs `bun run build` first (boots the standalone

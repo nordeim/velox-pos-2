@@ -9,6 +9,7 @@ import {
   niceTicks,
   periodStart,
   PERIODS,
+  saleTimestamp,
   summarize,
   type SaleLike,
 } from "@/lib/reports";
@@ -210,5 +211,26 @@ describe("niceScale (the with-data domain contract — the top covers the data)"
       expect(ticks[ticks.length - 1]).toBe(top);
       expect(ticks.length).toBeLessThanOrEqual(7);
     }
+  });
+});
+
+// saleTimestamp (Session-16, F-110 — the receipt timestamp contract): the
+// receipt headers must render BYTE-IDENTICALLY on every device — the bare
+// toLocaleString() the receipts shipped was client-locale-dependent (en-US
+// on the audit browser, ar-SA digits on an ar-SA device) inside the
+// Spanish-mixed Sales surface. The seam formats the es-convention
+// day-first order with manual padStart (the shiftTime precedent) — zero
+// Intl dependence.
+describe("saleTimestamp (the receipt timestamp contract — byte-stable, never the client's locale)", () => {
+  it("renders the es-convention DD/MM/YYYY HH:MM bytes (the audit-measured sale moment)", () => {
+    expect(saleTimestamp(new Date(2026, 9, 26, 14, 41))).toBe("26/10/2026 14:41");
+  });
+
+  it("zero-pads every component (single-digit day/month/hour/minute)", () => {
+    expect(saleTimestamp(new Date(2026, 2, 5, 3, 7))).toBe("05/03/2026 03:07");
+  });
+
+  it("accepts the runtime's real input class — the ISO string from the JSON wire (no-Z parses local: tz-safe)", () => {
+    expect(saleTimestamp("2020-05-17T09:15:00")).toBe("17/05/2020 09:15");
   });
 });

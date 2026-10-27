@@ -95,6 +95,22 @@ export function niceScale(max: number, count = 5): { top: number; ticks: number[
   return { top, ticks };
 }
 
+/** A byte-stable sale timestamp for the receipt headers (Session-16, F-110):
+ * the es-convention day-first `DD/MM/YYYY HH:MM`, zero Intl dependence —
+ * the bare `toLocaleString()` the receipts shipped rendered en-US on the
+ * audit browser (and ar-SA digits on an ar-SA device: a printed receipt
+ * must render identically on every device), inconsistent with the same
+ * surface's es-MX ledger cell. Manual padStart formatting mirrors
+ * `shiftTime` in `src/lib/shift.ts` — the deterministic precedent. Accepts
+ * the JSON-wire `string` form (what `Sale.createdAt` is) or a `Date`.
+ * Unit-pinned in tests/unit/reports.test.ts; e2e-pinned on the checkout
+ * receipt in tests/e2e/terminal.spec.ts. */
+export function saleTimestamp(at: string | Date): string {
+  const d = typeof at === "string" ? new Date(at) : at;
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
 /** One bucket per day in the window (inclusive), in chronological order. */
 export type DailyBucket = { date: string; label: string; revenue: number; count: number };
 

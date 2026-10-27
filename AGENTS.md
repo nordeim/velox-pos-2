@@ -388,6 +388,33 @@ bite hardest here:
   The ui primitive set remains EXACTLY the 10 live files; the Radix set is
   slot/alert-dialog/dialog/label/select/switch only.
 
+## The with-data + receipt contracts (Session-16 pins — F-110/F-111)
+
+- **Receipt timestamps are `saleTimestamp` — NEVER bare `toLocaleString()`**
+  (`src/lib/reports.ts`, unit-pinned; Session-16, F-110): both receipt headers (the
+  post-checkout dialog in `terminal-view.tsx` and the receipt viewer in
+  `sales-view.tsx`) render the byte-stable es-convention `DD/MM/YYYY HH:MM` — manual
+  padStart mirroring `shiftTime`, zero Intl dependence. The bare `toLocaleString()`
+  they shipped was client-locale-dependent: en-US on the audit browser, ar-SA digits
+  on an ar-SA device — a printed receipt must render identically on every device, and
+  the same surface's own ledger cell already used es-MX. The e2e pin rides the
+  checkout receipt (a regex on `T-000001 · DD/MM/YYYY HH:MM`).
+- **The with-data evidence tier is `scripts/capture-s16-evidence.mjs`** (F-111): the
+  demo-seeded Registers/Sales/Cashiers contracts are pinned live each cycle — the
+  with-data class is invisible to the empty-store e2e by construction (the s15 V24
+  doctrine). Run it before pushing when a with-data surface changes.
+- **Two measurement lessons from this cycle's evidence infra** (both fixed without
+  weakening a check): (1) **`visible` ≠ animation-settled** — Radix dialogs animate
+  via tw-animate-css zoom-in, and a geometry read mid-flight measures 384×0.95 ≈ 365;
+  wait ~700ms after the dialog-visible wait before any width read. (2) **Bootstrap
+  races** — `goto` with default "load" + a fixed sleep loses to the shifts fetch on a
+  cold route; wait for the SETTLED state (a `waitForFunction` on the ledger's row or
+  empty copy), not a timer.
+- **Leaf-element measurement** (the reference-side lesson): probe the TEXT NODE's
+  `parentElement` (a TreeWalker), never the first ancestor matching the copy — a
+  wrapper div's inherited `color` misread the reference's "Sin ventas" as #e7e9ef
+  until the leaf TD showed its own `text-slate-400` (byte-identical to the clone).
+
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
 `src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px
