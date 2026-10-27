@@ -751,3 +751,113 @@ stat-card families (two, never shared), the muted-tone design language, the logi
 card's translated blur, and the reference's root-path landing are all measured, pinned,
 and documented. Standing debt: NONE identified. Baselines: unit **133/133**, e2e
 **84/84**, smoke **13/13**.
+
+---
+
+## Session-11 — the dialog/form-text parity pass + the invisible-typed-text cure (velox-pos-2)
+
+**Received state**: `b43821b` (Session-10's tree `939d3a6` + the operator's
+session-log commit). **Directive**: the standing audit→remediate→push cycle —
+workspace refresh, doc re-internalization, the skills-led code audit, the live
+reference re-measurement, the TDD remediation, the docs lockstep, and the
+SSH-wrapper push.
+
+**Environment:** the workspace had been RESET — fresh `git clone` + `cp
+.env.example .env` (AUTH_SECRET generated; `DATABASE_URL="file:../db/custom.db"`
+per the contract) + `bun install` (485 pkgs) + `db:push` + `db:seed -- --demo`
+(15 products / 5 categories / 1 register / 33 sales) + `bunx playwright install
+chromium` (1243). **Gate on the received tree: GREEN on first run** — lint 0
+errors (1 documented warning) · tsc clean · unit 133/133 · build green
+(hygiene-clean; `ƒ /` in the route table) · smoke 13/13 · e2e 84/84.
+
+**The reference re-measured live end-to-end — NO drift for the FIFTH
+consecutive cycle** (every Session-4/5/6/8/9/10 pin byte-exact: the sidebar
+chrome, the POS gate, both stat families, the Reports pills, the Settings
+fiscal labels + Save + Add, the Inventory chips, the Spanish copy, the login
+internals incl. blur(4px), the `/` landing, the reference's own mobile defect
+at 390×844). With the style surface stable five cycles running, the audit
+went to a NEW depth: **the dialog family** (opening each dialog client-side —
+the reference 403s writes but the dialogs open) and **the form-text color
+census** — surfaces every prior session copy-pinned or geometry-pinned but
+never measured at the container/color depth.
+
+**Six findings (the ledger is `docs/remediation-plan-session-11.md`):**
+- **F-70 (HIGH — the oldest live defect in the codebase)**: the login's TYPED
+  credentials computed `rgb(231,233,239)` — near-white text on the near-white
+  card, INVISIBLE since Session-101. Root cause: the base Input/Textarea
+  carry no text color, so the `.theme-light` scope's `--foreground` re-point
+  (the entire point of Session-5's `@theme inline` fix) never REACHED the
+  fields — they inherited the dark-theme body color. Invisible to e2e
+  (fills don't read rendered text) and to screenshots (they showed the EMPTY
+  form). Cured at the root: `text-foreground` on the base Input/Textarea
+  (SelectTrigger already had it) + `.theme-light --foreground` → `240 10% 4%`
+  (zinc-950, byte-exact vs the reference's measured rgb(9,9,11)). Pinned on
+  the TYPED text. SKILL trap #22: a scoped theme needs a carrier.
+- **F-64 (MEDIUM)**: every dialog shipped `glass-dark border-edge` —
+  translucent #0d0f1a@95 + blur(20px) + white/6 border, with the `border-edge`
+  utility INERT (trap #15) — while the reference's dialogs compute SOLID
+  `rgb(15,18,26)` (#0f121a) + 1px `rgb(38,42,54)` (#262a36) + NO blur +
+  rounded-lg + p-6. `--card` re-pointed to `224 27% 8%`; the strips swept the
+  11 DialogContent/AlertDialogContent sites AND four SelectContent sites
+  carrying the same inert pair (they would have defeated the popover
+  re-point); the Close hit-area extended to the measured 36px. The mobile
+  drawer keeps glass-dark BY DESIGN (the superset surface). SKILL trap #24.
+- **F-66 (MEDIUM)**: the reference's form text is ONE family — every label
+  (14px/500), dialog title (18px/600), and input text computes
+  `rgb(231,233,239)` #e7e9ef; the clone shipped 35 `text-white/70` Label
+  overrides + 11 `text-white` titles + ~30 per-field input overrides that
+  bypassed the token. The base components own the color now. En-route catch:
+  the `--foreground` triplet `221 28% 93%` computed **#e8ebf2** — its
+  "#e7e9ef" comment was a past rounding approximation; all five
+  foreground-family triplets re-pointed to the exact `225 20% 92%`.
+- **F-67 (MEDIUM)**: six dialog Cancel sites + two AlertDialogCancel sites +
+  the receipt "Cerrar" shipped bare ghosts (transparent, white/70) — the
+  reference's Cancel is the gray `glass-button` family; the clone's own
+  category-dialog pattern applied everywhere.
+- **F-68 (LOW)**: the New Register dialog 448px → 512px (`sm:max-w-lg`, the
+  reference's measured width; the category 384 + product 512 already held).
+- **F-69 (LOW-MEDIUM)**: the select dropdown surface — `--popover` re-pointed
+  `230 32% 9%` (#10121e) → `225 21% 11%` (#161922, the reference's measured
+  listbox) + rounded-md confirmed.
+- **F-65 (RETRACTED by re-measurement)**: the dialog Create buttons — the
+  first read measured `background-color: transparent` and concluded
+  "outline"; the re-measurement captured the 135° violet gradient in
+  `background-image` — the clone's `glass-button-primary` was byte-exact all
+  along. SKILL trap #23: gradient buttons live in background-IMAGE; measure
+  both layers before concluding.
+
+**TDD execution:** all pins red-first (rgb(231,233,239)≠rgb(9,9,11);
+glass-dark rgba(13,15,26,0.95)≠solid rgb(15,18,26) on the register AND
+category dialogs; white/70≠#e7e9ef; transparent≠rgba(28,31,52,0.85);
+448≠512), then green. En-route: the raw dialog-width reads raced the 200ms
+zoom-in-95 entrance (511.58 mid-zoom) — all three width pins hardened to
+`expect.poll` (the F-51 doctrine, third strike).
+
+**Re-certification (all on the final tree):** lint ✓ (0 errors, 1 documented
+warning) · tsc ✓ · unit **133/133** (13 files) · build ✓ (hygiene-clean) ·
+smoke **13/13** · e2e **88/88** (+4: the typed-text pin, the register-dialog
+contract, the product dialog + select, the Settings label family; the
+category-dialog container pins EXTENDED the existing first inventory test —
+no prior pin weakened). Live evidence on the rebuilt standalone
+(`scripts/capture-s11-evidence.mjs`, **12/12**): all six fixes measured
+live, the checkout journey (the cart at $19.72 → the receipt allocated
+**T-000039**), and the mobile drawer contract at 390×844 (labeled hamburger →
+role=dialog, 8 links, no horizontal overflow — the user's called-out
+surface). VLM sweep of screenshots 55–60: **6/6 effective** (including the
+typed-text legibility check on the login card).
+
+**Docs lockstep:** README (the 88 sites); AGENTS.md (the dialog-container +
+form-text contracts + the F-70 trap); CLAUDE.md (the same); PAD v1.9 (the
+revision block + the retracted-finding record); velox-pos_SKILL.md v2.7.0
+(traps 22/23/24 + the Session-11 addendum + the counts); the docs-counts
+constants re-anchored (E2E=88, "Session-11 lock", "74 desktop + 13 mobile +
+1 setup"); the remediation plan's execution record; this worklog entry; the
+session narration (`docs/session_17.md`, following the one-ahead numbering).
+
+**Stage summary.** The parity surface is stable (five consecutive drift-free
+reference cycles) and the pin doctrine now covers the last unpinned depth:
+the dialog family (solid #0f121a containers, the gray Cancel, the gradient
+Create, the #e7e9ef form-text family, the #161922 dropdown) — plus the
+oldest live defect in the codebase (invisible typed credentials) is measured,
+cured at the root, and pinned. Standing debt: NONE identified. Baselines:
+unit **133/133**, e2e **88/88**, smoke **13/13**.

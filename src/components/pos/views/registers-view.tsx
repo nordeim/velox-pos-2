@@ -83,9 +83,11 @@ function RegisterModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="glass-dark border-edge sm:max-w-md">
+      {/* Session-11 (F-68): the reference's New Register dialog is 512px
+          (max-w-lg) — measured live; the 448px max-w-md was the clone's own. */}
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-white">{editing ? "Edit Register" : "New Register"}</DialogTitle>
+          <DialogTitle>{editing ? "Edit Register" : "New Register"}</DialogTitle>
           <DialogDescription className="sr-only">
             {editing ? "Update the register." : "Create a new cash register."}
           </DialogDescription>
@@ -97,7 +99,7 @@ function RegisterModal({
         )}
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="r-name" className="text-white/70">
+            <Label htmlFor="r-name">
               Name *
             </Label>
             <Input
@@ -105,12 +107,11 @@ function RegisterModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Register 1"
-              className="text-white"
               autoFocus
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="r-location" className="text-white/70">
+            <Label htmlFor="r-location">
               Location
             </Label>
             <Input
@@ -118,12 +119,11 @@ function RegisterModal({
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="e.g. Main entrance"
-              className="text-white"
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} className="text-white/70">
+          <Button variant="ghost" onClick={onClose} className="glass-button rounded-xl border-0">
             Cancel
           </Button>
           <Button
@@ -178,9 +178,9 @@ function OpenShiftDialog({
 
   return (
     <Dialog open={!!register} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="glass-dark border-edge sm:max-w-sm">
+      <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle className="text-white">Open shift — {register.name}</DialogTitle>
+          <DialogTitle>Open shift — {register.name}</DialogTitle>
           <DialogDescription className="text-white/50">
             Count the opening cash in the drawer.
           </DialogDescription>
@@ -191,7 +191,7 @@ function OpenShiftDialog({
           </p>
         )}
         <div className="grid gap-2">
-          <Label htmlFor="s-float" className="text-white/70">
+          <Label htmlFor="s-float">
             Opening float
           </Label>
           <Input
@@ -201,12 +201,11 @@ function OpenShiftDialog({
             step="0.01"
             value={openingFloat}
             onChange={(e) => setOpeningFloat(e.target.value)}
-            className="text-white"
             autoFocus
           />
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} className="text-white/70">
+          <Button variant="ghost" onClick={onClose} className="glass-button rounded-xl border-0">
             Cancel
           </Button>
           <Button
@@ -276,9 +275,9 @@ function CloseShiftDialog({
 
   return (
     <Dialog open={!!shift} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="glass-dark border-edge sm:max-w-sm">
+      <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle className="text-white">Close shift</DialogTitle>
+          <DialogTitle>Close shift</DialogTitle>
           <DialogDescription className="text-white/50">
             Count the drawer's cash and close the shift.
           </DialogDescription>
@@ -303,7 +302,7 @@ function CloseShiftDialog({
           </div>
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="s-counted" className="text-white/70">
+          <Label htmlFor="s-counted">
             Counted cash
           </Label>
           <Input
@@ -313,7 +312,6 @@ function CloseShiftDialog({
             step="0.01"
             value={counted}
             onChange={(e) => setCounted(e.target.value)}
-            className="text-white"
             autoFocus
           />
           {counted !== "" && (
@@ -332,7 +330,7 @@ function CloseShiftDialog({
           )}
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} className="text-white/70">
+          <Button variant="ghost" onClick={onClose} className="glass-button rounded-xl border-0">
             Cancel
           </Button>
           <Button
@@ -499,7 +497,7 @@ export function RegistersView() {
       />
 
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
-        <AlertDialogContent className="glass-dark border-edge">
+        <AlertDialogContent className="">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white">Delete register</AlertDialogTitle>
             <AlertDialogDescription className="text-white/60">
@@ -507,7 +505,7 @@ export function RegistersView() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="text-white/70">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="glass-button rounded-xl border-0">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => void confirmDelete()}
               className="glass-button-danger border-0"

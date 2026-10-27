@@ -1,9 +1,9 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.8
+# VeloxPOS — Master Project Architecture Document (PAD) v1.9
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
 **Companion documents:** `README.md` (tour) · `AGENTS.md` (agent invariants) · `CLAUDE.md` (Claude conventions) · `docs/veloxpos-implementation-plan.md` (the measured reference spec)
-**Last Updated:** 2026-10-27
+**Last Updated:** 2026-10-27 (Session-11)
 **Audience:** Senior engineers, tech leads, DevOps, onboarding engineers, and AI coding agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -28,7 +28,7 @@ guardrail is enforced by tooling that runs in this checkout.
 **Scale & baselines (verified 2026-10-27, Session-10 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views (9 route spellings — the root `/` page is the
 terminal's reference-parity landing, Session-10 F-60)
-+ login/reset/404 · 133 unit tests (13 files) · 84 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 133 unit tests (13 files) · 88 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -295,7 +295,7 @@ lint → typecheck → unit → build → smoke → e2e
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 13 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 84/84):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 88/88):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
@@ -642,6 +642,66 @@ style-only audits had missed for three sessions.
 - Test baselines: unit **133/133** (13 files) · e2e **80/80** (+2: the glyph + cursor
   pins; no prior pin weakened) · smoke **13/13**. The gate order is unchanged
   (`lint → typecheck → test → build → smoke → e2e`, `bun run gate`).
+
+## Revision Block — v1.9 (2026-10-27, Session-11)
+
+**Scope:** the standing audit→remediate→push cycle on the Session-10 tree (HEAD `b43821b`;
+the ledger is `docs/remediation-plan-session-11.md`). Six findings, all clone-side — the
+reference did NOT drift for the FIFTH consecutive cycle (every pinned surface re-measured
+byte-exact), but this cycle's parity audit went to a NEW depth: **the dialog family**
+(containers, titles, labels, inputs, buttons, widths, the select dropdown) and **the form-text
+color family** — surfaces every prior session copy-pinned or geometry-pinned but never
+measured at the color/container depth — plus the typed-state login probe.
+
+- **F-70 (HIGH, functional-visual defect)**: the base Input/Textarea carried NO text color,
+  so the `.theme-light` scope's `--foreground` re-point (the whole point of Session-5's
+  `@theme inline` fix) never REACHED the login fields — TYPED credentials computed
+  `rgb(231,233,239)` (near-white) on the `rgba(248,250,252,0.5)` filled card: **invisible
+credentials since Session-101**. Invisible to e2e (fills don't read rendered text) and to
+  screenshots (they showed the EMPTY form). Cured at the root (the base-owns-it doctrine):
+  `text-foreground` on Input/Textarea + `.theme-light --foreground` → `240 10% 4%` (zinc-950,
+  byte-exact vs the reference's measured rgb(9,9,11)); pinned on the TYPED text.
+- **F-64 (MEDIUM)**: every dialog shipped `glass-dark border-edge` — translucent
+  #0d0f1a@95 + blur(20px) + white/6 border, with the `border-edge` utility INERT (trap #15)
+  — while the reference's dialogs compute SOLID `rgb(15,18,26)` + 1px `rgb(38,42,54)` + NO
+  blur. `--card` re-pointed to `224 27% 8%` (#0f121a); the glass-dark strips swept the
+  DialogContent/AlertDialogContent sites AND four SelectContent sites that would have
+  defeated the popover re-point; the Close hit-area extended to the measured 36px. The
+  mobile drawer keeps glass-dark by design (the superset surface).
+- **F-66 (MEDIUM)**: the reference's form text is ONE family — labels 14px/500, dialog
+  titles 18px/600, input text, ALL `rgb(231,233,239)` #e7e9ef — while the clone shipped 35
+  `text-white/70` Label overrides + 11 `text-white` dialog titles + ~30 per-field
+  `text-white` input overrides. The base components now own the color (`text-foreground`
+  on Label/Input/Textarea). En-route catch: the `--foreground` triplet `221 28% 93%`
+  actually computed **#e8ebf2** — its "#e7e9ef" comment was a past rounding approximation;
+  all five foreground-family triplets re-pointed to the exact `225 20% 92%`.
+- **F-67 (MEDIUM)**: six dialog Cancel sites + two AlertDialogCancel sites + the receipt
+  "Cerrar" shipped a bare ghost (transparent bg, white/70) while the reference's Cancel is
+  the gray `glass-button` family — applied the clone's own category-dialog Cancel pattern
+  everywhere.
+- **F-68 (LOW)**: the New Register dialog 448px (`sm:max-w-md`) → 512px (`sm:max-w-lg`), the
+  reference's measured width.
+- **F-69 (LOW-MEDIUM)**: the select dropdown surface — `--popover` re-pointed `230 32% 9%`
+  (#10121e) → `225 21% 11%` (#161922, the reference's measured listbox) + the four inert
+  glass-dark SelectContent strips.
+- **F-65 (RETRACTED by re-measurement)**: the dialog Create buttons — the first read
+  measured `background-color: transparent` and concluded "outline"; the re-measurement
+  captured the 135° violet gradient in `background-image` — the clone's
+  `glass-button-primary` was byte-exact all along. The retracted candidate is recorded in
+  the plan's NOT-findings section: gradient buttons live in background-IMAGE; measure both
+  layers before concluding.
+- **Test doctrine (the F-51 rule strikes again)**: the raw dialog-width reads raced the
+  200ms `zoom-in-95` entrance (511.58 mid-zoom) — all three width pins hardened to
+  `expect.poll`.
+
+**Re-certification (all on the final tree):** lint ✓ (0 errors, 1 documented warning) ·
+tsc ✓ · unit **133/133** (13 files) · build ✓ (hygiene-clean) · smoke **13/13** · e2e
+**88/88** (+4: the typed-text pin, the register-dialog contract, the product-dialog +
+select, the Settings label family; the category-dialog container pins EXTENDED the existing
+first inventory test — no prior pin weakened). Live evidence on the rebuilt standalone
+(`scripts/capture-s11-evidence.mjs`, **12/12**): all six fixes measured live, the checkout
+journey (T-000039), and the mobile drawer contract at 390×844. VLM sweep of screenshots
+55–60: **6/6 effective** (including the typed-text legibility check).
 
 ## Revision Block — v1.8 (2026-10-27, Session-10)
 

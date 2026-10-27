@@ -62,19 +62,28 @@
 
 :root {
   --background: 228 30% 6%; /* #080a14 */
-  --foreground: 221 28% 93%; /* #e7e9ef */
-  --card: 229 33% 10%; /* #0d0f1a */
-  --card-foreground: 221 28% 93%;
-  --popover: 230 32% 9%;
-  --popover-foreground: 221 28% 93%;
+  --foreground: 225 20% 92%; /* #e7e9ef — measured rgb(231,233,239) on the reference (Session-11: the old 221 28 93 triplet computed #e8ebf2, a 1-off-per-channel rounding drift; 225 20 92 renders EXACT) */
+  /* Session-11 (F-64): the reference's dialog surface is a SOLID #0f121a
+     (measured rgb(15,18,26) on every dialog) — not the panel #0d0f1a and
+     not the translucent glass. bg-card lives only on the dialog +
+     alert-dialog primitives (Tabs/outline/popover confirmed unused), so the
+     re-point is surgical. */
+  --card: 224 27% 8%; /* #0f121a — the reference's measured dialog bg */
+  --card-foreground: 225 20% 92%;
+  /* Session-11 (F-69): the reference's select dropdown (listbox) surface is
+     #161922 (measured rgb(22,25,34)) — a LIGHTER elevated panel than the
+     dialog; the old value computed #10121e. bg-popover lives only on
+     SelectContent. */
+  --popover: 225 21% 11%; /* #161922 — the reference's measured listbox bg */
+  --popover-foreground: 225 20% 92%;
   --primary: 251 91% 60%; /* violet-500 */
   --primary-foreground: 0 0% 100%;
   --secondary: 231 26% 14%;
-  --secondary-foreground: 221 28% 93%;
+  --secondary-foreground: 225 20% 92%;
   --muted: 231 26% 14%;
   --muted-foreground: 220 12% 50%; /* #707a8f — measured on the reference's placeholders */
   --accent: 231 26% 16%;
-  --accent-foreground: 221 28% 93%;
+  --accent-foreground: 225 20% 92%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   /* Session-5 (measured live on the reference's app shell): the reference
@@ -92,7 +101,13 @@
 
 .theme-light {
   --background: 210 40% 98%;
-  --foreground: 222 47% 11%;
+  /* Session-11 (F-70): the reference's login inputs compute TYPED text at
+     rgb(9,9,11) — zinc-950. The scoped foreground now carries exactly that,
+     and the base Input/Textarea apply text-foreground, so the re-point
+     finally REACHES the fields (pre-fix they inherited the dark-theme body
+     color: near-white text on the near-white card — invisible
+     credentials). */
+  --foreground: 240 10% 4%; /* #09090b zinc-950 — the reference's measured input text */
   --card: 0 0% 100%;
   --card-foreground: 222 47% 11%;
   --popover: 0 0% 100%;

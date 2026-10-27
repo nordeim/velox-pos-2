@@ -45,7 +45,11 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none">
+      {/* Session-11 (F-64): the reference's dialog Close computes a 36px hit
+          area — the bare 16px icon-only button was below it. flex h-9 w-9
+          centers the X in the measured target without moving it (right-4
+          top-4). */}
+      <DialogPrimitive.Close className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none">
         <X className="h-4 w-4" strokeWidth={2} aria-hidden />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>

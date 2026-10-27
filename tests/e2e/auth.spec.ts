@@ -114,6 +114,25 @@ test("login inputs compute the reference's light geometry (48px, slate borders, 
   expect(bg).toMatch(/rgba\(248, 250, 252, 0\.5\)|oklab\([^)]*\/\s*0\.5\)/);
 });
 
+test("the login inputs render TYPED text in the reference's zinc-950 (the .theme-light foreground reaches the fields)", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  // Session-11 (F-70): the base Input/Textarea carried no text color, so the
+  // .theme-light scope's --foreground re-point never REACHED the fields —
+  // they inherited the dark-theme body color rgb(231,233,239) (near-white on
+  // the near-white card: invisible credentials since Session-101; invisible
+  // to every e2e because fills don't read rendered text, and to every
+  // screenshot because they showed the EMPTY form). The reference's typed
+  // text computes rgb(9,9,11) (zinc-950) — the scoped light foreground.
+  const email = page.getByLabel("Email");
+  await email.fill("probe@example.com");
+  await expect(email).toHaveCSS("color", "rgb(9, 9, 11)");
+  const pw = page.getByLabel("Password");
+  await pw.fill("probe-password");
+  await expect(pw).toHaveCSS("color", "rgb(9, 9, 11)");
+});
+
 test("the login card carries the reference's shadow + 4px top gradient strip", async ({
   page,
 }) => {

@@ -192,19 +192,20 @@ export function StoreSettingsView() {
         <SectionCard icon={<Store className="h-5 w-5 text-indigo-500" aria-hidden="true" />} title="Business Information">
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="set-name" className="text-white/70">
+              <Label htmlFor="set-name">
                 Store name *
               </Label>
               <Input
                 id="set-name"
                 value={form.storeName}
                 onChange={(e) => set({ storeName: e.target.value })}
-                className="text-white"
               />
             </div>
             <div className="grid gap-2">
-              <Label className="text-white/70">Logo</Label>
-              <label className="glass-button vpx-focus inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-sm">
+              <Label>Logo</Label>
+              {/* Session-11 (F-66): the reference's "Upload logo" affordance is
+                  14px/500 (measured) — the clone shipped font-weight 400. */}
+              <label className="glass-button vpx-focus inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium">
                 <Upload className="h-4 w-4" aria-hidden="true" />
                 Upload logo
                 <input
@@ -223,30 +224,28 @@ export function StoreSettingsView() {
               </label>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="set-address" className="text-white/70">
+              <Label htmlFor="set-address">
                 Address
               </Label>
               <Input
                 id="set-address"
                 value={form.address}
                 onChange={(e) => set({ address: e.target.value })}
-                className="text-white"
               />
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
-                <Label htmlFor="set-phone" className="text-white/70">
+                <Label htmlFor="set-phone">
                   Phone
                 </Label>
                 <Input
                   id="set-phone"
                   value={form.phone}
                   onChange={(e) => set({ phone: e.target.value })}
-                  className="text-white"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="set-email" className="text-white/70">
+                <Label htmlFor="set-email">
                   Email
                 </Label>
                 <Input
@@ -254,27 +253,25 @@ export function StoreSettingsView() {
                   type="email"
                   value={form.email}
                   onChange={(e) => set({ email: e.target.value })}
-                  className="text-white"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="set-taxid" className="text-white/70">
+                <Label htmlFor="set-taxid">
                   Tax ID / EIN
                 </Label>
                 <Input
                   id="set-taxid"
                   value={form.taxId}
                   onChange={(e) => set({ taxId: e.target.value })}
-                  className="text-white"
                 />
               </div>
               <div className="grid gap-2">
-                <Label className="text-white/70">Currency</Label>
+                <Label>Currency</Label>
                 <Select value={form.currency} onValueChange={(v) => set({ currency: v })}>
-                  <SelectTrigger className="text-white" aria-label="Currency">
+                  <SelectTrigger aria-label="Currency">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="glass-dark border-edge">
+                  <SelectContent className="">
                     {CURRENCIES.map((c) => (
                       <SelectItem key={c.code} value={c.code}>
                         {c.label}
@@ -290,7 +287,7 @@ export function StoreSettingsView() {
         <SectionCard icon={<Palette className="h-5 w-5 text-purple-500" aria-hidden="true" />} title="Branding">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
-              <Label htmlFor="set-primary" className="text-white/70">
+              <Label htmlFor="set-primary">
                 Primary color
               </Label>
               <div className="flex items-center gap-3">
@@ -310,7 +307,7 @@ export function StoreSettingsView() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="set-secondary" className="text-white/70">
+              <Label htmlFor="set-secondary">
                 Secondary color
               </Label>
               <div className="flex items-center gap-3">
@@ -334,7 +331,7 @@ export function StoreSettingsView() {
 
         <SectionCard icon={<FileText className="h-5 w-5 text-green-500" aria-hidden="true" />} title="Receipt" tone="green">
           <div className="grid gap-2">
-            <Label htmlFor="set-footer" className="text-white/70">
+            <Label htmlFor="set-footer">
               Receipt footer
             </Label>
             {/* Session-5 (measured live): the reference renders a TEXTAREA
@@ -344,7 +341,6 @@ export function StoreSettingsView() {
               rows={2}
               value={form.receiptFooter}
               onChange={(e) => set({ receiptFooter: e.target.value })}
-              className="text-white"
             />
           </div>
         </SectionCard>
@@ -357,7 +353,7 @@ export function StoreSettingsView() {
             // the title. Polarity per the reference: switch ON = fiscal data
             // VISIBLE on the receipt (default OFF = hidden). The internal
             // column stays hideFiscalOnReceipt, so the wiring inverts here.
-            <label className="flex w-fit items-center gap-3 text-sm text-white/70">
+            <label className="flex w-fit items-center gap-3 text-sm text-foreground">
               <Switch
                 checked={!form.hideFiscalOnReceipt}
                 onCheckedChange={(v) => set({ hideFiscalOnReceipt: !v })}
@@ -374,7 +370,7 @@ export function StoreSettingsView() {
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
-                <Label htmlFor="set-ruc" className="text-white/70">
+                <Label htmlFor="set-ruc">
                   Tax ID / EIN
                 </Label>
                 <Input
@@ -382,11 +378,10 @@ export function StoreSettingsView() {
                   value={form.fiscalRuc}
                   onChange={(e) => set({ fiscalRuc: e.target.value })}
                   placeholder="e.g. 12-3456789"
-                  className="text-white"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="set-biztype" className="text-white/70">
+                <Label htmlFor="set-biztype">
                   Tax Regime
                 </Label>
                 <Input
@@ -394,11 +389,10 @@ export function StoreSettingsView() {
                   value={form.fiscalBusinessType}
                   onChange={(e) => set({ fiscalBusinessType: e.target.value })}
                   placeholder="e.g. S-Corp, LLC"
-                  className="text-white"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="set-fiscal-address" className="text-white/70">
+                <Label htmlFor="set-fiscal-address">
                   Fiscal Address
                 </Label>
                 <Input
@@ -406,11 +400,10 @@ export function StoreSettingsView() {
                   value={form.fiscalAddress}
                   onChange={(e) => set({ fiscalAddress: e.target.value })}
                   placeholder="Street, city, state, ZIP"
-                  className="text-white"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="set-expense" className="text-white/70">
+                <Label htmlFor="set-expense">
                   CFDI Use (default)
                 </Label>
                 <Input
@@ -418,7 +411,6 @@ export function StoreSettingsView() {
                   value={form.fiscalExpenseAccount}
                   onChange={(e) => set({ fiscalExpenseAccount: e.target.value })}
                   placeholder="e.g. G03 - General expenses"
-                  className="text-white"
                 />
               </div>
             </div>
@@ -427,12 +419,12 @@ export function StoreSettingsView() {
 
         <SectionCard icon={<CreditCard className="h-5 w-5 text-blue-500" aria-hidden="true" />} title="Card Payment Provider">
           <div className="grid max-w-xs gap-2">
-            <Label className="text-white/70">Provider</Label>
+            <Label>Provider</Label>
             <Select value={form.cardProvider} onValueChange={(v) => set({ cardProvider: v })}>
-              <SelectTrigger className="text-white" aria-label="Card payment provider">
+              <SelectTrigger aria-label="Card payment provider">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="glass-dark border-edge">
+              <SelectContent className="">
                 {CARD_PROVIDERS.map((p) => (
                   <SelectItem key={p} value={p}>
                     {cardProviderLabel(p)}
@@ -486,15 +478,15 @@ export function StoreSettingsView() {
 
         {/* The New Category dialog (Session-6 — the reference's own flow). */}
         <Dialog open={catDialogOpen} onOpenChange={setCatDialogOpen}>
-          <DialogContent className="glass-dark border-edge sm:max-w-sm">
+          <DialogContent className="sm:max-w-sm">
             <DialogHeader>
-              <DialogTitle className="text-white">New Category</DialogTitle>
+              <DialogTitle>New Category</DialogTitle>
               <DialogDescription className="sr-only">
                 Register a new product category.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-2">
-              <Label htmlFor="new-cat-name" className="text-white/70">
+              <Label htmlFor="new-cat-name">
                 Name
               </Label>
               <Input
@@ -502,7 +494,6 @@ export function StoreSettingsView() {
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 placeholder="e.g. Beverages"
-                className="text-white"
                 autoFocus
               />
             </div>

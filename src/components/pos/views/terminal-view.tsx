@@ -114,9 +114,9 @@ function ChargeDialog({ open, onOpenChange, total, currency, onComplete }: Charg
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-dark border-edge sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-white">Charge {formatMoney(total, currency)}</DialogTitle>
+          <DialogTitle>Charge {formatMoney(total, currency)}</DialogTitle>
           <DialogDescription className="text-white/50">
             Choose the payment method and complete the sale.
           </DialogDescription>
@@ -149,7 +149,7 @@ function ChargeDialog({ open, onOpenChange, total, currency, onComplete }: Charg
         </div>
         {method === "cash" && (
           <div className="grid gap-2">
-            <Label htmlFor="charge-amount" className="text-white/70">
+            <Label htmlFor="charge-amount">
               Amount received
             </Label>
             <Input
@@ -161,7 +161,6 @@ function ChargeDialog({ open, onOpenChange, total, currency, onComplete }: Charg
               value={amountPaid}
               onChange={(e) => setAmountPaid(e.target.value)}
               placeholder={total.toFixed(2)}
-              className="text-white"
             />
             {amountPaid !== "" && (
               <p className={`text-sm ${change > 0 ? "text-emerald-400" : "text-white/50"}`} data-testid="change-due">
@@ -171,7 +170,7 @@ function ChargeDialog({ open, onOpenChange, total, currency, onComplete }: Charg
           </div>
         )}
         <div className="grid gap-2">
-          <Label htmlFor="charge-customer" className="text-white/70">
+          <Label htmlFor="charge-customer">
             Customer (optional)
           </Label>
           <Input
@@ -179,11 +178,14 @@ function ChargeDialog({ open, onOpenChange, total, currency, onComplete }: Charg
             value={customer}
             onChange={(e) => setCustomer(e.target.value)}
             placeholder="Walk-in customer"
-            className="text-white"
           />
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} className="text-white/70">
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            className="glass-button rounded-xl border-0"
+          >
             Cancel
           </Button>
           <Button
@@ -208,10 +210,10 @@ function ReceiptDialog({ sale, onClose }: { sale: Sale | null; onClose: () => vo
   const currency = settings?.currency ?? "USD";
   return (
     <Dialog open={!!sale} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="glass-dark border-edge sm:max-w-sm">
+      <DialogContent className="sm:max-w-sm">
         <div className="receipt-print">
           <DialogHeader>
-            <DialogTitle className="text-white">{settings?.storeName ?? "My Store"}</DialogTitle>
+            <DialogTitle>{settings?.storeName ?? "My Store"}</DialogTitle>
             <DialogDescription className="font-mono text-white/60">
               {sale.ticket} · {new Date(sale.createdAt).toLocaleString()}
             </DialogDescription>
@@ -261,7 +263,7 @@ function ReceiptDialog({ sale, onClose }: { sale: Sale | null; onClose: () => vo
           <p className="mt-3 text-center text-sm text-white/60">{settings?.receiptFooter}</p>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} className="text-white/70">
+          <Button variant="ghost" onClick={onClose} className="glass-button rounded-xl border-0">
             Close
           </Button>
           <Button onClick={() => window.print()} className="glass-button-primary rounded-2xl border-0">

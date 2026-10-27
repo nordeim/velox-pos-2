@@ -159,9 +159,9 @@ function ProductModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="glass-dark border-edge sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-white">{editing ? "Edit Product" : "New Product"}</DialogTitle>
+          <DialogTitle>{editing ? "Edit Product" : "New Product"}</DialogTitle>
           <DialogDescription className="sr-only">
             {editing ? "Update the product." : "Register a new product."}
           </DialogDescription>
@@ -173,39 +173,37 @@ function ProductModal({
         )}
         <div className="vpx-scroll grid max-h-[60vh] gap-4 overflow-y-auto pr-1">
           <div className="grid gap-2">
-            <Label htmlFor="p-name" className="text-white/70">
+            <Label htmlFor="p-name">
               Name *
             </Label>
             <Input
               id="p-name"
               value={draft.name}
               onChange={(e) => set({ name: e.target.value })}
-              className="text-white"
               autoFocus
             />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
-              <Label htmlFor="p-barcode" className="text-white/70">
+              <Label htmlFor="p-barcode">
                 Barcode *
               </Label>
               <Input
                 id="p-barcode"
                 value={draft.barcode}
                 onChange={(e) => set({ barcode: e.target.value })}
-                className="text-white"
               />
             </div>
             <div className="grid gap-2">
-              <Label className="text-white/70">Category</Label>
+              <Label>Category</Label>
               <Select
                 value={draft.categoryId || "none"}
                 onValueChange={(v) => set({ categoryId: v === "none" ? "" : v })}
               >
-                <SelectTrigger className="text-white" aria-label="Category">
+                <SelectTrigger aria-label="Category">
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
-                <SelectContent className="glass-dark border-edge">
+                <SelectContent className="">
                   <SelectItem value="none">Select</SelectItem>
                   {categories.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
@@ -216,7 +214,7 @@ function ProductModal({
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="p-price" className="text-white/70">
+              <Label htmlFor="p-price">
                 Selling price *
               </Label>
               <Input
@@ -226,11 +224,10 @@ function ProductModal({
                 step="0.01"
                 value={draft.price}
                 onChange={(e) => set({ price: e.target.value })}
-                className="text-white"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="p-cost" className="text-white/70">
+              <Label htmlFor="p-cost">
                 Cost
               </Label>
               <Input
@@ -240,11 +237,10 @@ function ProductModal({
                 step="0.01"
                 value={draft.cost}
                 onChange={(e) => set({ cost: e.target.value })}
-                className="text-white"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="p-stock" className="text-white/70">
+              <Label htmlFor="p-stock">
                 Current stock
               </Label>
               <Input
@@ -254,11 +250,10 @@ function ProductModal({
                 step="1"
                 value={draft.stock}
                 onChange={(e) => set({ stock: e.target.value })}
-                className="text-white"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="p-minstock" className="text-white/70">
+              <Label htmlFor="p-minstock">
                 Min. stock
               </Label>
               <Input
@@ -268,11 +263,10 @@ function ProductModal({
                 step="1"
                 value={draft.minStock}
                 onChange={(e) => set({ minStock: e.target.value })}
-                className="text-white"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="p-tax" className="text-white/70">
+              <Label htmlFor="p-tax">
                 Tax rate (%)
               </Label>
               <Input
@@ -283,16 +277,15 @@ function ProductModal({
                 step="0.5"
                 value={draft.taxRate}
                 onChange={(e) => set({ taxRate: e.target.value })}
-                className="text-white"
               />
             </div>
             <div className="grid gap-2">
-              <Label className="text-white/70">Unit</Label>
+              <Label>Unit</Label>
               <Select value={draft.unit} onValueChange={(v) => set({ unit: v })}>
-                <SelectTrigger className="text-white" aria-label="Unit">
+                <SelectTrigger aria-label="Unit">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="glass-dark border-edge">
+                <SelectContent className="">
                   {UNITS.map((u) => (
                     <SelectItem key={u} value={u}>
                       {u}
@@ -303,7 +296,7 @@ function ProductModal({
             </div>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="p-image" className="text-white/70">
+            <Label htmlFor="p-image">
               Product image
             </Label>
             <Input
@@ -320,13 +313,13 @@ function ProductModal({
               className="text-white/70"
             />
           </div>
-          <label className="flex items-center gap-3 text-sm text-white/70">
+          <label className="flex items-center gap-3 text-sm text-foreground">
             <Switch checked={draft.active} onCheckedChange={(v) => set({ active: v })} />
             Active product
           </label>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} className="text-white/70">
+          <Button variant="ghost" onClick={onClose} className="glass-button rounded-xl border-0">
             Cancel
           </Button>
           <Button
@@ -636,7 +629,7 @@ export function InventoryView() {
       />
 
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
-        <AlertDialogContent className="glass-dark border-edge">
+        <AlertDialogContent className="">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white">Delete product</AlertDialogTitle>
             <AlertDialogDescription className="text-white/60">
@@ -644,7 +637,7 @@ export function InventoryView() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="text-white/70">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="glass-button rounded-xl border-0">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => void confirmDelete()}
               className="glass-button-danger border-0"

@@ -19,6 +19,16 @@ test.describe.serial("inventory", () => {
     await page.getByRole("button", { name: "Add", exact: true }).click();
     const catDialog = page.getByRole("dialog", { name: "New Category" });
     await expect(catDialog).toBeVisible();
+    // Session-11 (F-64): the category dialog is the reference's 384px
+    // member of the solid-container family — #0f121a + #262a36 + no blur.
+    await expect(catDialog).toHaveCSS("background-color", "rgb(15, 18, 26)");
+    await expect(catDialog).toHaveCSS("border-color", "rgb(38, 42, 54)");
+    await expect(catDialog).toHaveCSS("backdrop-filter", "none");
+    // The width read polls (the entrance zoom animation reads ~383.7 mid-flight
+    // — the F-51 raw-read doctrine: every raw computed read in the suite polls).
+    await expect
+      .poll(() => catDialog.evaluate((el) => el.getBoundingClientRect().width))
+      .toBe(384);
     await catDialog.getByLabel("Name").fill("Beverages");
     await catDialog.getByRole("button", { name: "Create" }).click();
     await expect(page.getByText("Beverages").first()).toBeVisible();
@@ -41,6 +51,38 @@ test.describe.serial("inventory", () => {
 
     await expect(page.getByRole("cell", { name: "Espresso Beans", exact: true })).toBeVisible();
     await expect(page.getByText("1 products registered")).toBeVisible();
+  });
+
+  test("the New Product dialog + the Category select dropdown match the reference's surfaces", async ({
+    page,
+  }) => {
+    await page.goto("/Inventory");
+    await page.getByRole("button", { name: "New Product" }).click();
+    const dialog = page.getByRole("dialog", { name: "New Product" });
+    await expect(dialog).toBeVisible();
+
+    // Session-11 (F-64): the product dialog is the 512px member of the
+    // solid-container family (#0f121a + #262a36 + no blur).
+    await expect(dialog).toHaveCSS("background-color", "rgb(15, 18, 26)");
+    await expect(dialog).toHaveCSS("border-color", "rgb(38, 42, 54)");
+    await expect(dialog).toHaveCSS("backdrop-filter", "none");
+    await expect
+      .poll(() => dialog.evaluate((el) => el.getBoundingClientRect().width))
+      .toBe(512);
+
+    // Session-11 (F-69): the reference's select dropdown (listbox) surface
+    // is #161922 + 1px #262a36 + 6px radius — a LIGHTER elevated panel than
+    // the dialog; the clone's --popover computed #10121e (darker).
+    await dialog.getByLabel("Category").click();
+    const listbox = page.getByRole("listbox");
+    await expect(listbox).toBeVisible();
+    await expect(listbox).toHaveCSS("background-color", "rgb(22, 25, 34)");
+    await expect(listbox).toHaveCSS("border-color", "rgb(38, 42, 54)");
+    await expect(listbox).toHaveCSS("border-radius", "6px");
+    await page.keyboard.press("Escape");
+    await expect(listbox).toHaveCount(0);
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(dialog).toHaveCount(0);
   });
 
   test("search narrows by name or code and the empty query restores", async ({ page }) => {

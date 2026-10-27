@@ -108,6 +108,30 @@ No hosted CI exists; the local gate is the only gate.
   `text-slate-500` — Reports' own subtitle is its `text-white/35` exception; empty states
   slate-400/500 + `w-16 text-slate-200` stroke-2 icons + `py-12` rhythms; the cart copy
   `text-white/25`) — never substitute white/xx for the reference's slate design language.
+- **The dialog family is SOLID (Session-11, F-64)**: every reference dialog
+  computes `rgb(15,18,26)` (#0f121a) + 1px `rgb(38,42,54)` + NO blur +
+  rounded-lg + p-6 (`--card: 224 27% 8%`; the primitive's `bg-card
+  border-border` owns it — NEVER `glass-dark border-edge`, the companion
+  utility is inert per trap #15). Widths: Register/Product 512
+  (`sm:max-w-lg`), Category 384 (`sm:max-w-sm`). Close X: 36px hit area.
+  The select dropdown is a different panel (`--popover: 225 21% 11%` =
+  #161922, rounded-md). The mobile drawer keeps glass-dark by design.
+- **The form-text family is #e7e9ef via `text-foreground` (Session-11,
+  F-66)**: labels 14px/500, dialog titles 18px/600, input text — all compute
+  `rgb(231,233,239)` (`--foreground: 225 20% 92%` EXACTLY; the old
+  `221 28% 93%` computed #e8ebf2 — a rounding drift). The base
+  Input/Textarea/Label carry `text-foreground`; per-field
+  `text-white`/`text-white/70` form-control overrides are BANNED.
+- **`text-foreground` on the base inputs is LOAD-BEARING (Session-11,
+  F-70)**: without it the login inputs inherit the dark-theme body color —
+  TYPED credentials rendered near-white on the near-white card (invisible
+  since Session-101; e2e fills never read rendered text, screenshots showed
+  the empty form). `.theme-light --foreground` = `240 10% 4%` (zinc-950,
+  byte-exact); pinned on the typed text.
+- **Dialog Cancel = the gray glass-button; Create/Save =
+  `glass-button-primary`** — the gradient lives in `background-image`
+  (`background-color` reads transparent — measure BOTH before concluding
+  "outline"). Disabled: opacity .5 + not-allowed (byte-matched).
 - **Unpinned palette values serialize as `lab(...)`** (F-62): v4's defaults are oklab-defined —
   pin the hex in `globals.css`'s `@theme` when a computed pin expects the reference's
   `rgb(...)` (indigo-400 `#818cf8` was the Session-10 catch).
@@ -151,7 +175,7 @@ No hosted CI exists; the local gate is the only gate.
   (the gate fails until you do; history blocks keep their historical numbers by design).
 - **E2E** (`tests/e2e/**`, Playwright, production standalone on :3100): user journeys through the
   real UI. Two projects — `chromium` (1440×900) and `mobile` (390×844; runs only
-  `mobile-navigation.spec.ts`). **Baseline: 84 tests.** Auth once via `auth.setup.ts` +
+  `mobile-navigation.spec.ts`). **Baseline: 88 tests.** Auth once via `auth.setup.ts` +
   storageState (the rate limiter is 10/IP/15 min). The scratch db (`db/e2e.db`) is provisioned
   by the webServer command (kill-port → provision → boot) and never replaced while the server
   lives — replacing it after boot desynchronizes the login and page-render clients

@@ -591,3 +591,28 @@ test("the muted-tone family matches the reference (F-63: subtitle + empty states
     .poll(async () => cartEmpty.evaluate((el) => getComputedStyle(el).color))
     .toMatch(/(?:\/\s*0\.25\)|,\s*0\.25\))/);
 });
+
+test("the Settings form labels compute the reference's #e7e9ef (the foreground the token already carries)", async ({
+  page,
+}) => {
+  // Session-11 (F-66): every label on the reference (Settings + dialogs)
+  // measures rgb(231,233,239) at 14px/500 — the SAME value the clone's
+  // --foreground token computes. The 35 per-field text-white/70 overrides
+  // (and the text-white titles/inputs) bypassed the token with tones the
+  // reference never ships. The base Label now owns the color.
+  await page.goto("/StoreSettings");
+  const storeName = page.getByText("Store name *", { exact: true });
+  await expect(storeName).toHaveCSS("color", "rgb(231, 233, 239)");
+  await expect(storeName).toHaveCSS("font-size", "14px");
+  await expect(storeName).toHaveCSS("font-weight", "500");
+  const phone = page.getByText("Phone", { exact: true });
+  await expect(phone).toHaveCSS("color", "rgb(231, 233, 239)");
+  const fiscal = page.getByText("Tax Regime", { exact: true });
+  await expect(fiscal).toHaveCSS("color", "rgb(231, 233, 239)");
+  // The "Upload logo" affordance is the glass-button-styled label: the
+  // reference's 14px/500 treatment (the clone shipped font-weight 400).
+  const upload = page.getByText("Upload logo", { exact: true });
+  await expect(upload).toHaveCSS("font-size", "14px");
+  await expect(upload).toHaveCSS("font-weight", "500");
+  await expect(upload).toHaveCSS("color", "rgba(200, 210, 255, 0.8)");
+});

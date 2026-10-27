@@ -58,9 +58,9 @@ function AddCashierDialog({ open, onClose }: { open: boolean; onClose: () => voi
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="glass-dark border-edge sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-white">Nuevo cajero</DialogTitle>
+          <DialogTitle>Nuevo cajero</DialogTitle>
           <DialogDescription className="text-white/50">
             Crea la cuenta con la que el cajero iniciará sesión.
           </DialogDescription>
@@ -72,19 +72,18 @@ function AddCashierDialog({ open, onClose }: { open: boolean; onClose: () => voi
         )}
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="c-name" className="text-white/70">
+            <Label htmlFor="c-name">
               Nombre *
             </Label>
             <Input
               id="c-name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="text-white"
               autoFocus
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="c-email" className="text-white/70">
+            <Label htmlFor="c-email">
               Email *
             </Label>
             <Input
@@ -92,11 +91,10 @@ function AddCashierDialog({ open, onClose }: { open: boolean; onClose: () => voi
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="text-white"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="c-password" className="text-white/70">
+            <Label htmlFor="c-password">
               Contraseña temporal * (mín. 8)
             </Label>
             <Input
@@ -104,12 +102,11 @@ function AddCashierDialog({ open, onClose }: { open: boolean; onClose: () => voi
               type="text"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="text-white"
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} className="text-white/70">
+          <Button variant="ghost" onClick={onClose} className="glass-button rounded-xl border-0">
             Cancelar
           </Button>
           <Button

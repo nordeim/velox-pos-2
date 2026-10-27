@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.6.0
+version: 2.7.0
 last_updated: 2026-10-27
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-10 lock: unit **133/133** (13 files) · e2e **84/84**
-(70 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-11 lock: unit **133/133** (13 files) · e2e **88/88**
+(74 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -68,7 +68,7 @@ bun run lint                   # eslint flat config — 0 errors, 1 documented w
 bun run typecheck              # tsc --noEmit — strict
 bun run test                   # vitest — tests/unit/** (133)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               # playwright (84) — NEEDS the build first (:3100)
+bun run test:e2e               # playwright (88) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -294,6 +294,33 @@ is a loss machine.
     shared between two reference views, verify BOTH views' reference DOMs first — the
     reference itself ships TWO different stat-card families (Dashboard gradients vs
     Reports flat chips) that the clone had collapsed into one.
+22. **(Session-11) A scoped theme needs a carrier (F-70)** — the `.theme-light`
+    scope's `--foreground` re-point is inert until a utility APPLIES it: the base
+    Input/Textarea carried no text color, so they inherited the dark-theme BODY
+    color and the login's TYPED credentials rendered near-white on the near-white
+    card — invisible since Session-101, invisible to e2e (fills don't read rendered
+    text) and to screenshots (they showed the empty form). Lesson: scoped token
+    re-points are only half the fix — the base component must route the utility
+    (`text-foreground`) for the scope to reach the element; and pin the TYPED-state
+    color, not the empty-state screenshot.
+23. **(Session-11) Gradient buttons live in background-IMAGE (the retracted F-65)** —
+    the first measurement of the reference's dialog Create read
+    `background-color: transparent` and concluded "outline button"; the
+    re-measurement captured `background-image: linear-gradient(135deg, rgb(124,58,237),
+    rgb(99,102,241))` — the same `glass-button-primary` the clone already shipped.
+    Lesson: `background-color` and `background-image` are DIFFERENT layers — measure
+    BOTH before concluding a button's treatment; a retraction caught by
+    re-measurement is the audit discipline working, not a wasted step.
+24. **(Session-11) The dialog family is SOLID, not glass (F-64)** — the reference's
+    dialogs compute `rgb(15,18,26)` + `#262a36` + NO backdrop-filter, and the
+    `glass-dark border-edge` pair on every `*DialogContent` was doubly wrong: the
+    glass values (translucent + blur(20px) + white/6) mismatched the measured
+    surface AND the `border-edge` utility was inert (trap #15 — unlayered glass
+    beats utilities). Lesson: when an inert override ships next to a plain-CSS
+    class, ask what the author INTENDED — the intent (a #262a36 border) was the
+    reference contract all along. The primitive's `bg-card border-border` IS the
+    mechanism; re-point the token, strip the override. (And sweep ALL `*Content`
+    primitives — four SelectContent sites carried the same inert pair.)
 
 ## 8. Component architecture & the React patterns that are law
 
@@ -378,7 +405,7 @@ SUPERSET instead:
 1. **Unit (Vitest, 133/133, 13 files)** — the pure seams only (plus the docs-counts
    lockstep gate). New `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 84/84)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 88/88)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -724,3 +751,61 @@ contract at 390×844. VLM sweep of screenshots 49–54: 6/6 effective (the one i
 flag — "no visible blur" on the login card — was the prompt's expectation bug: the
 reference's canvas is a plain gradient with nothing behind the card to blur; the 4px
 value is a computed contract, verified on both sides). Skill v2.6.0.
+
+## Session history addendum — Session-11
+
+**The fifth consecutive drift-free reference cycle; the audit went to the
+dialog/form-text depth and found the oldest live defect in the codebase.**
+
+The received tree gated green on first run (133/133 · 84/84 · 13/13). The live
+reference re-measured byte-exact at every pinned depth for the FIFTH
+consecutive cycle — so this cycle's audit opened the DIALOGS (client-side,
+no writes needed) and measured, for the first time, the container/title/
+label/input/button family and the select dropdown:
+
+- **F-70 (HIGH)**: the login's TYPED credentials computed rgb(231,233,239) —
+  near-white on the near-white card, INVISIBLE since Session-101. The base
+  inputs carried no text color, so the `.theme-light` scope's foreground
+  re-point never reached the fields. Cured at the root: `text-foreground`
+  on the base Input/Textarea + the scoped foreground to zinc-950
+  (`240 10% 4%`); pinned on the typed text. Trap 22.
+- **F-64 (MEDIUM)**: the reference's dialogs are SOLID `rgb(15,18,26)`
+  (#0f121a via `--card: 224 27% 8%`) + 1px #262a36 + NO blur — the clone's
+  `glass-dark border-edge` pair was doubly wrong (translucent+blur+white/6
+  values, and the border-edge utility was INERT per trap #15). Stripped
+  from every `*DialogContent`/`AlertDialogContent` AND four `SelectContent`
+  sites that would have defeated the popover re-point; the Close hit-area
+  extended to the measured 36px. Trap 24.
+- **F-66 (MEDIUM)**: the reference's form text is ONE family — every label
+  (14px/500), dialog title (18px/600), and input text computes
+  `rgb(231,233,239)` #e7e9ef. The clone shipped 35 `text-white/70` Label
+  overrides + 11 `text-white` titles + ~30 per-field input overrides that
+  bypassed the token. The base components own the color now. En-route
+  catch: the `--foreground` triplet `221 28% 93%` computed #e8ebf2 — its
+  "#e7e9ef" comment was a rounding approximation; all five
+  foreground-family triplets re-pointed to the exact `225 20% 92%`.
+- **F-67 (MEDIUM)**: six dialog Cancellations + two AlertDialogCancels + the
+  receipt "Cerrar" were bare ghosts (transparent, white/70) — the
+  reference's Cancel is the gray `glass-button` family; the clone's own
+  category-dialog pattern applied everywhere.
+- **F-68 (LOW)**: the New Register dialog 448 → 512px (`sm:max-w-lg`).
+- **F-69 (LOW-MEDIUM)**: the select dropdown surface — `--popover` to
+  `225 21% 11%` (#161922, the measured listbox).
+- **F-65 (RETRACTED)**: the "outline Create button" reading missed the
+  `background-image` gradient layer — the clone's `glass-button-primary`
+  was byte-exact all along. Trap 23 records the two-layer lesson.
+
+**TDD:** all pins red-first (rgb(231,233,239)≠rgb(9,9,11), glass-dark≠solid,
+white/70≠#e7e9ef, transparent≠gray, 448≠512), then green. En-route: the raw
+dialog-width reads raced the zoom-in-95 entrance (511.58 mid-zoom) — all
+three hardened to `expect.poll` (the F-51 doctrine, third strike).
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **133/133**
+(13 files) · build green (hygiene-clean) · smoke **13/13** · e2e **88/88**
+(+4: the typed-text pin, the register-dialog contract, the product dialog +
+select, the Settings label family; the category-dialog pins EXTENDED an
+existing test). Live evidence (`scripts/capture-s11-evidence.mjs`): **12/12**
+— all six fixes measured live, the checkout journey (T-000039), and the
+mobile drawer contract at 390×844. VLM sweep of screenshots 55–60: **6/6
+effective** (including the typed-text legibility check on the login card).
+Skill v2.7.0.

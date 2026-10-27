@@ -156,6 +156,40 @@ bite hardest here:
   of the reference's `rgb(…)`. `--color-indigo-400: #818cf8` was added in Session-10;
   when a pin expects `rgb(...)` and reads `lab(...)`, pin the hex.
 
+## The dialog + form-text contracts (Session-11 pins)
+
+- **The reference's dialog family is SOLID, never glass**: every dialog
+  computes `rgb(15,18,26)` (#0f121a via `--card` `224 27% 8%`) + 1px
+  `rgb(38,42,54)` (#262a36) + **NO backdrop-filter** + rounded-lg (8px) +
+  p-6 + shadow-lg + the reference's widths (`New Register`/`New Product`
+  512px `sm:max-w-lg`; `New Category` 384px `sm:max-w-sm`). NEVER put
+  `glass-dark` (or its inert `border-edge` companion — trap #15) on a
+  `*DialogContent`; the primitive's `bg-card border-border` owns the surface.
+  The dialog Close X computes a 36px hit area (`flex h-9 w-9 …`). The mobile
+  drawer keeps glass-dark BY DESIGN (the clone's own superset — no reference
+  contract). The select dropdown is a DIFFERENT elevated panel: `--popover`
+  computes `#161922` (rgb(22,25,34)) + rounded-md (6px).
+- **The form-text family is ONE color — `#e7e9ef` via `text-foreground`**:
+  the reference's labels (14px/500), dialog titles (18px/600), and input text
+  ALL compute `rgb(231,233,239)`. The `--foreground` triplet is
+  **`225 20% 92%`** — the old `221 28% 93%` computed #e8ebf2 (a 1-off
+  rounding drift caught by the label pin). The base Input/Textarea/Label
+  carry `text-foreground` (SelectTrigger already did); NEVER re-introduce
+  per-field `text-white`/`text-white/70` overrides on form controls.
+- **`text-foreground` on the base inputs is LOAD-BEARING (Session-11, F-70)**:
+  without it the inputs inherit the dark-theme BODY color, so the
+  `.theme-light` scope's `--foreground` re-point never reached the login
+  fields — TYPED credentials rendered near-white on the near-white card
+  (invisible since Session-101; invisible to e2e because fills don't read
+  rendered text, and to screenshots because they showed the EMPTY form).
+  `.theme-light --foreground` = `240 10% 4%` (zinc-950 — byte-exact vs the
+  reference's measured rgb(9,9,11)); e2e-pinned on the TYPED text.
+- **Dialog buttons**: Cancel = the gray `glass-button` (rgba(28,31,52,0.85) +
+  white/9 + rgba(200,210,255,0.8) + 42px + rounded-xl); Create/Save =
+  `glass-button-primary` (the 135° gradient lives in `background-image` —
+  `background-color` reads transparent; measure BOTH before concluding
+  "outline"); disabled = opacity .5 + not-allowed.
+
 ## The chrome + chart contracts (Session-6 pins)
 
 - **Nav items are `px-3 py-2.5` PADDING-DRIVEN** (40px inactive; the reference dropped its

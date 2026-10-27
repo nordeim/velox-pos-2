@@ -37,9 +37,9 @@ function SaleDetailDialog({ sale, onClose }: { sale: Sale | null; onClose: () =>
   const currency = settings?.currency ?? "USD";
   return (
     <Dialog open={!!sale} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="glass-dark border-edge sm:max-w-sm">
+      <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle className="text-white">{sale.ticket}</DialogTitle>
+          <DialogTitle>{sale.ticket}</DialogTitle>
           <DialogDescription className="text-white/50">
             {new Date(sale.createdAt).toLocaleString()}
           </DialogDescription>
@@ -63,7 +63,7 @@ function SaleDetailDialog({ sale, onClose }: { sale: Sale | null; onClose: () =>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} className="text-white/70">
+          <Button variant="ghost" onClick={onClose} className="glass-button rounded-xl border-0">
             Cerrar
           </Button>
           <Button onClick={() => window.print()} className="glass-button-primary rounded-xl border-0">

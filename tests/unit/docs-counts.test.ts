@@ -81,10 +81,11 @@ const viewFiles = readdirSync(path.join(root, "src/components/pos/views")).filte
 // UNIT 133 = the 123 Session-7 baseline + THIS file's 10 its.
 const UNIT = 133;
 const UNIT_FILES = 13;
-// E2E 84 = the Session-9 80 + the Session-10 pins (the login blur, the
-// Dashboard stat family, the Reports stat family, the muted-tone family —
-// the F-60 landing test was an EXTENSION of an existing test, not a new one).
-const E2E = 84;
+// E2E 88 = the Session-10 84 + the Session-11 pins (the login typed-text,
+// the register-dialog container/Cancel/form-text contract, the product dialog
+// + select dropdown, the Settings label family — the category-dialog
+// container pins EXTENDED an existing test, not a new one).
+const E2E = 88;
 const E2E_SPECS = 7;
 const ROUTE_FILES = 26;
 const PRISMA_MODELS = 9;
@@ -164,8 +165,8 @@ describe("session-8 (F-52): the count-lockstep gate — every live-tense count s
   });
 
   it("the SKILL carries the live counts (header baselines, commands, data model, tiers)", () => {
-    expect(skillFlat).toContain(`Baselines at Session-10 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
-    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (70 desktop + 13 mobile + 1 setup)`);
+    expect(skillFlat).toContain(`Baselines at Session-11 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
+    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (74 desktop + 13 mobile + 1 setup)`);
     expect(skillFlat).toContain(`tests/unit/** (${UNIT})`);
     expect(skillFlat).toContain(`playwright (${E2E})`);
     expect(skillFlat).toContain(`${PRISMA_MODELS} models, user-scoped, cascade deletes`);
