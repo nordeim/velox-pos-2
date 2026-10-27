@@ -78,14 +78,16 @@ const viewFiles = readdirSync(path.join(root, "src/components/pos/views")).filte
 ).length;
 
 // ---- the constants (re-anchored in the same commit as any suite growth) ----
-// UNIT 133 = the 123 Session-7 baseline + THIS file's 10 its.
-const UNIT = 133;
-const UNIT_FILES = 13;
-// E2E 97 = the Session-12 93 + the Session-13 reset-password pins (the
-// gray-family form card, the invalid-token alert + API copy, the client-side
-// mismatch check, the tokenless Invalid-Reset-Link dead-end — all NEW tests,
-// no prior pin extended).
-const E2E = 97;
+// UNIT 138 = the 123 Session-7 baseline + the F-52 gate's 10 its + the
+// Session-14 chart-path seam's 5 its (the smooth-curve pure seam).
+const UNIT = 138;
+const UNIT_FILES = 14;
+// E2E 102 = the Session-13 97 + the Session-14 chart pins (the Dashboard's
+// indigo line family, the slate grid/axes, the gradient area, the plot
+// geometry/ticks, and the Reports chart's own family — all NEW tests; the
+// F-50 pin's y-label filter corrected from the clone's old pad 34 to the
+// measured plot edge 65, no assertion weakened).
+const E2E = 102;
 const E2E_SPECS = 7;
 const ROUTE_FILES = 26;
 const PRISMA_MODELS = 9;
@@ -165,8 +167,8 @@ describe("session-8 (F-52): the count-lockstep gate — every live-tense count s
   });
 
   it("the SKILL carries the live counts (header baselines, commands, data model, tiers)", () => {
-    expect(skillFlat).toContain(`Baselines at Session-13 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
-    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (83 desktop + 13 mobile + 1 setup)`);
+    expect(skillFlat).toContain(`Baselines at Session-14 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
+    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (88 desktop + 13 mobile + 1 setup)`);
     expect(skillFlat).toContain(`tests/unit/** (${UNIT})`);
     expect(skillFlat).toContain(`playwright (${E2E})`);
     expect(skillFlat).toContain(`${PRISMA_MODELS} models, user-scoped, cascade deletes`);

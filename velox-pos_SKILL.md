@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.9.0
+version: 2.10.0
 last_updated: 2026-10-27
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-13 lock: unit **133/133** (13 files) · e2e **97/97**
-(83 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-14 lock: unit **138/138** (14 files) · e2e **102/102**
+(88 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -45,7 +45,7 @@ warning) · standalone build green.
 | ORM | Prisma ^6 / SQLite | `db/custom.db` at the repo root; `src/lib/db-path.ts` owns the URL contract |
 | Validation | Zod ^4.6 | Strip mode at EVERY API boundary (`src/lib/validation.ts`) |
 | Auth | scrypt + HMAC `sf_session` cookie (`node:crypto`) | Hand-rolled by design (PAD ADR-002); boot-guarded secret |
-| Charts | Hand-rolled SVG (`src/components/pos/shared.tsx`) | Zero chart dependencies |
+| Charts | Hand-rolled SVG (`src/components/pos/shared.tsx` + the `smoothPath` seam in `src/lib/chart-path.ts`) | Zero chart dependencies; TWO measured contracts — Dashboard: indigo #6366f1 2.5px smooth + slate-200 dashed grid + slate-400 axes + gradient area 0.3@5%, no dots; Reports: indigo 2px + white/4% grid, no axes, 0.35@5% (Session-14, F-95..F-106 — do not restyle from memory) |
 | Unit tests | Vitest ^5 (node env) | `tests/unit/**` — the pure seams only |
 | E2E | Playwright ^1.63 | Against the PRODUCTION standalone build on :3100, own scratch db |
 | Runtime | Bun ≥ 1.1 | Everything: dev, scripts, seed, tests |
@@ -66,9 +66,9 @@ removed `quill`, `web-vitals`, `tailwindcss-animate`, `@radix-ui/react-radio-gro
 bun run dev                    # :3000 (output teed to dev.log)
 bun run lint                   # eslint flat config — 0 errors, 1 documented warning
 bun run typecheck              # tsc --noEmit — strict
-bun run test                   # vitest — tests/unit/** (133)
+bun run test                   # vitest — tests/unit/** (138)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               playwright (97) — NEEDS the build first (:3100)
+bun run test:e2e               playwright (102) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -429,10 +429,10 @@ SUPERSET instead:
 
 ## 12. Testing strategy (three tiers)
 
-1. **Unit (Vitest, 133/133, 13 files)** — the pure seams only (plus the docs-counts
+1. **Unit (Vitest, 138/138, 14 files)** — the pure seams only (plus the docs-counts
    lockstep gate). New `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 97/97)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 102/102)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -989,3 +989,74 @@ the owner's password rewritten to its current value — the dev db's
 credentials unchanged) and the login-surface sanity sweep. Screenshots
 67–70. The count constants re-anchored (E2E=97, "Session-13 lock", "83
 desktop + 13 mobile + 1 setup"). Skill v2.9.0.
+
+## Session history addendum — Session-14
+
+**The cycle:** received-tree gate green on first run at `fdd2704` (the operator's
+session_22.md raw log — its "Next" pointer named this cycle's targets: the chart
+internals + the fresh-clone pristine path). The EIGHTH consecutive drift-free reference
+cycle (every standing pin byte-exact: the login card, the F-76 alert, the sidebar, the
+terminal gate, the Spanish families, the Dashboard date line, the reference's own mobile
+defect at 390×844).
+
+**The NEW depth — the chart internals, never measured in any prior session**
+(F-95..F-106): the reference ships TWO distinct chart contracts. The Dashboard chart:
+an **indigo-500 #6366f1 2.5px SMOOTH monotone line** over a **slate-200 #e2e8f0 1px
+dashed-3-3 grid** (5h+7v), **two full-length slate-400 axes** + 12 tick stubs (x-ticks
+245→251), **12px slate-400 ticks** (x middle-anchored baseline 253, y end-anchored x=57),
+a **gradient area** (indigo 0.3 @5% → 0 @95% under fill-opacity 0.6), **ZERO data
+dots**, plot viewBox `0 0 731 280` (baseline y=245, edge x=65 — container-responsive
+width, FIXED paddings). The Reports chart: its OWN family — **indigo at 2px**,
+**white/4% dashed grid with NO axes**, **11px white/30 ticks**, gradient **0.35** @5%,
+plot `0 0 1130 220` (baseline y=190). The earlier "dotted grid + violet stroke" was an
+unmeasured Session-101 assumption that survived 13 cycles because no session had swept
+the chart internals — F-50 pinned only the tick discipline.
+
+**The cure:** the new pure seam `src/lib/chart-path.ts` (`smoothPath` — a
+Fritsch-Carlson monotone-X cubic Hermite; flat data reproduces the reference's measured
+D shape with controls at 1/3·2/3 spans; unit-pinned 5/5) + both chart rewrites in
+`shared.tsx`. Colors are SVG ATTRIBUTES (literal hex) — the Tailwind cascade and its v4
+oklch serialization never touch the charts.
+
+**The static sweep (SD-1):** 12 zero-importer ui primitives deleted (avatar, badge,
+card, checkbox, dropdown-menu, popover, progress, separator, skeleton, slider, tabs,
+tooltip) + the 9 Radix packages serving only them removed via `bun remove` — the ui
+layer is exactly the 10 live files, census-proven in the evidence script. The
+Session-13 sweep cleared `src/lib` + the pos components; the ui/ layer had kept its
+scaffolding-era full set.
+
+**SD-2 — the Session-13 evidence claim CORRECTED:** the s13 round-trip's "the owner's
+password rewritten to its current value — the dev db's credentials unchanged" (this
+skill's Session-13 addendum, above) was **wrong** — the script typed its own form-fill
+constant "Abcd1234!" into the reset form and silently changed `db/custom.db`'s owner
+password. Found when this cycle's evidence login 401'd; hash-verified ("Abcd1234!"
+matched, "$Abcd1234" did not); restored via `scripts/restore-owner-password.mjs`
+(control-verified the drifted hash, end-to-end verified the restore to the
+README-documented `$Abcd1234`). **The doctrine: any script that exercises a
+password-changing flow ends by proving the DOCUMENTED login works.**
+
+**The fresh-clone pristine-path verification (web-application §15's periodic gate, first
+run on this repo):** clone of HEAD → `bun install` (485 pkgs from the lockfile) → `cp
+.env.example .env` → `db:push` → `db:seed` → `typecheck` → `build` → standalone boot →
+health `db:up` + /login 200. The no-AUTH_SECRET boot refusal fires first exactly as
+documented — the pristine path works as the README quick-start says, verbatim.
+
+**TDD:** all pins red-first. Unit RED 5/5 (the seam absent) — with an infrastructure
+lesson: `next build` type-checks `tests/` too, so a unit-tier RED pin BLOCKS the
+standalone build the e2e RED needs; the order for a two-tier RED is: prove the unit
+RED, hold the unit test aside, prove the e2e RED against the pre-fix build, restore for
+GREEN. E2E RED: exactly 5/5 targeted failures (the serial-mode siblings proven failing
+individually), zero collateral. Two serialization postures learned mid-GREEN (no
+assertions weakened): Chromium computes gradient fills QUOTED (`url("#id")` — the
+reference's own computed fill measures identically), and the F-50 pin's `x < 34`
+y-label filter (the clone's own old padding) was corrected to the measured plot edge
+`x < 65`.
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **138/138** (14 files,
++5 the chart-path seam) · build green (hygiene-clean) · smoke **13/13** · e2e
+**102/102** (+5 chart pins — all NEW; the F-50 filter corrected, no prior pin
+weakened). Live evidence (`scripts/capture-s14-evidence.mjs`): **14/14** — both
+charts' contracts end-to-end, the SD-1 census, the F-76 drift spot-check (oklab-alpha
+posture), the mobile drawer. VLM parity: the clone's chart matches the reference's on
+all four contract axes. Screenshots 71–74. The count constants re-anchored (E2E=102,
+"Session-14 lock", "88 desktop + 13 mobile + 1 setup"). Skill v2.10.0.

@@ -1,9 +1,9 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.11
+# VeloxPOS — Master Project Architecture Document (PAD) v1.12
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
 **Companion documents:** `README.md` (tour) · `AGENTS.md` (agent invariants) · `CLAUDE.md` (Claude conventions) · `docs/veloxpos-implementation-plan.md` (the measured reference spec)
-**Last Updated:** 2026-10-27 (Session-13)
+**Last Updated:** 2026-10-27 (Session-14)
 **Audience:** Senior engineers, tech leads, DevOps, onboarding engineers, and AI coding agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -25,10 +25,10 @@ reports, validation) underneath **server-gated thin routes**, a **single Zustand
 (lint → typecheck → unit → build → e2e) is the only gate — there is no hosted CI — so every
 guardrail is enforced by tooling that runs in this checkout.
 
-**Scale & baselines (verified 2026-10-27, Session-13 re-certification):** 9 Prisma models · 26 API
+**Scale & baselines (verified 2026-10-27, Session-14 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views (9 route spellings — the root `/` page is the
 terminal's reference-parity landing, Session-10 F-60)
-+ login/reset/404 · 133 unit tests (13 files) · 97 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 138 unit tests (14 files) · 102 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -241,12 +241,14 @@ Dependency rule: arrows point downward only. `src/lib` pure seams never import R
  ├ 📂 src/components/pos   — app-shell (sidebar+drawer) · nav-items · shared (PageHeader,
  │                           StatCard, SVG charts) · pages.tsx · login/reset surfaces ·
  │                           use-pos-bootstrap.ts · views/ (8 view files)
- ├ 📂 src/components/ui    — shadcn-style Radix primitives (dialog, select, toast, …)
+ ├ 📂 src/components/ui    — shadcn-style Radix primitives, the 10 live files
+ │                           (alert, alert-dialog, button, dialog, input, label,
+ │                           select, switch, textarea, toast)
  ├ 📂 src/lib              — pure seams (money, cart, shift, reports, inventory-status,
- │                           currency, router, validation, auth, date, site, env-check,
+ │                           currency, router, validation, auth, chart-path, site, env-check,
  │                           db-path, db, store, api, utils) + server/ (http, auth, entities)
  ├ 📂 prisma               — schema.prisma (9 models) · seed.ts (owner + settings; --demo dataset)
- ├ 📂 tests/unit           — 13 vitest files (the seam registry + the docs-counts gate)
+ ├ 📂 tests/unit           — 14 vitest files (the seam registry + the docs-counts gate)
  ├ 📂 tests/e2e            — 7 spec files + auth.setup + kill-port + provisioning
  ├ 📂 docs                 — implementation plan, runbooks, Tailwind report, screenshots/
  └ ⚙️ next.config.ts · playwright.config.ts · vitest.config.ts · package.json · .env.example
@@ -290,12 +292,12 @@ auth-support pair — `VerificationToken` (6-digit OTP, 15-minute window) and
 lint → typecheck → unit → build → smoke → e2e
 ```
 
-1. **Unit (Vitest, 133/133):** the pure seams — money (cents math, formatting), cart (reducer,
+1. **Unit (Vitest, 138/138):** the pure seams — money (cents math, formatting), cart (reducer,
    totals, charge gate), shift (state machine, variance), reports (bucketing, shares),
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
-   Baseline: 13 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 97/97):** production standalone on :3100, scratch db (`db/e2e.db`)
+   Baseline: 14 files. New seams arrive with their file; fixes arrive with regression tests.
+2. **E2E (Playwright, 102/102):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
@@ -914,3 +916,77 @@ VLM sweep of screenshots 49–54: **6/6 effective** (the one initial flag — "n
 blur" on the login card — was the prompt's wrong expectation: the reference's canvas is a
 plain gradient with nothing behind the card to blur; the 4px value is a computed-style
 contract, pinned and verified on both sides).
+
+## Revision Block — v1.12 (2026-10-27, Session-14)
+
+**Scope:** the chart-internal parity pass (F-95..F-106 — the last never-measured primary
+surfaces), the ui-primitive purge (SD-1), the dev-db credential restore (SD-2), and the
+first fresh-clone pristine-path verification (web-application §15's periodic gate).
+
+- **The chart internals were never measured** — Session-6's F-50 pinned only the tick
+  discipline (nice ticks, 12px/11px fonts, weekday/date labels, `$` y ticks) and
+  Session-101 implemented "dotted grid + violet stroke" as an unmeasured assumption that
+  survived 13 cycles. Session-14 decoded both charts live (computed styles + DOM
+  attributes): **the reference ships TWO distinct chart contracts** (its own pattern —
+  two alert families, two stat families, two chart families).
+- **F-95..F-101 (the Dashboard chart)**: an **indigo-500 #6366f1 2.5px SMOOTH monotone
+  line** over a **slate-200 #e2e8f0 1px dashed-3-3 grid** (5 horizontal + 7 vertical),
+  **two full-length slate-400 #94a3b8 axes** (baseline y=245, edge x=65) + 12 tick stubs
+  (x-ticks 245→251), **12px slate-400 ticks** (x middle-anchored at baseline 253, y
+  end-anchored at x=57), a **gradient area** (indigo 0.3 @5% → 0 @95% under fill-opacity
+  0.6), and **ZERO data dots**. Plot: viewBox `0 0 731 280` (container-responsive width;
+  fixed paddings — the clone's fixed-viewBox `w-full` SVG renders 1:1 at the e2e
+  viewport). Cured by the `LineChart` rewrite; the smooth curve through the new pure seam
+  `src/lib/chart-path.ts` (`smoothPath` — Fritsch-Carlson monotone-X Hermite, unit-pinned
+  5/5 in `tests/unit/chart-path.test.ts`; flat data reproduces the reference's measured
+  D shape — controls at 1/3·2/3 spans).
+- **F-102..F-106 (the Reports chart)**: its OWN family — **indigo at 2px** (not the
+  Dashboard's 2.5), gridlines **rgba(255,255,255,0.04) dashed 3-3 with NO slate axes**,
+  ticks **11px rgba(255,255,255,0.3)**, the gradient at **0.35 @5%** (not 0.3) under
+  fill-opacity 0.6, `$`-prefixed y ticks + "d MMM" date labels (both already correct).
+  Plot: viewBox `0 0 1130 220` (clip x=60 y=4 1066×186, baseline y=190). Cured by the
+  `AreaChart` rewrite.
+- **The charts' colors are SVG ATTRIBUTES (literal hex)** — the Tailwind cascade and its
+  v4 oklch serialization never touch the charts. Two serialization postures learned:
+  Chromium computes gradient fills **quoted** (`url("#id")` — the reference's own computed
+  fill measures identically; pins assert the quoted form), and the F-50 pin's `x < 34`
+  y-label filter (the clone's own old padding) was corrected to the measured plot edge
+  `x < 65` — valid across both geometries, no assertion weakened.
+- **SD-1 (the ui-primitive purge)**: 12 zero-importer scaffolding primitives deleted
+  (avatar, badge, card, checkbox, dropdown-menu, popover, progress, separator, skeleton,
+  slider, tabs, tooltip) + `bun remove` of the 9 Radix packages serving only them — the
+  ui layer is now exactly the 10 measured-live files (alert, alert-dialog, button,
+  dialog, input, label, select, switch, textarea, toast), census-proven in the evidence
+  script. The PAD's component tree now names the exact set.
+- **SD-2 (the dev-db credential drift, found mid-evidence)**: the Session-13 evidence
+  run's "one-shot reset round-trip" typed its own form-fill constant "Abcd1234!" into the
+  reset form — silently changing `db/custom.db`'s owner password; the s13 plan's "no
+  state change" claim was wrong. Found when this cycle's evidence login 401'd;
+  hash-verified, then restored via `scripts/restore-owner-password.mjs` (control-verified
+  the drifted hash, end-to-end verified the restore to the README-documented `$Abcd1234`).
+  Doctrine: evidence scripts that mutate auth state end by proving the DOCUMENTED login.
+- **The fresh-clone pristine-path verification (first run on this repo)**: local clone of
+  HEAD → `bun install` (485 pkgs from the lockfile) → `cp .env.example .env` → `db:push`
+  → `db:seed` (owner + `db/custom.db` at the clone root — the relative-URL contract
+  proven on a pristine tree) → `typecheck` → `build` → standalone boot → health
+  `{"status":"ok","db":"up"}` + /login 200. The no-AUTH_SECRET boot refusal fired first
+  exactly as documented (§5 enforcement) — the pristine path works as the README's
+  quick-start says, verbatim.
+- **The eighth consecutive drift-free reference cycle**: every standing pin re-measured
+  live and byte-exact (the login card's internals, the F-76 alert panel, the sidebar
+  family, the terminal shift gate, the Sales/Cashiers Spanish families, the Dashboard
+  date line) — plus the reference's own mobile defect at 390×844 (still no hamburger,
+  still the static 220px z-50 sidebar; the clone's drawer superset remains correct).
+
+**Re-certification (all on the final tree):** lint ✓ (0 errors, 1 documented warning) ·
+tsc ✓ · unit **138/138** (14 files — +5: the chart-path seam) · build ✓ (hygiene-clean) ·
+smoke **13/13** · e2e **102/102** (+5: the Dashboard's line-family, grid+axes,
+gradient-area, plot-geometry pins + the Reports family pin; the F-50 y-label filter
+corrected to the measured edge — no prior pin weakened). Live evidence on the rebuilt
+standalone (`scripts/capture-s14-evidence.mjs`, **14/14**): both charts' full contracts
+computed end-to-end, the SD-1 census (10 files, 9 deps gone), the F-76 drift spot-check
+(the documented oklab-alpha posture), and the mobile drawer at 390×844. VLM parity
+cross-check: the clone's Dashboard chart matches the reference's on all four contract
+axes (line family, dashed grid, axis structure, zero dots); the only visible delta is
+the container-responsive width at different capture viewports — the internal contract is
+the pinned part. Screenshots 71–74.

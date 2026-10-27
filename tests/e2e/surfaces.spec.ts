@@ -31,6 +31,83 @@ test("the period pills switch (90 days renders 90 buckets)", async ({ page }) =>
   await expect(page.getByTestId("area-chart")).toBeVisible();
 });
 
+// Session-14 (F-102..F-106, measured live on the reference 2026-10-27 at
+// 1440×900): the Reports "Daily Sales" chart is its OWN family — the
+// reference ships two distinct chart contracts exactly as it ships two
+// alert/stat families. The Reports chart: a white/4% dashed grid (NO slate
+// axes), 11px white/30 ticks, the indigo line at 2px (not the Dashboard's
+// 2.5), and the gradient at 0.35@5% (not 0.3). The clone's single
+// violet/dotted treatment diverged on every axis of the contract.
+test("the Reports daily chart is the reference's own indigo family (F-102..F-106)", async ({
+  page,
+}) => {
+  await page.goto("/Reports");
+  const chart = page.getByTestId("area-chart");
+  await expect(chart).toBeVisible();
+  const c = await chart.evaluate((svg) => {
+    const paths = Array.from(svg.querySelectorAll("path"));
+    const areaPath = paths[0];
+    const linePath = paths[paths.length - 1];
+    const lines = Array.from(svg.querySelectorAll("line")).map((l) => ({
+      stroke: getComputedStyle(l).stroke,
+      dash: l.getAttribute("stroke-dasharray"),
+    }));
+    const texts = Array.from(svg.querySelectorAll("text")).map((t) => ({
+      t: (t.textContent || "").trim(),
+      size: getComputedStyle(t).fontSize,
+      color: getComputedStyle(t).fill,
+    }));
+    const grad = svg.querySelector("linearGradient");
+    const stops = grad
+      ? Array.from(grad.querySelectorAll("stop")).map((s) => ({
+          off: s.getAttribute("offset"),
+          op: getComputedStyle(s).stopOpacity,
+        }))
+      : [];
+    return {
+      viewBox: svg.getAttribute("viewBox"),
+      lineStroke: linePath ? getComputedStyle(linePath).stroke : null,
+      lineW: linePath?.getAttribute("stroke-width") ?? null,
+      lineD: linePath?.getAttribute("d") ?? "",
+      areaFill: areaPath ? getComputedStyle(areaPath).fill : null,
+      areaFillOp: areaPath ? getComputedStyle(areaPath).getPropertyValue("fill-opacity") : null,
+      gridStrokes: [...new Set(lines.map((l) => l.stroke))],
+      gridDash: [...new Set(lines.map((l) => l.dash))],
+      slateAxisCount: lines.filter((l) => l.stroke === "rgb(148, 163, 184)").length,
+      gridCount: lines.length,
+      yTick: texts.find((t) => /^\$\d+$/.test(t.t)) ?? null,
+      xTick: texts.find((t) => /^\d{1,2} [A-Z][a-z]{2}$/.test(t.t)) ?? null,
+      stops,
+    };
+  });
+  // F-102: the indigo line at 2px, smooth (C segments).
+  expect(c.lineStroke).toBe("rgb(99, 102, 241)");
+  expect(c.lineW).toBe("2");
+  expect(c.lineD).toMatch(/^M-?[\d.]+,-?[\d.]+C/);
+  // F-105: the gradient area — 0.35 @5% → 0 @95% at fill-opacity 0.6
+  // (computed fill serializes the id QUOTED — `url("#…")`, the reference's
+  // own measured form).
+  expect(c.areaFill).toContain('url("#');
+  expect(c.areaFillOp).toBe("0.6");
+  expect(c.stops).toHaveLength(2);
+  expect(c.stops[0].off).toBe("5%");
+  expect(c.stops[0].op).toBe("0.35");
+  expect(c.stops[1].off).toBe("95%");
+  expect(c.stops[1].op).toBe("0");
+  // F-103: the grid is white at 4%, dashed 3-3 — and NO slate axes here.
+  expect(c.gridStrokes).toEqual(["rgba(255, 255, 255, 0.04)"]);
+  expect(c.gridDash).toEqual(["3 3"]);
+  expect(c.slateAxisCount).toBe(0);
+  expect(c.gridCount).toBeGreaterThanOrEqual(8);
+  // F-104: 11px white/30 ticks; the $-prefixed y + the "d MMM" x survive.
+  expect(c.yTick?.size).toBe("11px");
+  expect(c.yTick?.color).toBe("rgba(255, 255, 255, 0.3)");
+  expect(c.xTick?.size).toBe("11px");
+  expect(c.xTick?.color).toBe("rgba(255, 255, 255, 0.3)");
+  // F-106: the measured plot box (responsive width; 1130 at this viewport).
+  expect(c.viewBox).toBe("0 0 1130 220");
+});
+
 test("Cashiers shows the Spanish copy and the roster flow", async ({ page }) => {
   await page.goto("/Cashiers");
   await expect(page.getByRole("heading", { name: "Cajeros" })).toBeVisible();

@@ -4,12 +4,14 @@
 // Shared view furniture: the page header (title + subtitle, the reference's
 // ghost-heading style), the stat cards (the reference ships TWO families —
 // the Dashboard's solid-gradient chips and the Reports' flat /15 chips —
-// Session-10, F-61/F-62), and the two hand-rolled SVG charts (dotted grid +
-// violet stroke — zero chart dependencies, pixel-controlled parity).
+// Session-10, F-61/F-62), and the two hand-rolled SVG charts (Session-14:
+// the reference's measured indigo/slate families — two DISTINCT contracts,
+// zero chart dependencies, pixel-controlled parity).
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
 
+import { smoothPath } from "@/lib/chart-path";
 import { niceTicks } from "@/lib/reports";
 
 export function PageHeader({
@@ -99,28 +101,58 @@ export function StatCard({
 
 export type SeriesPoint = { label: string; value: number };
 
-/** The "Sales — Last 7 days" line chart: dotted grid + violet stroke.
- * Session-6 (F-50): the y axis renders NICE TICKS (the reference's
- * Recharts convention, ~5 steps — measured 12px fonts, weekday x labels). */
+// ---------------------------------------------------------------------------
+// Session-14 (F-95..F-106, measured live on the reference 2026-10-27 at
+// 1440×900): the chart internals, decoded for the first time. The reference
+// ships TWO distinct chart contracts (exactly as it ships two alert and two
+// stat families) — the earlier "dotted grid + violet stroke" was an
+// unmeasured Session-101 assumption:
+//   • Dashboard "Sales — Last 7 days": an indigo-500 #6366f1 2.5px SMOOTH
+//     monotone line over a slate-200 #e2e8f0 dashed 3-3 grid, slate-400
+//     #94a3b8 axis lines + tick stubs, 12px slate-400 ticks, an indigo
+//     gradient area (0.3 @5% → 0 @95%, fill-opacity 0.6), and ZERO data
+//     dots. Plot: viewBox 731×280 (the reference's chart is
+//     container-responsive — the paddings/fonts are the fixed measured
+//     values), edge x=65, top y=5, baseline y=245, plot 661×240.
+//   • Reports "Daily Sales": its OWN family — white/4% dashed grid with NO
+//     slate axes, 11px white/30 ticks, the indigo line at 2px, the gradient
+//     at 0.35 @5%. Plot: viewBox 1130×220, edge x=60, top y=4, baseline
+//     y=190, plot 1066×186.
+// The colors are SVG ATTRIBUTES (literal hex) — the Tailwind cascade and
+// its v4 oklch serialization never touch the charts.
+// ---------------------------------------------------------------------------
+
+/** The Dashboard "Sales — Last 7 days" chart (F-95..F-101): indigo smooth
+ * line + slate grid/axes + the gradient area + zero dots. The y axis
+ * renders NICE TICKS (Session-6 F-50, re-verified this cycle: 0,1,2,3,4 on
+ * the empty reference — niceTicks(4) reproduces it exactly). */
 export function LineChart({
   data,
-  height = 260,
   ariaLabel,
 }: {
   data: SeriesPoint[];
-  height?: number;
   ariaLabel: string;
 }) {
-  const width = 720;
-  const pad = { top: 14, right: 14, bottom: 28, left: 34 };
-  const innerW = width - pad.left - pad.right;
-  const innerH = height - pad.top - pad.bottom;
+  // The measured plot box (viewBox 731×280 — the e2e-state container width;
+  // the svg scales responsively below it).
+  const width = 731;
+  const height = 280;
+  const plotX = 65;
+  const plotY = 5;
+  const plotW = width - plotX - 5; // 661
+  const plotH = 240;
+  const baseY = 245; // the measured axis baseline
   const max = Math.max(4, ...data.map((d) => d.value));
   const niceMax = Math.ceil(max);
   const x = (i: number): number =>
-    pad.left + (data.length <= 1 ? innerW / 2 : (i / (data.length - 1)) * innerW);
-  const y = (v: number): number => pad.top + innerH - (v / niceMax) * innerH;
-  const path = data.map((d, i) => `${i === 0 ? "M" : "L"}${x(i)},${y(d.value)}`).join(" ");
+    plotX + (data.length <= 1 ? plotW / 2 : (i / (data.length - 1)) * plotW);
+  const y = (v: number): number => baseY - (v / niceMax) * plotH;
+  const pts = data.map((d, i) => ({ x: x(i), y: y(d.value) }));
+  const line = smoothPath(pts);
+  // The area closes along the measured baseline (degenerate — zero height —
+  // on flat data, exactly like the reference's empty state).
+  const lastX = x(data.length - 1);
+  const area = `${line} L${lastX},${baseY} L${x(0)},${baseY} Z`;
   // F-50: nice ticks — never one grid line per unit of the domain.
   const gridLines = niceTicks(niceMax, 5);
 
@@ -132,75 +164,131 @@ export function LineChart({
       aria-label={ariaLabel}
       data-testid="line-chart"
     >
+      <defs>
+        <linearGradient id="vpx-dash-sales" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="5%" stopColor="#6366f1" stopOpacity="0.3" />
+          <stop offset="95%" stopColor="#6366f1" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {/* F-96: the slate-200 dashed grid — one horizontal per nice tick. */}
       {gridLines.map((g) => (
-        <g key={g}>
+        <g key={`g-${g}`}>
           <line
-            x1={pad.left}
-            x2={width - pad.right}
+            x1={plotX}
+            x2={plotX + plotW}
             y1={y(g)}
             y2={y(g)}
-            stroke="rgba(255,255,255,0.16)"
+            stroke="#e2e8f0"
             strokeWidth="1"
-            strokeDasharray="2 4"
+            strokeDasharray="3 3"
           />
-          <text x={pad.left - 8} y={y(g) + 4} textAnchor="end" className="fill-white/40" fontSize="12">
+          <text
+            x={plotX - 8}
+            y={y(g)}
+            textAnchor="end"
+            fontSize="12"
+            fill="#94a3b8"
+          >
             {g}
           </text>
         </g>
       ))}
+      {/* F-96: one vertical per day bucket. */}
       {data.map((d, i) => (
-        <g key={`${d.label}-${i}`}>
-          <line
-            x1={x(i)}
-            x2={x(i)}
-            y1={pad.top}
-            y2={pad.top + innerH}
-            stroke="rgba(255,255,255,0.16)"
-            strokeWidth="1"
-            strokeDasharray="2 4"
-          />
-          <text
-            x={x(i)}
-            y={height - 8}
-            textAnchor="middle"
-            className="fill-white/50"
-            fontSize="12"
-          >
-            {d.label}
-          </text>
-        </g>
+        <line
+          key={`v-${i}`}
+          x1={x(i)}
+          x2={x(i)}
+          y1={plotY}
+          y2={baseY}
+          stroke="#e2e8f0"
+          strokeWidth="1"
+          strokeDasharray="3 3"
+        />
       ))}
-      <path d={path} fill="none" stroke="#8b5cf6" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+      {/* F-97: the y-tick stubs run 6px left of the y-axis. */}
+      {gridLines.map((g) => (
+        <line
+          key={`yt-${g}`}
+          x1={plotX}
+          x2={plotX - 6}
+          y1={y(g)}
+          y2={y(g)}
+          stroke="#94a3b8"
+          strokeWidth="1"
+        />
+      ))}
+      {/* F-97: the x-tick stubs run 6px below the baseline (245→251). */}
       {data.map((d, i) => (
-        <circle key={`dot-${i}`} cx={x(i)} cy={y(d.value)} r="3" fill="#8b5cf6">
-          <title>{`${d.label}: ${d.value.toFixed(2)}`}</title>
-        </circle>
+        <line
+          key={`xt-${i}`}
+          x1={x(i)}
+          x2={x(i)}
+          y1={baseY}
+          y2={baseY + 6}
+          stroke="#94a3b8"
+          strokeWidth="1"
+        />
+      ))}
+      {/* F-97: the two full-length axes. */}
+      <line x1={plotX} y1={baseY} x2={plotX + plotW} y2={baseY} stroke="#94a3b8" strokeWidth="1" />
+      <line x1={plotX} y1={plotY} x2={plotX} y2={baseY} stroke="#94a3b8" strokeWidth="1" />
+      {/* F-99: the gradient area (renders before the line — paths[0]). */}
+      <path d={area} fill="url(#vpx-dash-sales)" fillOpacity="0.6" />
+      {/* F-95: the indigo smooth line (paths[last]) — NO data dots (F-100). */}
+      <path
+        d={line}
+        fill="none"
+        stroke="#6366f1"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      {/* F-98: the x labels — 12px slate-400, middle-anchored, baseline 253. */}
+      {data.map((d, i) => (
+        <text
+          key={`xl-${i}`}
+          x={x(i)}
+          y={baseY + 8}
+          textAnchor="middle"
+          fontSize="12"
+          fill="#94a3b8"
+        >
+          {d.label}
+        </text>
       ))}
     </svg>
   );
 }
 
-/** The Reports DAILY SALES area chart: violet area fill + $-prefixed y axis. */
+/** The Reports "Daily Sales" chart (F-102..F-106): its OWN family — a
+ * white/4% dashed grid with NO slate axes, 11px white/30 ticks, the indigo
+ * line at 2px, the gradient at 0.35 @5%, $-prefixed y labels and the
+ * reference's "d MMM" date labels (already correct since Session-6). */
 export function AreaChart({
   data,
-  height = 280,
   ariaLabel,
 }: {
   data: SeriesPoint[];
-  height?: number;
   ariaLabel: string;
 }) {
-  const width = 1080;
-  const pad = { top: 16, right: 16, bottom: 30, left: 44 };
-  const innerW = width - pad.left - pad.right;
-  const innerH = height - pad.top - pad.bottom;
+  // The measured plot box (viewBox 1130×220 at the e2e-state container).
+  const width = 1130;
+  const height = 220;
+  const plotX = 60;
+  const plotY = 4;
+  const plotW = width - plotX - 4; // 1066
+  const plotH = 186;
+  const baseY = 190; // the measured area baseline
   const rawMax = Math.max(4, ...data.map((d) => d.value));
   const niceMax = Math.max(4, Math.ceil(rawMax));
   const x = (i: number): number =>
-    pad.left + (data.length <= 1 ? innerW / 2 : (i / (data.length - 1)) * innerW);
-  const y = (v: number): number => pad.top + innerH - (v / niceMax) * innerH;
-  const line = data.map((d, i) => `${i === 0 ? "M" : "L"}${x(i)},${y(d.value)}`).join(" ");
-  const area = `${line} L${x(data.length - 1)},${pad.top + innerH} L${x(0)},${pad.top + innerH} Z`;
+    plotX + (data.length <= 1 ? plotW / 2 : (i / (data.length - 1)) * plotW);
+  const y = (v: number): number => baseY - (v / niceMax) * plotH;
+  const pts = data.map((d, i) => ({ x: x(i), y: y(d.value) }));
+  const line = smoothPath(pts);
+  const lastX = x(data.length - 1);
+  const area = `${line} L${lastX},${baseY} L${x(0)},${baseY} Z`;
   // F-50: nice ticks — never one grid line per unit of the domain.
   const gridLines = niceTicks(niceMax, 5);
   const labelEvery = Math.max(1, Math.ceil(data.length / 10));
@@ -214,32 +302,72 @@ export function AreaChart({
       data-testid="area-chart"
     >
       <defs>
-        <linearGradient id="vpx-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="rgba(139,92,246,0.35)" />
-          <stop offset="100%" stopColor="rgba(139,92,246,0.02)" />
+        <linearGradient id="vpx-reports-sales" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="5%" stopColor="#6366f1" stopOpacity="0.35" />
+          <stop offset="95%" stopColor="#6366f1" stopOpacity="0" />
         </linearGradient>
       </defs>
+      {/* F-103: the white/4% grid — horizontals at the nice ticks… */}
       {gridLines.map((g) => (
-        <g key={g}>
+        <g key={`g-${g}`}>
           <line
-            x1={pad.left}
-            x2={width - pad.right}
+            x1={plotX}
+            x2={plotX + plotW}
             y1={y(g)}
             y2={y(g)}
-            stroke="rgba(255,255,255,0.14)"
+            stroke="rgba(255,255,255,0.04)"
             strokeWidth="1"
-            strokeDasharray="2 4"
+            strokeDasharray="3 3"
           />
-          <text x={pad.left - 8} y={y(g) + 4} textAnchor="end" className="fill-white/40" fontSize="11">
+          <text
+            x={plotX - 8}
+            y={y(g)}
+            textAnchor="end"
+            fontSize="11"
+            fill="rgba(255,255,255,0.3)"
+          >
             {`$${g}`}
           </text>
         </g>
       ))}
-      <path d={area} fill="url(#vpx-area)" />
-      <path d={line} fill="none" stroke="#8b5cf6" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+      {/* …and verticals at the LABELED buckets (the reference's own
+          thinning rhythm — no vertical per unlabeled bucket). */}
       {data.map((d, i) =>
         i % labelEvery === 0 || i === data.length - 1 ? (
-          <text key={`xl-${i}`} x={x(i)} y={height - 8} textAnchor="middle" className="fill-white/50" fontSize="11">
+          <line
+            key={`v-${i}`}
+            x1={x(i)}
+            x2={x(i)}
+            y1={plotY}
+            y2={baseY}
+            stroke="rgba(255,255,255,0.04)"
+            strokeWidth="1"
+            strokeDasharray="3 3"
+          />
+        ) : null,
+      )}
+      {/* F-105: the gradient area at 0.35 → 0 under fill-opacity 0.6. */}
+      <path d={area} fill="url(#vpx-reports-sales)" fillOpacity="0.6" />
+      {/* F-102: the indigo line at 2px, smooth. */}
+      <path
+        d={line}
+        fill="none"
+        stroke="#6366f1"
+        strokeWidth="2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      {/* F-104: the thinned "d MMM" labels — 11px white/30. */}
+      {data.map((d, i) =>
+        i % labelEvery === 0 || i === data.length - 1 ? (
+          <text
+            key={`xl-${i}`}
+            x={x(i)}
+            y={baseY + 22}
+            textAnchor="middle"
+            fontSize="11"
+            fill="rgba(255,255,255,0.3)"
+          >
             {d.label}
           </text>
         ) : null,

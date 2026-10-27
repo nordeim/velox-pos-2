@@ -4,8 +4,8 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6)
-![Tests](https://img.shields.io/badge/unit%20tests-133%20%2F%20133-brightgreen)
-![E2E](https://img.shields.io/badge/e2e-97%20%2F%2097-brightgreen)
+![Tests](https://img.shields.io/badge/unit%20tests-138%20%2F%20138-brightgreen)
+![E2E](https://img.shields.io/badge/e2e-102%20%2F%20102-brightgreen)
 ![License](https://img.shields.io/badge/license-Proprietary-lightgrey)
 
 **A production-ready, enterprise-grade Point of Sale web application — a functional superset of
@@ -97,8 +97,8 @@ register, a closed shift, and a week of sales).
 | `bun run build` | Standalone production build (`next build` + static/public copy) |
 | `bun run lint` | ESLint (flat config) |
 | `bun run typecheck` | `tsc --noEmit` (strict) |
-| `bun run test` | Vitest unit suite — the pure domain seams (133 tests / 13 files) |
-| `bun run test:e2e` | Playwright suite against the production standalone build (97 tests; desktop 1440×900 + mobile 390×844 projects) |
+| `bun run test` | Vitest unit suite — the pure domain seams (138 tests / 14 files) |
+| `bun run test:e2e` | Playwright suite against the production standalone build (102 tests; desktop 1440×900 + mobile 390×844 projects) |
 | `bun run smoke` | The 13-step API smoke ladder against the standalone artifact on :3210 (own scratch `db/smoke.db`; health → auth wall → Zod seam → CRUD → rate limit → boot gate → artifact hygiene) |
 | `bun run gate` | The full pre-push gate: `lint → typecheck → test → build → smoke → e2e` |
 | `bun run db:push` | `prisma db push` against `db/custom.db` |
@@ -156,7 +156,7 @@ Browser ──► /POS /Dashboard /Inventory /Sales /Registers /Cashiers /Report
  └ 📂 lib/server         — http.ts (error mapper + CRUD factories), auth.ts (cookies), entities.ts
 📂 prisma                — schema.prisma (9 models) + seed.ts
 📂 tests
- ├ 📂 unit/              — 13 vitest files over the pure seams
+ ├ 📂 unit/              — 14 vitest files over the pure seams
  └ 📂 e2e/               — Playwright specs (desktop + mobile projects)
 ```
 
@@ -186,10 +186,10 @@ All endpoints return domain JSON; errors use `{ error: string }` with the docume
 ## Testing
 
 ```bash
-bun run test            # unit: 133 tests / 13 files — the pure seams (money, cart, shift,
+bun run test            # unit: 138 tests / 14 files — the pure seams (money, cart, shift,
                         # reports, inventory-status, currency, router, validation, auth,
                         # db-path, env-check, site) + the docs-counts lockstep gate
-bun run test:e2e        # e2e: 97 tests — needs `bun run build` first (boots the standalone
+bun run test:e2e        # e2e: 102 tests — needs `bun run build` first (boots the standalone
                         # build on :3100 with its own scratch db, db/e2e.db)
 bun run smoke           # the 13-step API smoke ladder — also needs the build (boots the
                         # artifact on :3210 with db/smoke.db; verifies the boot gate +

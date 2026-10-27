@@ -176,6 +176,21 @@ No hosted CI exists; the local gate is the only gate.
   invisible to the empty-store e2e; caught by a VLM eyeball of the live
   dashboard). The Dashboard x axis = weekday abbreviations (12px); Reports =
   dates (11px) + `$` y ticks.
+- **The chart internals are TWO measured contracts** (Session-14, F-95..F-106,
+  e2e-pinned — do not restyle the charts from memory): the Dashboard chart is
+  the indigo-500 `#6366f1` 2.5px SMOOTH line (`smoothPath` in
+  `src/lib/chart-path.ts` — the pure monotone-X seam, unit-pinned) over a
+  slate-200 `#e2e8f0` dashed-3-3 grid + slate-400 `#94a3b8` axes/tick stubs +
+  12px slate-400 ticks + the indigo gradient area (0.3 @5% → 0 @95%,
+  fill-opacity 0.6) + ZERO data dots, plot viewBox `0 0 731 280`
+  (baseline y=245, edge x=65); the Reports chart is its OWN family — indigo
+  at 2px, `rgba(255,255,255,0.04)` dashed grid with NO axes, 11px white/30
+  ticks, gradient 0.35 @5%, plot `0 0 1130 220` (baseline y=190). Colors are
+  SVG attributes (literal hex — the Tailwind cascade never touches the
+  charts); Chromium computes gradient fills QUOTED (`url("#…")`) — pin the
+  quoted form. The ui primitive layer is exactly the 10 live files
+  (Session-14 SD-1 purged the 12 zero-importer primitives + their 9
+  Radix-only deps).
 - **The Session-6 chrome contracts are e2e-pinned**: padding-driven 40px nav
   items (active pill + violet border/shadow → 42px, 16px icons,
   FileChartColumnIncreasing for Reports — Session-9/F-56 corrected the glyph to the
@@ -201,13 +216,13 @@ No hosted CI exists; the local gate is the only gate.
 
 - **Unit** (`tests/unit/**`, vitest): only the pure seams. If you add a `src/lib` seam, add its
   file here — red → green (TDD) for new logic, regression tests for fixes. Expected baseline:
-  133 tests / 13 files. **`docs-counts.test.ts` is the lockstep gate** (Session-8, F-52): it
+  138 tests / 14 files. **`docs-counts.test.ts` is the lockstep gate** (Session-8, F-52): it
   LIVE-censuses the test/source tree and pins every live-tense count site in the docs to the
   constants — when a suite grows, update the constants AND every doc site in the SAME commit
   (the gate fails until you do; history blocks keep their historical numbers by design).
 - **E2E** (`tests/e2e/**`, Playwright, production standalone on :3100): user journeys through the
   real UI. Two projects — `chromium` (1440×900) and `mobile` (390×844; runs only
-  `mobile-navigation.spec.ts`). **Baseline: 97 tests.** Auth once via `auth.setup.ts` +
+  `mobile-navigation.spec.ts`). **Baseline: 102 tests.** Auth once via `auth.setup.ts` +
   storageState (the rate limiter is 10/IP/15 min). The scratch db (`db/e2e.db`) is provisioned
   by the webServer command (kill-port → provision → boot) and never replaced while the server
   lives — replacing it after boot desynchronizes the login and page-render clients

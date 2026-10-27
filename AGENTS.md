@@ -322,6 +322,46 @@ bite hardest here:
   passive-effect flush and failed the gate reliably. The lesson: when a pin doctrine
   lands, SWEEP the whole suite for the old pattern, not just the new pins.
 
+## The chart-internal contracts (Session-14 pins — F-95..F-106)
+
+- **The reference ships TWO distinct chart contracts** (its own pattern: two alert
+  families, two stat families, two chart families). The earlier "dotted grid + violet
+  stroke" was an unmeasured Session-101 assumption that survived 13 cycles because no
+  session had swept the chart internals; Session-14 decoded both live (computed styles +
+  DOM attributes, 1440×900).
+- **The Dashboard chart ("Sales — Last 7 days")**: an **indigo-500 `#6366f1` 2.5px SMOOTH
+  monotone line** (C segments — the `smoothPath` seam in `src/lib/chart-path.ts`,
+  Fritsch-Carlson tangents, unit-pinned) over a **slate-200 `#e2e8f0` 1px dashed `3 3`
+  grid** (5 horizontal at the nice ticks + one vertical per day bucket), **two full-length
+  slate-400 `#94a3b8` axis lines** (baseline y=245 + left x=65) + tick stubs (x-ticks run
+  245→251 below the baseline), **12px slate-400 ticks** (x middle-anchored baseline 253,
+  y end-anchored x=57), a **gradient area** (indigo 0.3 @5% → 0 @95%, path fill-opacity
+  0.6), and **ZERO data dots**. Plot: viewBox `0 0 731 280`, plot x=65 y=5 661×240 — the
+  reference's chart is container-responsive; the paddings/fonts/height are the fixed
+  measured values (the clone's fixed-viewBox `w-full` SVG renders 1:1 at the e2e
+  viewport).
+- **The Reports chart ("Daily Sales") is its OWN family**: **indigo at 2px** (not the
+  Dashboard's 2.5), gridlines **`rgba(255,255,255,0.04)` dashed `3 3` with NO slate
+  axes**, ticks **11px `rgba(255,255,255,0.3)`**, the gradient at **0.35** @5% (not 0.3)
+  under fill-opacity 0.6, `$`-prefixed y ticks, "d MMM" date labels thinned. Plot:
+  viewBox `0 0 1130 220`, clip x=60 y=4 1066×186, baseline y=190.
+- **The charts' colors are SVG ATTRIBUTES (literal hex)** — the Tailwind cascade and its
+  v4 oklch serialization never touch the charts. Chromium computes gradient fills
+  **quoted** (`url("#id")`) — the reference's own computed fill measures identically;
+  pin the quoted form.
+- **The ui primitive layer is EXACTLY the 10 live files** (alert, alert-dialog, button,
+  dialog, input, label, select, switch, textarea, toast) — Session-14 (SD-1) deleted the
+  12 zero-importer scaffolding primitives and `bun remove`d the 9 Radix packages that
+  served only them. A new view needing a primitive imports from this set or adds it
+  deliberately (and the docs-counts census re-anchors if suites grow).
+- **Evidence scripts that mutate auth state must verify the DOCUMENTED credential
+  after** (Session-14, SD-2): the Session-13 reset round-trip typed its own form-fill
+  constant "Abcd1234!" and silently changed the dev db's owner password — the "no state
+  change" claim in the s13 plan was wrong, found only when the next cycle's UI login
+  401'd. `scripts/restore-owner-password.mjs` restored `$Abcd1234` (control-verified the
+  drifted hash first, end-to-end verified the restore). Any script that exercises a
+  password-changing flow ends by proving the documented login works.
+
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
 `src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px
@@ -354,7 +394,7 @@ drawer + backdrop `animate-in` (tw-animate-css), and Radix dialogs compute a liv
 
 ## Testing rules
 
-- Unit tests live at the pure seams (`tests/unit/**`, vitest, node env). The 13 existing files are
+- Unit tests live at the pure seams (`tests/unit/**`, vitest, node env). The 14 existing files are
   the seam registry + the docs-counts lockstep gate — new `src/lib` seams get a file; UI
   components don't get unit tests.
 - E2E (`tests/e2e/**`) runs against the PRODUCTION standalone build with its own scratch db

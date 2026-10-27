@@ -1125,3 +1125,79 @@ drift-free reference cycles) and the pin doctrine now covers every auth
 surface including the reset page's three states. The repo's StudyFlow debt
 is fully purged (scripts, src, root files, config). Standing debt: NONE
 identified. Baselines: unit **133/133**, e2e **97/97**, smoke **13/13**.
+
+## Session-14 — the chart-internal parity pass + the primitive purge + the pristine-path proof (velox-pos-2)
+
+**Received state**: `fdd2704` (Session-13's tree `2c88a91` + the operator's
+`docs/session_22.md` commit — the raw log of the Session-13 conversation; its
+"Next" pointer named this cycle's targets). **Directive**: the standing
+audit→remediate→push cycle. **Result**: the EIGHTH consecutive drift-free
+reference cycle; the NEW depth decoded the chart internals (the last
+never-measured primary surfaces); the ui-primitive static debt cured; the
+dev-db credential drift found and restored; the fresh-clone pristine path
+proven for the first time.
+
+**The received-tree gate** green on the first run: lint 0 (1 documented
+warning) · tsc · unit 133/133 (13 files) · build · smoke 13/13 · e2e 97/97 —
+the Session-13 lock held at `fdd2704`.
+
+**The live re-measurement** (agent-browser, computed styles + DOM
+attributes): every standing pin byte-exact for the EIGHTH consecutive cycle —
+the login card (blur(4px), white/95, 16px, the 4px slate strip), the F-76
+alert panel, the 220px sidebar + the 42px violet pill, the terminal shift
+gate, the Sales/Cashiers Spanish families, the Dashboard date line, and the
+reference's own mobile defect at 390×844 (still no hamburger — the clone's
+drawer superset stays correct).
+
+**The NEW depth — the chart internals (F-95..F-106)**: the reference ships
+TWO distinct chart contracts. Dashboard "Sales — Last 7 days": indigo-500
+#6366f1 2.5px SMOOTH monotone line, slate-200 #e2e8f0 dashed-3-3 grid (5h+7v),
+two slate-400 axes + tick stubs, 12px slate-400 ticks (x middle/baseline 253,
+y end-anchored x=57), the indigo gradient area (0.3 @5% → 0 @95% @
+fill-opacity 0.6), ZERO dots, viewBox 731×280 (baseline 245, edge 65).
+Reports "Daily Sales": its OWN family — indigo at 2px, white/4% dashed grid
+with NO axes, 11px white/30 ticks, gradient 0.35 @5%, viewBox 1130×220
+(baseline 190). The clone's "dotted grid + violet stroke" was an unmeasured
+Session-101 assumption that survived 13 cycles (F-50 pinned only tick
+discipline). Cured: the new pure seam `src/lib/chart-path.ts` (smoothPath —
+Fritsch-Carlson monotone-X, unit-pinned 5/5) + both chart rewrites; colors as
+SVG attributes (no Tailwind serialization in the charts).
+
+**The static sweep (SD-1)**: 12 zero-importer ui primitives deleted + the 9
+Radix-only packages `bun remove`d — the ui layer is exactly the 10 live
+files, census-proven.
+
+**SD-2 (found mid-evidence)**: the Session-13 round-trip's "credentials
+unchanged" claim was FALSE — it typed "Abcd1234!" into the reset form and
+silently changed db/custom.db's owner password. Hash-verified, then restored
+to the documented `$Abcd1234` via `scripts/restore-owner-password.mjs`
+(control test + end-to-end verify). Doctrine: scripts that mutate auth state
+end by proving the DOCUMENTED login.
+
+**The fresh-clone pristine-path verification** (web-application §15's
+periodic gate, first run here): clone → install (485 pkgs) → env → db:push →
+db:seed → tsc → build → standalone boot → health db:up + /login 200; the
+no-secret boot refusal fires first exactly as documented. The README
+quick-start is proven verbatim on a pristine tree.
+
+**TDD**: unit RED 5/5 at import (with the lesson: next build type-checks
+tests/ — a unit-tier RED blocks the e2e RED's build; hold it aside, prove the
+e2e RED, restore for GREEN). E2E RED exactly 5/5 targeted failures (serial
+siblings proven individually), zero collateral. Two serialization postures
+landed mid-GREEN with no assertion weakened: gradient fills compute QUOTED
+(`url("#id")`), and the F-50 filter corrected 34→65 (the measured edge, valid
+across both geometries).
+
+**Re-certification on the final tree**: lint 0 (1 documented warning) · tsc ·
+unit **138/138** (14 files) · build · smoke **13/13** · e2e **102/102**.
+Live evidence `scripts/capture-s14-evidence.mjs` **14/14**; VLM parity: the
+clone's chart matches on all four contract axes; screenshots 71–74.
+
+**Docs lockstep**: AGENTS.md (the chart-internal contracts + the primitive
+census + the SD-2 lesson), CLAUDE.md (the two-chart seam entry), PAD v1.12
+(revision block + the exact 10-file ui tree + the stale `date` seam entry
+cured), velox-pos_SKILL.md v2.10.0 (§2 charts row + the Session-14 addendum,
+which corrects the s13 credentials claim on the record), README + vitest
+config + the docs-counts constants re-anchored (138/14/102, "Session-14
+lock", "88 desktop"), `docs/remediation-plan-session-14.md` (the ledger
+V1–V24 + the execution record), and `docs/session_23.md` (the narration).

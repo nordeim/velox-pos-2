@@ -176,18 +176,166 @@ test.describe.serial("terminal checkout", () => {
         const c = getComputedStyle(t);
         return { t: (t.textContent || "").trim(), x: Number(t.getAttribute("x")), fs: c.fontSize };
       });
-      // The y-axis labels sit left of the plot (x < pad.left = 34).
-      const yLabels = texts.filter((t) => t.x < 34).map((t) => t.t);
+      // The y-axis labels sit left of the plot's measured edge (x=65 —
+      // Session-14 corrected the filter from the clone's own old pad 34 to
+      // the reference-measured plot edge; valid for both geometries).
+      const yLabels = texts.filter((t) => t.x < 65).map((t) => t.t);
       // The 7-day x axis renders weekday abbreviations (Tue..Mon).
       const xLabels = texts
-        .filter((t) => t.x >= 34 && /^[A-Z][a-z]{2}$/.test(t.t))
+        .filter((t) => t.x >= 65 && /^[A-Z][a-z]{2}$/.test(t.t))
         .map((t) => t.t);
-      return { yLabels, xLabels, xFont: texts.find((t) => t.x >= 34)?.fs };
+      return { yLabels, xLabels, xFont: texts.find((t) => t.x >= 65)?.fs };
     });
     expect(axis.yLabels.length, "y-axis label count (nice ticks, not per-dollar)").toBeLessThan(8);
     expect(axis.yLabels[0]).toBe("0");
     expect(axis.xLabels.length).toBe(7);
     expect(axis.xLabels[0]).toMatch(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)$/);
     expect(axis.xFont).toBe("12px");
+  });
+
+  // ------------------------------------------------------------------------
+  // Session-14 (F-95..F-101, measured live on the reference 2026-10-27 at
+  // 1440×900): the Dashboard chart's INTERNAL contract — never measured in
+  // any prior session (F-50 pinned only the tick discipline). The reference
+  // ships an indigo-500 line over a slate grid/axes family with a gradient
+  // area under it and ZERO data dots — the clone's violet/dotted/no-area
+  // treatment was an unmeasured Session-101 assumption. All four pins are
+  // data-independent (structure + color families); they ride this describe
+  // so the chart renders with the checkout journey's real sales.
+  // ------------------------------------------------------------------------
+
+  test("the dashboard chart's line is the reference's indigo smooth family (F-95, F-100)", async ({
+    page,
+  }) => {
+    await page.goto("/Dashboard");
+    const chart = page.getByTestId("line-chart");
+    await expect(chart).toBeVisible();
+    const line = await chart.evaluate((svg) => {
+      const paths = Array.from(svg.querySelectorAll("path"));
+      const linePath = paths[paths.length - 1]; // the stroke path (the area renders first)
+      const cs = linePath ? getComputedStyle(linePath) : null;
+      return {
+        pathCount: paths.length,
+        stroke: cs?.stroke ?? null,
+        widthAttr: linePath?.getAttribute("stroke-width") ?? null,
+        fill: cs?.fill ?? null,
+        d: linePath?.getAttribute("d") ?? "",
+        circles: svg.querySelectorAll("circle").length,
+      };
+    });
+    // F-95: indigo-500 rgb(99,102,241) at 2.5px — NOT the old violet #8b5cf6.
+    expect(line.stroke).toBe("rgb(99, 102, 241)");
+    expect(line.widthAttr).toBe("2.5");
+    expect(line.fill).toBe("none");
+    // The reference's curve is SMOOTH (C segments, no straight L runs).
+    expect(line.d).toMatch(/^M-?[\d.]+,-?[\d.]+C/);
+    expect(line.d).not.toContain("L");
+    // F-100: the reference ships ZERO point markers.
+    expect(line.circles).toBe(0);
+  });
+
+  test("the dashboard chart's grid + axes are the reference's slate families (F-96, F-97)", async ({
+    page,
+  }) => {
+    await page.goto("/Dashboard");
+    const grid = await page.getByTestId("line-chart").evaluate((svg) => {
+      const lines = Array.from(svg.querySelectorAll("line")).map((l) => ({
+        stroke: getComputedStyle(l).stroke,
+        dash: l.getAttribute("stroke-dasharray"),
+        x1: Number(l.getAttribute("x1")),
+        y1: Number(l.getAttribute("y1")),
+        x2: Number(l.getAttribute("x2")),
+        y2: Number(l.getAttribute("y2")),
+      }));
+      const grid = lines.filter((l) => l.stroke === "rgb(226, 232, 240)");
+      const axes = lines.filter((l) => l.stroke === "rgb(148, 163, 184)");
+      return {
+        gridDash: [...new Set(grid.map((l) => l.dash))],
+        vGrid: grid.filter((l) => Math.abs(l.y2 - l.y1) > 100).length,
+        hGrid: grid.filter((l) => Math.abs(l.x2 - l.x1) > 100).length,
+        xAxis: axes.filter((l) => l.y1 === 245 && l.y2 === 245 && l.x2 - l.x1 > 500).length,
+        yAxis: axes.filter((l) => l.x1 === 65 && l.x2 === 65 && l.y2 - l.y1 > 100).length,
+        xTicks: axes.filter((l) => Math.max(l.y1, l.y2) === 251 && Math.min(l.y1, l.y2) === 245).length,
+      };
+    });
+    // F-96: the grid is slate-200, dashed 3-3 — one vertical per day bucket.
+    expect(grid.gridDash).toEqual(["3 3"]);
+    expect(grid.vGrid).toBe(7);
+    expect(grid.hGrid).toBeGreaterThanOrEqual(3);
+    expect(grid.hGrid).toBeLessThanOrEqual(7);
+    // F-97: two full-length slate-400 axes (x at the y=245 baseline, y at
+    // x=65) + the 7 x-tick stubs running 245→251 below the axis.
+    expect(grid.xAxis).toBe(1);
+    expect(grid.yAxis).toBe(1);
+    expect(grid.xTicks).toBe(7);
+  });
+
+  test("the dashboard chart renders the reference's gradient area (F-99)", async ({ page }) => {
+    await page.goto("/Dashboard");
+    const area = await page.getByTestId("line-chart").evaluate((svg) => {
+      const paths = Array.from(svg.querySelectorAll("path"));
+      const areaPath = paths[0]; // the fill path renders before the stroke path
+      const grad = svg.querySelector("linearGradient");
+      const stops = grad
+        ? Array.from(grad.querySelectorAll("stop")).map((s) => ({
+            off: s.getAttribute("offset"),
+            color: getComputedStyle(s).stopColor,
+            op: getComputedStyle(s).stopOpacity,
+          }))
+        : [];
+      return {
+        fill: areaPath ? getComputedStyle(areaPath).fill : null,
+        fillOp: areaPath ? getComputedStyle(areaPath).getPropertyValue("fill-opacity") : null,
+        stops,
+      };
+    });
+    // F-99: an indigo gradient area (0.3 @5% → 0 @95%) at fill-opacity 0.6 —
+    // the measured def id is the reference's own "salesGrad"; the clone
+    // mirrors the CONTRACT (stops + opacity), not the id string. (Chromium
+    // serializes computed fill with the id QUOTED — `url("#…")` — the same
+    // form the reference's own computed area fill measured in.)
+    expect(area.fill).toContain('url("#');
+    expect(area.fillOp).toBe("0.6");
+    expect(area.stops).toHaveLength(2);
+    expect(area.stops[0].off).toBe("5%");
+    expect(area.stops[0].color).toBe("rgb(99, 102, 241)");
+    expect(area.stops[0].op).toBe("0.3");
+    expect(area.stops[1].off).toBe("95%");
+    expect(area.stops[1].op).toBe("0");
+  });
+
+  test("the dashboard chart's plot geometry + ticks are the reference's (F-98, F-101)", async ({
+    page,
+  }) => {
+    await page.goto("/Dashboard");
+    const geo = await page.getByTestId("line-chart").evaluate((svg) => {
+      const texts = Array.from(svg.querySelectorAll("text")).map((t) => ({
+        t: (t.textContent || "").trim(),
+        x: Number(t.getAttribute("x")),
+        y: Number(t.getAttribute("y")),
+        anchor: getComputedStyle(t).textAnchor,
+        size: getComputedStyle(t).fontSize,
+        color: getComputedStyle(t).fill,
+      }));
+      return {
+        viewBox: svg.getAttribute("viewBox"),
+        y0: texts.find((t) => t.t === "0" && t.x < 65) ?? null,
+        xLabel: texts.find((t) => /^[A-Z][a-z]{2}$/.test(t.t)) ?? null,
+      };
+    });
+    // F-101: the measured plot box — viewBox 731×280 (the e2e-state width;
+    // the reference's chart is container-responsive with FIXED paddings),
+    // plot edge x=65, baseline y=245.
+    expect(geo.viewBox).toBe("0 0 731 280");
+    // F-98: the y ticks are 12px slate-400, END-anchored at x=57.
+    expect(geo.y0?.x).toBe(57);
+    expect(geo.y0?.anchor).toBe("end");
+    expect(geo.y0?.size).toBe("12px");
+    expect(geo.y0?.color).toBe("rgb(148, 163, 184)");
+    // The x labels: 12px slate-400, middle-anchored, baseline at y=253.
+    expect(geo.xLabel?.size).toBe("12px");
+    expect(geo.xLabel?.color).toBe("rgb(148, 163, 184)");
+    expect(geo.xLabel?.anchor).toBe("middle");
+    expect(geo.xLabel?.y).toBe(253);
   });
 });
