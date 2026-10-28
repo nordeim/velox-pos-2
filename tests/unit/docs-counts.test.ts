@@ -97,9 +97,16 @@ const UNIT_FILES = 15;
 // of with-data-inventory-csv.spec.ts — the import→ledger→export wiring pin
 // over the API-derived counts + the byte-exact serialization lines + the
 // blank-name error path; the file sorts after with-data-dashboard-walk and
-// before with-data-reports-walk — d < i < r).
-const E2E = 113;
-const E2E_SPECS = 11;
+// before with-data-reports-walk — d < i < r)
+// + the Session-25 F-123 with-data fiscal receipt round-trip walk (the 2
+// tests of with-data-fiscal-receipt-walk.spec.ts — the settings flip →
+// save → store refresh → the receipt's fiscal line in BOTH render states
+// (visible: the exact RUC · business-type template; the gated polarity:
+// the RUC set + the flag off renders nothing) + the full restore; the
+// file sorts after with-data-dashboard-walk and before
+// with-data-inventory-csv — d < f < i < r).
+const E2E = 115;
+const E2E_SPECS = 12;
 const ROUTE_FILES = 26;
 const PRISMA_MODELS = 9;
 const VIEWS = 8;
@@ -178,8 +185,8 @@ describe("session-8 (F-52): the count-lockstep gate — every live-tense count s
   });
 
   it("the SKILL carries the live counts (header baselines, commands, data model, tiers)", () => {
-    expect(skillFlat).toContain(`Baselines at Session-24 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
-    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (99 desktop + 13 mobile + 1 setup)`);
+    expect(skillFlat).toContain(`Baselines at Session-25 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
+    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (101 desktop + 13 mobile + 1 setup)`);
     expect(skillFlat).toContain(`tests/unit/** (${UNIT})`);
     expect(skillFlat).toContain(`playwright (${E2E})`);
     expect(skillFlat).toContain(`${PRISMA_MODELS} models, user-scoped, cascade deletes`);

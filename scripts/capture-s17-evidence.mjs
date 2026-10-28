@@ -332,7 +332,24 @@ try {
     `bars=[${methods.brk.map(m => m.barW).join(", ")}]`,
   );
 
-  // The 7-day pill narrows the window (calendar-bucket truth: $366.56 / 28).
+  // The 7-day pill narrows the window — the expectation is DERIVED from the
+  // sales API at runtime (the s18/s22 volatile-expectation law, applied
+  // retroactively this cycle: the demo seed's sale timestamps are relative
+  // to the SEED time, so which boundary sales fall inside the 7-day
+  // CALENDAR window depends on the hour the db was seeded — a morning-seeded
+  // demo.db carries 29/$369.46, the afternoon-seeded recording the original
+  // hardcode captured carried 28/$366.56; the page derives correctly either
+  // way, only the pinned literal drifted).
+  const week = await page.evaluate(async () => {
+    const sales = await fetch("/api/sales").then((r) => r.json());
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - 6);
+    const inWeek = sales.filter((s) => new Date(s.createdAt) >= start && s.status === "completed");
+    const sum = Math.round(inWeek.reduce((a, s) => a + s.total, 0) * 100) / 100;
+    const fmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(sum);
+    return { count: inWeek.length, text: fmt };
+  });
   await page.getByRole("button", { name: "7 days" }).click();
   await page.waitForTimeout(600);
   const rep7 = await page.evaluate(() => {
@@ -344,9 +361,9 @@ try {
     });
   });
   ok(
-    "the 7-day calendar-bucket window narrows to the db truth ($366.56 / 28)",
-    rep7[0] === "$366.56" && rep7[1] === "28",
-    `7-day values=[${rep7.join(", ")}]`,
+    `the 7-day calendar-bucket window narrows to the db truth (${week.text} / ${week.count}, derived at runtime)`,
+    rep7[0] === week.text && rep7[1] === String(week.count),
+    `7-day values=[${rep7.join(", ")}] vs derived=[${week.text}, ${week.count}]`,
   );
   await page.screenshot({ path: `${OUT}/89-session17-reports-7day.png` });
 

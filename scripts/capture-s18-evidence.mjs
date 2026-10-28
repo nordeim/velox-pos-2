@@ -75,9 +75,14 @@ const buckets = [];
 for (let d = 6; d >= 0; d--) { const s = new Date(today); s.setDate(s.getDate()-d); const e = new Date(s); e.setDate(e.getDate()+1);
   const inB = sales.filter(r => new Date(r.createdAt) >= s && new Date(r.createdAt) < e);
   buckets.push({ n: inB.length, s: Math.round(inB.reduce((a,r)=>a+r.total,0)*100)/100 }); }
+// The 7-day window truth (the volatile-expectation law, applied this cycle:
+// which boundary sales fall inside the CALENDAR window depends on the hour
+// the demo db was seeded — derive, never hardcode).
+const wk = sales.filter(r => { const c = new Date(r.createdAt); const s = new Date(today); s.setDate(s.getDate()-6); return c >= s && c <= new Date(); });
+const week = { n: wk.length, sum: Math.round(wk.reduce((a,r)=>a+r.total,0)*100)/100 };
 console.log(JSON.stringify({ settings: { storeName: settings.storeName, currency: settings.currency, primary: settings.primaryColor, secondary: settings.secondaryColor, footer: settings.receiptFooter, provider: settings.cardProvider, hideFiscal: !!settings.hideFiscalOnReceipt },
   cats, lowStock: stock.lowStockCount, products: products.n,
-  today: { n: t.length, sum: Math.round(t.reduce((a,r)=>a+r.total,0)*100)/100 }, buckets }));
+  today: { n: t.length, sum: Math.round(t.reduce((a,r)=>a+r.total,0)*100)/100 }, buckets, week }));
 db.close();"`,
     { cwd: ROOT, env: process.env },
   ).toString(),
@@ -135,10 +140,10 @@ try {
     `products=${truth.products} cats=${truth.cats.length} low=${truth.lowStock}`,
   );
   ok(
-    "the derived 7-bucket series is coherent (7 buckets, the 7-day window the Reports page pins)",
+    `the derived 7-bucket series is coherent (7 buckets, the 7-day window the Reports page pins — ${truth.week.sum} / ${truth.week.n}, derived at runtime)`,
     truth.buckets.length === 7 &&
-      Math.abs(truth.buckets.reduce((a, b) => a + b.s, 0) - 366.56) < 0.01 &&
-      truth.buckets.reduce((a, b) => a + b.n, 0) === 28,
+      Math.abs(truth.buckets.reduce((a, b) => a + b.s, 0) - truth.week.sum) < 0.01 &&
+      truth.buckets.reduce((a, b) => a + b.n, 0) === truth.week.n,
     `buckets=${JSON.stringify(truth.buckets)}`,
   );
 

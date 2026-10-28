@@ -677,6 +677,42 @@ bite hardest here:
   "focus not restored". Probe focus behavior with a REAL click
   (Playwright's `.click()`), never an eval dispatch.
 
+## The fiscal receipt round-trip contracts (Session-25 pins — F-123)
+
+- **The fiscal chain is pinned end-to-end in BOTH render states**
+  (`tests/e2e/with-data-fiscal-receipt-walk.spec.ts`): the fiscal Switch
+  flip (the INVERTED wiring: `checked={!form.hideFiscalOnReceipt}` —
+  switch ON = "Visible on receipt") → the Tax ID / EIN + Tax Regime fills →
+  Save Changes → the "Settings saved" toast → the API-persisted state
+  (`hideFiscalOnReceipt: false` + the RUC) → a REAL terminal checkout → the
+  receipt's fiscal line asserted by its EXACT template text
+  (`RUC · BusinessType`); then the gated polarity (the flag off, the RUC
+  still set) → the second checkout renders NOTHING (the
+  `!hideFiscalOnReceipt` guard, proven — not just empty-field absence).
+- **The receipt's fiscal conditional is law**
+  (`src/components/pos/views/terminal-view.tsx`):
+  `!settings?.hideFiscalOnReceipt && (settings?.fiscalRuc || settings?.taxId)`
+  renders the dashed-border line with the
+  `{ruc}{biz ? ` · ${biz}` : ""}` template (U+00B7 middle dot). Never
+  change the polarity or the template without updating the walk.
+- **The settings self-clean law, extended**: the walk RESTORES the seed
+  defaults at its end (both shifts CLOSED with exact-variance counts, the
+  toggle hidden, the RUC empty) — a spec that mutates settings MUST restore
+  them; even a mid-test failure must leave a safe state for the remaining
+  specs (the downstream walks are settings-independent by construction —
+  verified before the spec landed).
+- **TWO inputs carry the "Tax ID / EIN" label** (Business Information's
+  `taxId` `#set-taxid` and the fiscal card's `fiscalRuc` `#set-ruc`) —
+  ALWAYS scope fiscal-field locators to the
+  `region "Fiscal / Tax Data"` (the unscoped `getByLabel` is a strict-mode
+  violation; caught live in this cycle's first run).
+- **FOUR specs now persist data — the ordering law, extended again**: the
+  fiscal walk sorts between the dashboard walk and the inventory CSV walk
+  (d < f < i < r). Its sales/products perturb no product- or sale-derived
+  pin (every downstream walk derives from the API at runtime), and its
+  settings mutations are restored before the file ends. A fifth persisting
+  spec must be checked against ALL FOUR before it lands.
+
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
 `src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px

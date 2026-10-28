@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.20.0
+version: 2.21.0
 last_updated: 2026-10-28
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-24 lock: unit **151/151** (15 files) · e2e **113/113**
-(99 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-25 lock: unit **151/151** (15 files) · e2e **115/115**
+(101 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -68,7 +68,7 @@ bun run lint                   # eslint flat config — 0 errors, 1 documented w
 bun run typecheck              # tsc --noEmit — strict
 bun run test                   # vitest — tests/unit/** (151)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               playwright (113) — NEEDS the build first (:3100)
+bun run test:e2e               playwright (115) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -433,7 +433,7 @@ SUPERSET instead:
    lockstep gate; store.test.ts pins the F-118 shifts-race at the store seam). New
    `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 113/113)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 115/115)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -465,7 +465,17 @@ SUPERSET instead:
    resolution both ways, the line count = 1 + the API-derived total), and
    the error path (a blank-name row → "Import failed: name is required",
    zero rows imported) — THREE specs now persist data; the CSV walk sorts
-   between the dashboard and reports walks (d < i < r).
+   between the dashboard and reports walks (d < i < r). The Session-25
+   with-data fiscal receipt round-trip walk
+   (`with-data-fiscal-receipt-walk.spec.ts`): the deepest StoreSettings
+   chain — the fiscal switch flip (the inverted wiring) → the RUC/regime
+   fills → Save → the API-persisted state → a REAL terminal checkout →
+   the receipt's fiscal line asserted by its EXACT template text
+   (RUC · business type) in the visible state, and gated to render NOTHING
+   in the hidden-polarity state (the RUC still set, the flag off) — with
+   the settings restored to seed defaults at the end; FOUR specs now
+   persist data (d < f < i < r), the fiscal walk extending the self-clean
+   law to the settings surface.
 3. **Live re-measurement (agent-browser)** — computed styles beat screenshots;
    re-measure the reference before any design-system change and record the
    measurement in the plan doc.
@@ -1597,3 +1607,68 @@ becomes the **Session-24 lock**), PAD v1.22, AGENTS (the Session-24 CSV
 round-trip contracts + the probe-methodology law), CLAUDE, README, the
 worklog entry, `docs/remediation-plan-session-24.md`, `docs/session_43.md`.
 Skill v2.20.0.
+
+### Session-25 addendum (v2.21.0) — the fiscal receipt round-trip walk
+
+The session_43 "Next" pointer landed: **the with-data fiscal receipt
+round-trip walk** (F-123) — the "StoreSettings save→toast" candidate taken
+to its deepest unpinned chain. The StoreSettings surface was style-heavy in
+the suite (surfaces.spec pins the toggle's DEFAULT state, the static fiscal
+labels, the listboxes, the basic store-name save) and terminal.spec pins
+the receipt's ticket/timestamp/footer/print-path — but NOTHING pinned the
+receipt's fiscal conditional
+`!settings?.hideFiscalOnReceipt && (settings?.fiscalRuc || settings?.taxId)`
+in EITHER render state. The full chain was e2e-invisible: the INVERTED
+switch flip (`checked={!form.hideFiscalOnReceipt}` — switch ON = "Visible
+on receipt") → the RUC/regime fills → Save Changes → the PATCH payload →
+`setSettings(row)` (the store refresh) → the toast → a real terminal
+checkout → the receipt's dashed-border fiscal line. A polarity flip in the
+conditional, a lost `fiscalRuc` in the save payload, a broken store
+refresh, or the fiscal `<p>` stopping rendering would ALL have passed the
+entire suite. The ANALYZE (V16) measured every leg CORRECT live (the
+visible state renders the exact RUC text; the gated polarity — the RUC set,
+the flag off — renders nothing; the restore returns the seed defaults) —
+the finding is the missing tier, not a live defect; the reference cannot
+produce this state (write-gated; its fiscal toggle is an icon-button with
+no switch semantics — the labeled Radix Switch is the documented a11y
+superset).
+
+The cure (`tests/e2e/with-data-fiscal-receipt-walk.spec.ts`, 2 tests): the
+visible state — flip + fill RUC/regime + save + toast + the API-persisted
+state (`hideFiscalOnReceipt: false` + the RUC) + a REAL checkout journey
+(open shift → add → CHARGE → cash) + the receipt's fiscal line asserted by
+its EXACT template text (`FWALK-RUC-001 · S-Corp Test` — the U+00B7
+template) inside `.receipt-print` + the shift closed (counted = float +
+sale, exact variance); then the gated polarity — flip OFF with the RUC
+STILL SET (the strongest hidden condition) + save + the API verify (the
+flag true AND the RUC persisted) + the second checkout rendering NO fiscal
+line (the `!hideFiscalOnReceipt` guard, proven — not just empty-field
+absence) + the full restore (the RUC cleared + save → the seed defaults).
+One probe fix during authoring: TWO inputs carry the "Tax ID / EIN" label
+(Business Information's `taxId` and the fiscal card's `fiscalRuc`) — fiscal
+locators must scope to the `region "Fiscal / Tax Data"` (the unscoped
+`getByLabel` is a strict-mode violation).
+
+The ordering law, extended again: FOUR specs now persist data — the fiscal
+walk (f) sorts between the dashboard walk (d) and the inventory CSV walk
+(i), all before the reports walk (r): d < f < i < r. Its sales/products
+perturb no product- or sale-derived pin (every downstream walk derives from
+the API at runtime — verified before the spec landed), and the self-clean
+law is EXTENDED to the settings surface: both shifts closed, the settings
+restored to seed defaults; even a mid-test failure leaves a safe state (the
+downstream walks are settings-independent by construction).
+
+The nineteenth reference sweep: every standing pin HOLDS and the reference's
+mobile defect is STABLE at its D-1 shape; the reference's Reports surface
+is still EMPTY — the with-data tiers remain a functional superset. The
+clone's mobile drawer re-verified live (the operator's priority, REAL
+clicks throughout — the V14 law).
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **151/151**
+(15 files — UNMOVED) · build green · smoke **13/13** · e2e **115/115** (101
+desktop + 13 mobile + 1 setup). Screenshots 111–113. Docs lockstep: the
+count constants + every live-tense site (the "Session-24 lock" literal
+becomes the **Session-25 lock**), PAD v1.23, AGENTS (the Session-25 fiscal
+round-trip contracts + the two-fields-one-label scoping law), CLAUDE, README,
+the worklog entry, `docs/remediation-plan-session-25.md`, `docs/session_45.md`.
+Skill v2.21.0.

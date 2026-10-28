@@ -1,9 +1,9 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.22
+# VeloxPOS — Master Project Architecture Document (PAD) v1.23
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
 **Companion documents:** `README.md` (tour) · `AGENTS.md` (agent invariants) · `CLAUDE.md` (Claude conventions) · `docs/veloxpos-implementation-plan.md` (the measured reference spec)
-**Last Updated:** 2026-10-28 (Session-24)
+**Last Updated:** 2026-10-28 (Session-25)
 **Audience:** Senior engineers, tech leads, DevOps, onboarding engineers, and AI coding agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -28,7 +28,7 @@ guardrail is enforced by tooling that runs in this checkout.
 **Scale & baselines (verified 2026-10-27, Session-16 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views (9 route spellings — the root `/` page is the
 terminal's reference-parity landing, Session-10 F-60)
-+ login/reset/404 · 151 unit tests (15 files) · 113 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 151 unit tests (15 files) · 115 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -251,7 +251,7 @@ Dependency rule: arrows point downward only. `src/lib` pure seams never import R
  │                           db-path, db, store, api, utils) + server/ (http, auth, entities)
  ├ 📂 prisma               — schema.prisma (9 models) · seed.ts (owner + settings; --demo dataset)
  ├ 📂 tests/unit           — 15 vitest files (the seam registry + the docs-counts gate)
- ├ 📂 tests/e2e            — 11 spec files + auth.setup + kill-port + provisioning
+ ├ 📂 tests/e2e            — 12 spec files + auth.setup + kill-port + provisioning
  ├ 📂 docs                 — implementation plan, runbooks, Tailwind report, screenshots/
  └ ⚙️ next.config.ts · playwright.config.ts · vitest.config.ts · package.json · .env.example
 ```
@@ -299,7 +299,7 @@ lint → typecheck → unit → build → smoke → e2e
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 15 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 113/113):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 115/115):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
@@ -316,6 +316,13 @@ lint → typecheck → unit → build → smoke → e2e
    the category-breakdown rows + share bars, the chart's niceScale domain, all derived
    from the sales/products/categories APIs at runtime — plus the with-data containment
    at the remaining widths 768/1024/390, the chrome switch with data),
+   `with-data-fiscal-receipt` (the Session-25 tier: the fiscal receipt round-trip
+   wiring pin — the fiscal switch flip (the INVERTED wiring) → the RUC/regime fills →
+   Save → the API-persisted state → a REAL terminal checkout → the receipt's fiscal
+   line asserted by its EXACT template text in the visible state, and gated to render
+   NOTHING in the hidden-polarity state (the RUC still set, the flag off) — the
+   settings restored to seed defaults at the end; FOUR specs now persist data,
+   d < f < i < r),
    `with-data-inventory-csv` (the Session-24 tier: the CSV round-trip wiring pin — the
    import leg (the file input → the per-row POSTs → the store upserts → the ledger
    re-render → the "Import complete" toast), the export leg (the download's `products.csv`
@@ -1521,3 +1528,56 @@ site (README badge/scripts/testing, CLAUDE baseline + the three-walk ordering la
 AGENTS the Session-24 CSV round-trip contracts + the probe-methodology law, PAD v1.22,
 SKILL v2.20.0 with the Session-24 addendum), the worklog entry,
 `docs/remediation-plan-session-24.md`, `docs/session_43.md`.
+
+## Revision History — Session-25 (v1.23, 2026-10-28)
+
+The session_43 "Next" pointer landed: **the with-data fiscal receipt round-trip walk**
+(`tests/e2e/with-data-fiscal-receipt-walk.spec.ts`, F-123) — the "StoreSettings
+save→toast" candidate taken to its deepest unpinned chain. The StoreSettings surface
+was style-heavy in the suite (surfaces.spec pins the toggle's DEFAULT state, the
+static fiscal labels, the listboxes, the basic store-name save; terminal.spec pins
+the receipt's ticket/timestamp/footer/print-path) — but NOTHING pinned the receipt's
+fiscal conditional `!settings?.hideFiscalOnReceipt && (settings?.fiscalRuc ||
+settings?.taxId)` in EITHER render state. The full chain — the INVERTED switch flip
+(`checked={!form.hideFiscalOnReceipt}`, switch ON = "Visible on receipt") → the
+RUC/regime fills → Save Changes → the PATCH payload → `setSettings(row)` (the store
+refresh) → the toast → a real terminal checkout → the receipt's dashed-border fiscal
+line — was e2e-invisible: a polarity flip, a lost `fiscalRuc` in the payload, a
+broken store refresh, or the fiscal `<p>` stopping rendering would ALL have passed
+the entire suite. The ANALYZE (V16) measured every leg CORRECT live (the visible
+state renders the exact RUC text; the gated polarity — the RUC set, the flag off —
+renders nothing; the restore returns the seed defaults) — the finding is the missing
+tier, not a live defect; the reference cannot produce this state (write-gated; its
+fiscal toggle is an icon-button with no switch semantics — the labeled Radix Switch
+is the documented a11y superset), so the tier is the s20..s24 functional-superset
+lineage.
+
+The walk provisions its idempotent chain (a "Fiscal Walk" category/product/register,
+the POSTs asserted — the F-120 law) and pins BOTH render states: the visible state
+(flip + fill + save + toast + the API-persisted `hideFiscalOnReceipt: false` + the
+RUC + a REAL checkout journey through the terminal + the receipt's fiscal line
+asserted by its EXACT template text `RUC · BusinessType` inside `.receipt-print` +
+the shift closed with an exact-variance count), then the gated polarity (flip OFF
+with the RUC STILL SET — the strongest hidden condition — + the API verify that the
+flag is true AND the RUC persists + the second checkout rendering NO fiscal line,
+the `!hideFiscalOnReceipt` guard proven rather than empty-field absence) + the full
+restore to seed defaults. One probe fix during authoring: TWO inputs carry the
+"Tax ID / EIN" label (Business Information's `taxId` and the fiscal card's
+`fiscalRuc`) — fiscal locators must scope to the `region "Fiscal / Tax Data"` (the
+law now in AGENTS). The ordering law, extended again: FOUR specs now persist data
+(d < f < i < r); the fiscal walk's sales/products perturb no product- or
+sale-derived pin (verified before the spec landed), and the self-clean law is
+EXTENDED to the settings surface — both shifts closed, the settings restored; even
+a mid-test failure leaves a safe state for the remaining specs. The nineteenth
+reference sweep: every standing pin HOLDS; the mobile defect STABLE at its D-1
+shape; the clone's mobile drawer re-verified live (REAL clicks throughout — the
+Session-24 V14 law).
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **151/151** (15 files —
+UNMOVED) · build green · smoke **13/13** · e2e **115/115** (101 desktop + 13 mobile + 1
+setup). Screenshots 111–113 + the D-1-shape reference capture
+(`ref-mobile-pos-390-s25.png`). Docs lockstep: the count constants + every live-tense
+site (README badge/scripts/testing, CLAUDE baseline + the four-walk ordering law,
+AGENTS the Session-25 fiscal round-trip contracts + the two-fields-one-label scoping
+law, PAD v1.23, SKILL v2.21.0 with the Session-25 addendum), the worklog entry,
+`docs/remediation-plan-session-25.md`, `docs/session_45.md`.

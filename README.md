@@ -5,7 +5,7 @@
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6)
 ![Tests](https://img.shields.io/badge/unit%20tests-151%20%2F%20151-brightgreen)
-![E2E](https://img.shields.io/badge/e2e-113%20%2F%20113-brightgreen)
+![E2E](https://img.shields.io/badge/e2e-115%20%2F%20115-brightgreen)
 ![License](https://img.shields.io/badge/license-Proprietary-lightgrey)
 
 **A production-ready, enterprise-grade Point of Sale web application — a functional superset of
@@ -99,7 +99,7 @@ register, a closed shift, and a week of sales).
 | `bun run lint` | ESLint (flat config) |
 | `bun run typecheck` | `tsc --noEmit` (strict) |
 | `bun run test` | Vitest unit suite — the pure domain seams (151 tests / 15 files) |
-| `bun run test:e2e` | Playwright suite against the production standalone build (113 tests; desktop 1440×900 + mobile 390×844 projects, plus the four-width 390/768/1024/1440 drift-sweep battery and the with-data Reports + Dashboard + Inventory-CSV walks) |
+| `bun run test:e2e` | Playwright suite against the production standalone build (115 tests; desktop 1440×900 + mobile 390×844 projects, plus the four-width 390/768/1024/1440 drift-sweep battery and the with-data Reports + Dashboard + Inventory-CSV + fiscal-receipt walks) |
 | `bun run smoke` | The 13-step API smoke ladder against the standalone artifact on :3210 (own scratch `db/smoke.db`; health → auth wall → Zod seam → CRUD → rate limit → boot gate → artifact hygiene) |
 | `bun run gate` | The full pre-push gate: `lint → typecheck → test → build → smoke → e2e` |
 | `bun run db:push` | `prisma db push` against `db/custom.db` |
@@ -190,7 +190,7 @@ All endpoints return domain JSON; errors use `{ error: string }` with the docume
 bun run test            # unit: 151 tests / 15 files — the pure seams (money, cart, shift,
                         # reports, inventory-status, currency, router, validation, auth,
                         # db-path, env-check, site, store, chart-path) + the docs-counts lockstep gate
-bun run test:e2e        # e2e: 113 tests — needs `bun run build` first (boots the standalone
+bun run test:e2e        # e2e: 115 tests — needs `bun run build` first (boots the standalone
                         # build on :3100 with its own scratch db, db/e2e.db)
 bun run smoke           # the 13-step API smoke ladder — also needs the build (boots the
                         # artifact on :3210 with db/smoke.db; verifies the boot gate +
@@ -220,7 +220,13 @@ the superset feature end-to-end — the import (the file input → the per-row P
 upserts → the ledger re-render → the "Import complete" toast), the export (the download's
 `products.csv` content: the header byte-exact, both fixture lines byte-exact with the
 category-NAME resolution, and the API-derived line count), and the error path (a blank-name
-row → "Import failed: name is required", zero rows imported).
+row → "Import failed: name is required", zero rows imported). The Session-25 with-data
+fiscal receipt round-trip walk (`with-data-fiscal-receipt-walk.spec.ts`) pins the deepest
+StoreSettings chain end-to-end — the fiscal switch flip (the inverted wiring, live) → the
+RUC/regime fills → Save → the API-persisted state → a real terminal checkout → the receipt's
+fiscal line asserted by its EXACT template text in the visible state, and gated to render
+NOTHING in the hidden-polarity state (the RUC still set, the flag off) — with the settings
+restored to seed defaults at the end.
 
 ## Design System
 

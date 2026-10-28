@@ -2000,3 +2000,81 @@ capture-methodology catch recorded: the first evidence pass produced byte-identi
 `hidden` state before the settled capture. Docs lockstep: this worklog entry,
 remediation-plan-session-24 (the full ledger + record), session_43.md (the narration).
 `.env.example` verified against the working `.env`.
+
+## Session-25 — the with-data fiscal receipt round-trip walk + the harness hour-drift cure (velox-pos-2)
+
+**Date:** 2026-10-28 · **Tree:** `35a13a6` received (the Session-24 push `0276d83` + the
+operator's session_44 raw-log commit; a FRESH CLONE this cycle — the sandbox workspace
+was reset, so the documented rebuild ran: `.env` regenerated with a fresh 64-hex secret,
+`bun install`, `db:push` + `db:seed`, chromium-1243 installed) · **Cycle:** the session_43
+"Next" pointer's StoreSettings save→toast candidate, taken to its deepest unpinned chain
++ the operator's mobile-navigation priority check + the harness hour-drift cure.
+
+**The received tree**: fast gate GREEN on arrival — lint 0 (1 documented warning) · tsc ·
+unit **151/151** (15 files). Static sweeps clean (the census + credential scripts
+RECREATED after the reset, one fix each during recreation: the census's import regex
+missed the `from "..."` form; the credential checker must decode the scrypt salt from
+hex — mirroring `verifyPassword` exactly): zero dead files (146 scanned), secrets clean,
+the documented credential VERIFIES, and the Session-24 code review confirmed the cycle's
+changes were test-tier only (the CSV walk spec, the s24 evidence script, the count
+lockstep, the docs) — ZERO unplanned production code.
+
+**Reference sweep #19: every standing pin HOLDS byte-exact** — the login card
+(blur(4px) · white/95 · 16px · h1 30px/700 · inputs 48px/12px · SSO 54px/16px), the F-76
+error alert byte-exact, the `/` landing + 220px sidebar + 8 links, the Dashboard date
+line + both chart h3s 16px/700, the Spanish families ("Historial de Ventas",
+"Cajeros"/"Turnos Recientes" H3), and the mobile defect STABLE at its Session-21 D-1
+shape. The reference's Reports surface is still EMPTY — the with-data tiers remain the
+functional superset. Reference capture refreshed: `ref-mobile-pos-390-s25.png`. **The
+clone's mobile drawer re-verified live** (the operator's priority, REAL clicks throughout
+— the V14 law): labeled hamburger · dialog + 8 links at 288px · `animation-name: enter`
+· focus management · scroll-lock · Escape restore · route-close · zero overflow — plus
+13/13 mobile e2e. NO Tailwind v4 regression.
+
+**The NEW depth — the with-data fiscal receipt round-trip walk (the session_43
+pointer)**: the ANALYZE measured every leg CORRECT live (the settings leg: the switch
+flip + label swap + the RUC fill + the toast + the API-persisted state; the receipt leg:
+a full UI checkout rendering the fiscal line; the polarity leg: the toggle OFF with the
+RUC still set rendering NOTHING; the restore) — **F-123, the protection gap**: the
+StoreSettings surface was style-heavy in the suite but NOTHING pinned the receipt's
+fiscal conditional `!hideFiscalOnReceipt && (fiscalRuc || taxId)` in EITHER render
+state. The cure: `tests/e2e/with-data-fiscal-receipt-walk.spec.ts` — the visible state
+(flip + fill + save + toast + the API verify + a REAL checkout + the fiscal line
+asserted by its EXACT template text `RUC · BusinessType` inside `.receipt-print` + the
+shift closed) and the gated polarity (the flag off, the RUC still set — the strongest
+hidden condition — + the API verify + the second checkout rendering NO line + the full
+restore to seed defaults). One probe fix during authoring: TWO inputs carry the "Tax ID
+/ EIN" label — fiscal locators must scope to the `region "Fiscal / Tax Data"` (the law
+now in AGENTS). FOUR specs now persist data (d < f < i < r); the self-clean law is
+EXTENDED to the settings surface.
+
+**The gate-time finding — the evidence harnesses' hour-drift, cured the same cycle**:
+on this cycle's FRESH demo.db (the prior cycles' was warm since Session-22), s17 failed
+18/19 and s18 19/20 — one check each. The forensics (the db queried directly) traced it
+to the SEED HOUR: the demo seed's sale timestamps are relative to the seed time, so the
+7-day CALENDAR window's boundary membership depends on the hour the db was seeded (the
+morning seed carried 29/$369.46; the Session-17 hardcodes recorded 28/$366.56 — the diff
+exactly the boundary sale T-000005, $2.90). The PAGE derived correctly — only the
+harnesses' hardcoded 7-day literals drifted. The cure (test-tier): s17's 7-day check now
+DERIVES from the sales API at runtime (mirroring `periodStart(7)` exactly); s18's truth
+block now derives a `week {n, sum}` pair and its coherence check asserts against IT.
+Both re-ran GREEN: s17 19/19 · s18 20/20 (s16 13/13, window-independent).
+
+**E2E 113 → 115 · specs 11 → 12 · desktop 99 → 101** (UNIT stays 151/15) — the
+count-lockstep constants AND every live-tense doc site moved in the SAME commit
+(docs-counts gate + the "Session-24 lock" → "Session-25 lock" literal, README
+badge/scripts/testing, CLAUDE baseline + the four-walk ordering law, AGENTS the
+Session-25 fiscal round-trip contracts, PAD **v1.23** + the revision block + the spec
+map, SKILL **v2.21.0** + the Session-25 addendum).
+
+**Gate on the final tree**: lint 0 (1 documented warning) · tsc · unit **151/151** (15
+files — UNMOVED) · build · smoke **13/13** · e2e **115/115 × 2 consecutive full runs**
+(101 desktop + 13 mobile + 1 setup, the fixtures + self-clean verified in the post-run
+e2e.db: the settings at seed defaults, zero open shifts, both fiscal shifts closed at
+103.25) · the three with-data harnesses **s16 13/13 · s17 19/19 · s18 20/20**. Evidence:
+screenshots **111–113** (the fiscal settings card with the toggle ON; the receipt
+rendering the fiscal line; the mobile drawer) via the committed self-provisioning
+`scripts/capture-s25-evidence.mjs`, plus the D-1-shape reference capture
+(`ref-mobile-pos-390-s25.png`). Docs lockstep: this worklog entry,
+remediation-plan-session-25 (the full ledger + record), session_45.md (the narration).
+`.env.example` verified against the working `.env`.
