@@ -5,7 +5,7 @@
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6)
 ![Tests](https://img.shields.io/badge/unit%20tests-151%20%2F%20151-brightgreen)
-![E2E](https://img.shields.io/badge/e2e-109%20%2F%20109-brightgreen)
+![E2E](https://img.shields.io/badge/e2e-111%20%2F%20111-brightgreen)
 ![License](https://img.shields.io/badge/license-Proprietary-lightgrey)
 
 **A production-ready, enterprise-grade Point of Sale web application — a functional superset of
@@ -99,7 +99,7 @@ register, a closed shift, and a week of sales).
 | `bun run lint` | ESLint (flat config) |
 | `bun run typecheck` | `tsc --noEmit` (strict) |
 | `bun run test` | Vitest unit suite — the pure domain seams (151 tests / 15 files) |
-| `bun run test:e2e` | Playwright suite against the production standalone build (109 tests; desktop 1440×900 + mobile 390×844 projects, plus the four-width 390/768/1024/1440 drift-sweep battery and the with-data Reports walk) |
+| `bun run test:e2e` | Playwright suite against the production standalone build (111 tests; desktop 1440×900 + mobile 390×844 projects, plus the four-width 390/768/1024/1440 drift-sweep battery and the with-data Reports + Dashboard walks) |
 | `bun run smoke` | The 13-step API smoke ladder against the standalone artifact on :3210 (own scratch `db/smoke.db`; health → auth wall → Zod seam → CRUD → rate limit → boot gate → artifact hygiene) |
 | `bun run gate` | The full pre-push gate: `lint → typecheck → test → build → smoke → e2e` |
 | `bun run db:push` | `prisma db push` against `db/custom.db` |
@@ -190,7 +190,7 @@ All endpoints return domain JSON; errors use `{ error: string }` with the docume
 bun run test            # unit: 151 tests / 15 files — the pure seams (money, cart, shift,
                         # reports, inventory-status, currency, router, validation, auth,
                         # db-path, env-check, site, store, chart-path) + the docs-counts lockstep gate
-bun run test:e2e        # e2e: 109 tests — needs `bun run build` first (boots the standalone
+bun run test:e2e        # e2e: 111 tests — needs `bun run build` first (boots the standalone
                         # build on :3100 with its own scratch db, db/e2e.db)
 bun run smoke           # the 13-step API smoke ladder — also needs the build (boots the
                         # artifact on :3210 with db/smoke.db; verifies the boot gate +
@@ -210,7 +210,11 @@ surfaces — Inventory, Sales, Cashiers — (the functional-scroll guard, extend
 The Session-22 with-data Reports walk (`with-data-reports-walk.spec.ts`) pins the computed
 surface end-to-end — the stats, both method tables, and the chart domain asserted EXACTLY
 against values derived from the API's own sales response at runtime — plus the with-data
-containment at 390 (it sorts last in the suite because it persists sales).
+containment at 390 (it sorts last in the suite because it persists sales). The Session-23
+with-data Dashboard walk (`with-data-dashboard-walk.spec.ts`) pins the app's landing view the
+same way — the today/stats testids, the category-breakdown rows and share bars, and the chart's
+niceScale domain all asserted against values derived from the sales/products/categories APIs
+at runtime — plus the with-data containment at the remaining widths (768/1024/390).
 
 ## Design System
 

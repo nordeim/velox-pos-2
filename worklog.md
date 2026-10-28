@@ -1849,3 +1849,77 @@ plus the refreshed 99–101 (the F-120 repair) and the D-1-shape reference captu
 (`ref-mobile-pos-390-s22.png`). Docs lockstep: this worklog entry,
 remediation-plan-session-22 (the full ledger + record), session_39.md (the narration).
 `.env.example` verified against the working `.env`.
+
+## Session-23 — the with-data Dashboard walk (velox-pos-2)
+
+**Date:** 2026-10-28 · **Tree:** `e1502b6` received (the Session-22 push `65988f6` + the
+operator's session_40 raw-log commit; a `git pull` fast-forward this cycle — the workspace
+SURVIVED, so the documented rebuild was not needed) · **Cycle:** the session_39 "Next"
+pointer's with-data Dashboard walk + the operator's mobile-navigation priority check + the
+store-bootstrap probe (the third candidate — audited CLEAN).
+
+**The received tree**: fast gate GREEN on arrival — lint 0 (1 documented warning) · tsc ·
+unit **151/151** (15 files). Static sweeps clean: zero dead files (142 scanned), secrets
+clean, the documented credential VERIFIES, and the Session-22 code review confirmed the
+cycle's changes were test-tier only (the new reports-walk spec, the surgical F-120 fix in
+the drift-sweep walk + the s21 script, the s22 evidence script, the count lockstep, the
+docs) — ZERO unplanned production code.
+
+**Reference sweep #17: every standing pin HOLDS byte-exact** — the login card
+(blur(4px) · white/95 · 16px · h1 30px/700 · inputs 48px/12px · SSO 54px/16px), the F-76
+error alert byte-exact, the `/` landing + 220px sidebar + 8 links, the Dashboard date line
+("Wednesday, October 28, 2026") + both chart h3s 16px/700, the Spanish families
+("Historial de Ventas", "Cajeros"/"Turnos Recientes" H3), and the mobile defect STABLE at
+its Session-21 D-1 shape (no hamburger, the static 220px sidebar, main 170px, the document
+contained at exactly 390 on every route). The reference's Reports surface is still EMPTY
+($0.00, 2× "No data for this period") — the with-data tiers remain the functional
+superset. Reference capture refreshed: `ref-mobile-pos-390-s23.png`. **The clone's mobile
+drawer re-verified live on the dev server** (the operator's priority): labeled hamburger ·
+dialog semantics + 8 labeled links at 288px · focus management (open→Close,
+Escape→hamburger + scroll-lock release) · route-close unmount · zero horizontal overflow ·
+`animation-name: enter` — plus 13/13 mobile e2e. NO Tailwind v4 regression.
+
+**The session_39 third candidate probed FIRST (the store's bootstrap pair): CLEAN** —
+`loadAll` owns the five collections in ONE `set()`, `loadCore` refreshes settings ONLY
+(the F-118 cure closed the genus, unit-pinned); no race remains. Recorded as the audit's
+negative result.
+
+**The NEW depth — the with-data Dashboard walk (the session_39 pointer)**: the ANALYZE
+measured the surface CORRECT with data at ALL FOUR audit widths (stats exactly the
+API-derived values through the live stat testids; the chart's niceScale top tick covering
+the today revenue; the category rows with share bars; contained at 390/768/1024/1440) —
+**F-121, the protection gap**: the Dashboard is the only major surface without an e2e
+with-data tier (surfaces.spec pins empty-state styles; the drift-sweep visits it EMPTY at
+the four widths; the s18 harness pins the with-data shape at 1440 in the EVIDENCE tier
+only — outside the suite, and NOTHING pins the with-data shape at 390/768/1024 anywhere).
+The cure: `tests/e2e/with-data-dashboard-walk.spec.ts` — the exact wiring pin (the four
+stat testids, the category-breakdown rows + bar widths, the chart's topmost numeric tick
+≥ the API-derived today revenue, the last x-label = today's weekday — all derived from
+the sales/products/categories APIs at runtime, the today pair mirroring
+`inPeriod(sale, 1, now)`'s calendar-bucket semantics, the Low Stock mirror inverting
+`stockStatus`'s "ok" condition) + the with-data containment at the remaining widths
+(768/1024 md+ chrome + frame; 390 sub-md chrome + the chart and category surfaces inside
+the viewport). The fixture is idempotent and self-cleaning (the shift closes). The file
+sorts between the drift-sweep and the reports walk (d < r) — TWO specs now persist sales;
+between the two the relative order is flexible (each derives from the API at runtime),
+the names keeping the reports walk last by convention.
+
+**E2E 109 → 111 · specs 9 → 10 · desktop 95 → 97** (UNIT stays 151/15) — the count-lockstep
+constants AND every live-tense doc site moved in the SAME commit (docs-counts gate + the
+"Session-22 lock" → "Session-23 lock" literal, README badge/scripts/testing, CLAUDE
+baseline + the two-walk ordering law, AGENTS the Session-23 with-data Dashboard
+contracts, PAD **v1.21** + the revision block + the spec map, SKILL **v2.19.0** + the
+Session-23 addendum).
+
+**Gate on the final tree**: lint 0 (1 documented warning) · tsc · unit **151/151** (15
+files — UNMOVED) · build · smoke **13/13** · e2e **111/111 × 2 consecutive full runs**
+(97 desktop + 13 mobile + 1 setup, ALL FIVE fixture sales verified in the post-run e2e.db
+— terminal's, drift-sweep's, the dashboard walk's, the reports walk's pair) · the three
+with-data harnesses **s16 13/13 · s17 19/19 · s18 20/20** (the older captures restored).
+Evidence: screenshots **105–107** (the with-data Dashboard desktop — the derivation
+verified live against a warm db carrying sales from FOUR different fixtures, $21.25/4/3/0;
+the with-data Dashboard contained at 390; the mobile drawer) via the committed
+self-provisioning `scripts/capture-s23-evidence.mjs`, plus the D-1-shape reference
+capture (`ref-mobile-pos-390-s23.png`). Docs lockstep: this worklog entry,
+remediation-plan-session-23 (the full ledger + record), session_41.md (the narration).
+`.env.example` verified against the working `.env`.

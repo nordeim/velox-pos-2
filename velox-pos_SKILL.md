@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.18.0
+version: 2.19.0
 last_updated: 2026-10-28
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-22 lock: unit **151/151** (15 files) · e2e **109/109**
-(95 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-23 lock: unit **151/151** (15 files) · e2e **111/111**
+(97 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -68,7 +68,7 @@ bun run lint                   # eslint flat config — 0 errors, 1 documented w
 bun run typecheck              # tsc --noEmit — strict
 bun run test                   # vitest — tests/unit/** (151)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               playwright (109) — NEEDS the build first (:3100)
+bun run test:e2e               playwright (111) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -433,7 +433,7 @@ SUPERSET instead:
    lockstep gate; store.test.ts pins the F-118 shifts-race at the store seam). New
    `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 109/109)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 111/111)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -450,7 +450,13 @@ SUPERSET instead:
    the stats/methods/chart-domain asserted against values DERIVED FROM THE
    API at runtime — plus the with-data containment at 390; the file sorts
    LAST in the chromium project because it persists sales (the empty-store
-   specs must run before its data exists).
+   specs must run before its data exists). The Session-23 with-data
+   Dashboard walk (`with-data-dashboard-walk.spec.ts`): the landing view's
+   exact wiring pin — the today/stats testids, the category-breakdown rows
+   and share bars, and the chart's niceScale domain, all derived from the
+   sales/products/categories APIs at runtime — plus the with-data
+   containment at the remaining widths (768/1024/390, the chrome switch
+   with data).
 3. **Live re-measurement (agent-browser)** — computed styles beat screenshots;
    re-measure the reference before any design-system change and record the
    measurement in the plan doc.
@@ -1470,3 +1476,57 @@ becomes the **Session-22 lock**), PAD v1.20, AGENTS (the Session-22
 with-data contracts), CLAUDE, README, the worklog entry,
 `docs/remediation-plan-session-22.md`, `docs/session_39.md`.
 Skill v2.18.0.
+
+### Session-23 addendum (v2.19.0) — the with-data Dashboard walk
+
+The session_39 "Next" pointer landed: the Dashboard — the app's landing
+view, and the only major surface whose value is computed from BOTH the
+sales ledger AND the product/category collections — got its with-data tier
+(`tests/e2e/with-data-dashboard-walk.spec.ts`, F-121). Before it, every
+Dashboard pin was empty-state (surfaces.spec's styles, the drift-sweep's
+data-agnostic containment) or evidence-tier-only (the s18 harness pins the
+with-data shape at 1440 on the demo db, OUTSIDE the suite); the CHAIN —
+the API sales list → the store's `sales` collection → `summarize(sales, 1)`
+→ the stat testids; the products/categories APIs → `products.length`/
+`lowStockCount`/the category rows and share bars; `dailySeries(sales, 7)`
+→ the chart's weekday labels + the niceScale domain — was e2e-invisible,
+and NOTHING pinned the with-data shape at 390/768/1024 anywhere.
+
+The walk provisions its own idempotent chain (category → product with an
+"ok" stock status → register → shift → one cash sale → shift CLOSED, the
+self-clean law) and asserts the four stats, the category rows + bar
+widths, the chart's topmost numeric tick ≥ the API-derived today revenue,
+and the last x-label = today's weekday — all EXACTLY against values
+DERIVED FROM THE APIs at runtime (the s18/s22 volatile-expectation law:
+the today pair mirrors `inPeriod(sale, 1, now)`'s calendar-bucket
+semantics, the Low Stock mirror inverts `stockStatus`'s "ok" condition,
+the rows mirror the view's count-desc + "Uncategorized" derivation). The
+second test pins the with-data containment at the REMAINING widths
+(768/1024: the md+ chrome + the frame; 390: the sub-md chrome + the chart
+and category surfaces inside the viewport) — the drift-sweep battery
+visited those widths EMPTY only.
+
+The ordering law, extended: TWO specs now persist sales — the dashboard
+walk (d) sorts before the reports walk (r), both after every empty-state
+pin of what they create; between the two, the relative order is flexible
+(each derives from the API at runtime) but the names keep the reports walk
+last by convention. The session_39 third candidate (the store's bootstrap
+pair) was probed and found CLEAN — `loadCore` is settings-only (the F-118
+cure closed the genus); recorded as the audit's negative result.
+
+The seventeenth reference sweep: every standing pin HOLDS (login card,
+F-76, sidebar, landing, Dashboard date line + chart h3s, Spanish families)
+and the reference's mobile defect is STABLE at its Session-21 D-1 shape
+(no hamburger, the static 220px sidebar, main crushed to 170px, the
+document contained at 390); the reference's Reports surface is still EMPTY
+($0.00, 2× "No data for this period") — the with-data tiers remain a
+functional superset.
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **151/151**
+(15 files — UNMOVED) · build green · smoke **13/13** · e2e **111/111** (97
+desktop + 13 mobile + 1 setup). Screenshots 105–107. Docs lockstep: the
+count constants + every live-tense site (the "Session-22 lock" literal
+becomes the **Session-23 lock**), PAD v1.21, AGENTS (the Session-23
+with-data Dashboard contracts), CLAUDE, README, the worklog entry,
+`docs/remediation-plan-session-23.md`, `docs/session_41.md`.
+Skill v2.19.0.

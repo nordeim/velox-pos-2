@@ -1,4 +1,4 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.20
+# VeloxPOS — Master Project Architecture Document (PAD) v1.21
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
@@ -28,7 +28,7 @@ guardrail is enforced by tooling that runs in this checkout.
 **Scale & baselines (verified 2026-10-27, Session-16 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views (9 route spellings — the root `/` page is the
 terminal's reference-parity landing, Session-10 F-60)
-+ login/reset/404 · 151 unit tests (15 files) · 109 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 151 unit tests (15 files) · 111 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -251,7 +251,7 @@ Dependency rule: arrows point downward only. `src/lib` pure seams never import R
  │                           db-path, db, store, api, utils) + server/ (http, auth, entities)
  ├ 📂 prisma               — schema.prisma (9 models) · seed.ts (owner + settings; --demo dataset)
  ├ 📂 tests/unit           — 15 vitest files (the seam registry + the docs-counts gate)
- ├ 📂 tests/e2e            — 9 spec files + auth.setup + kill-port + provisioning
+ ├ 📂 tests/e2e            — 10 spec files + auth.setup + kill-port + provisioning
  ├ 📂 docs                 — implementation plan, runbooks, Tailwind report, screenshots/
  └ ⚙️ next.config.ts · playwright.config.ts · vitest.config.ts · package.json · .env.example
 ```
@@ -299,7 +299,7 @@ lint → typecheck → unit → build → smoke → e2e
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 15 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 109/109):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 111/111):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
@@ -311,10 +311,16 @@ lint → typecheck → unit → build → smoke → e2e
    cart-md-geometry parity pins), `viewport-drift-sweep` (the Session-20 tier, extended
    Session-21: the 8 routes × 4 widths zero-overflow battery + the chrome-switch contract
    + the with-data functional-scroll containment guard at 390 on ALL THREE ledger surfaces
-   — Inventory/Sales/Cashiers, the F-117 three-ledger walk), `with-data-reports-walk`
-   (the Session-22 tier: the exact wiring pin over the API-derived stats/methods/
-   chart-domain + the with-data containment at 390 — the file sorts LAST because it
-   persists sales; every empty-state pin of what it creates runs before it).
+   — Inventory/Sales/Cashiers, the F-117 three-ledger walk), `with-data-dashboard-walk`
+   (the Session-23 tier: the landing view's exact wiring pin — the today/stats testids,
+   the category-breakdown rows + share bars, the chart's niceScale domain, all derived
+   from the sales/products/categories APIs at runtime — plus the with-data containment
+   at the remaining widths 768/1024/390, the chrome switch with data),
+   `with-data-reports-walk` (the Session-22 tier: the exact wiring pin over the
+   API-derived stats/methods/chart-domain + the with-data containment at 390 — the file
+   sorts LAST because it persists sales; every empty-state pin of what it creates runs
+   before it; the dashboard walk sorts between the drift-sweep and it — d < r — and is
+   robust to the reports walk's data by the same runtime-derivation design).
 3. **Field-tested e2e doctrine:** auth waits for the hydration-gated submit button (`toBeEnabled`)
    before filling; assertions use visibility (not DOM count) for `hidden md:*` elements; the
    scratch db is never replaced while the server lives (clients bind the inode; field-tested
@@ -1420,3 +1426,46 @@ at 390, the mobile drawer) + the D-1-shape reference capture
 (README badge/scripts/testing, CLAUDE baseline + the persistence-ordering law, AGENTS the
 Session-22 with-data contracts, PAD v1.20, SKILL v2.18.0 with the Session-22 addendum),
 the worklog entry, `docs/remediation-plan-session-22.md`, `docs/session_39.md`.
+
+## Revision History — Session-23 (v1.21, 2026-10-28)
+
+The session_39 "Next" pointer landed: **the with-data Dashboard walk** — the app's
+landing view, the only major surface whose value is computed from BOTH the sales
+ledger AND the product/category collections, gets its with-data e2e tier
+(`tests/e2e/with-data-dashboard-walk.spec.ts`, F-121). Before it every Dashboard pin
+was empty-state (surfaces.spec's style pins, the drift-sweep's data-agnostic
+containment) or evidence-tier-only (the s18 harness pins the with-data shape at 1440
+on the demo db, outside the suite) — the CHAIN (API sales → the store's `sales`
+collection → `summarize(sales, 1)` → the stat testids; the products/categories APIs →
+`products.length`/`lowStockCount` → the stat + category-breakdown rows;
+`dailySeries(sales, 7)` → the chart's weekday labels + niceScale domain) was
+e2e-invisible, and the with-data shape at 390/768/1024 was pinned NOWHERE. The
+ANALYZE (V16) measured the surface CORRECT with data at all four widths (the stats
+exactly the API-derived values; the top y-tick covering the today revenue; the
+category rows with share bars; contained) — the finding is the missing tier, not a
+live defect. The walk provisions its own idempotent chain (an "ok"-stock product so
+the Low Stock derivation is never perturbed; the shift CLOSED, the self-clean law),
+asserts the four stats + the category rows + the chart domain + the last weekday
+label EXACTLY against values derived from the APIs at runtime (the today pair
+mirrors `inPeriod(sale, 1, now)`'s calendar-bucket semantics; the Low Stock mirror
+inverts `stockStatus`'s "ok" condition), and pins the with-data containment at the
+remaining widths (768/1024 md+ chrome + frame; 390 sub-md chrome + the chart and
+category surfaces inside the viewport). The ordering law extended: TWO specs now
+persist sales — the dashboard walk sorts between the drift-sweep and the reports
+walk (d < r); between the two the relative order is flexible (each derives from the
+API at runtime), but the names keep the reports walk last by convention. The
+session_39 third candidate (the store's bootstrap pair) was probed CLEAN —
+`loadCore` is settings-only, the F-118 cure closed the genus (recorded as the
+audit's negative result). The seventeenth reference sweep: every standing pin HOLDS;
+the reference's mobile defect STABLE at its D-1 shape; the reference's Reports
+surface still EMPTY (the with-data tiers remain the functional superset).
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **151/151** (15 files —
+UNMOVED) · build green · smoke **13/13** · e2e **111/111** (97 desktop + 13 mobile + 1
+setup). Screenshots 105–107 (the with-data Dashboard desktop, the with-data Dashboard
+contained at 390, the mobile drawer) + the D-1-shape reference capture
+(`ref-mobile-pos-390-s23.png`). Docs lockstep: the count constants + every live-tense
+site (README badge/scripts/testing, CLAUDE baseline + the two-walk ordering law,
+AGENTS the Session-23 with-data Dashboard contracts, PAD v1.21, SKILL v2.19.0 with
+the Session-23 addendum), the worklog entry, `docs/remediation-plan-session-23.md`,
+`docs/session_41.md`.

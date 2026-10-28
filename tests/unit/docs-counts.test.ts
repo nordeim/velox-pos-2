@@ -83,13 +83,18 @@ const viewFiles = readdirSync(path.join(root, "src/components/pos/views")).filte
 // (store.test.ts — the shifts-collection bootstrap race, 2 its).
 const UNIT = 151;
 const UNIT_FILES = 15;
-// E2E 109 = the Session-20/21 107 + the Session-22 F-119 with-data Reports
+// E2E 111 = the Session-20/21 107 + the Session-22 F-119 with-data Reports
 // walk (the 2 tests of with-data-reports-walk.spec.ts — the exact wiring pin
 // over the API-derived stats/methods/chart-domain + the with-data containment
 // at 390; the file sorts LAST in the chromium project because it persists
-// sales — surfaces.spec's empty-Reports pin must run before its data exists).
-const E2E = 109;
-const E2E_SPECS = 9;
+// sales — surfaces.spec's empty-Reports pin must run before its data exists)
+// + the Session-23 F-121 with-data Dashboard walk (the 2 tests of
+// with-data-dashboard-walk.spec.ts — the exact wiring pin over the
+// API-derived today/stats/categories/chart-domain + the with-data
+// containment at the remaining widths 768/1024/390; the file sorts after
+// viewport-drift-sweep and before with-data-reports-walk).
+const E2E = 111;
+const E2E_SPECS = 10;
 const ROUTE_FILES = 26;
 const PRISMA_MODELS = 9;
 const VIEWS = 8;
@@ -168,8 +173,8 @@ describe("session-8 (F-52): the count-lockstep gate — every live-tense count s
   });
 
   it("the SKILL carries the live counts (header baselines, commands, data model, tiers)", () => {
-    expect(skillFlat).toContain(`Baselines at Session-22 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
-    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (95 desktop + 13 mobile + 1 setup)`);
+    expect(skillFlat).toContain(`Baselines at Session-23 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
+    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (97 desktop + 13 mobile + 1 setup)`);
     expect(skillFlat).toContain(`tests/unit/** (${UNIT})`);
     expect(skillFlat).toContain(`playwright (${E2E})`);
     expect(skillFlat).toContain(`${PRISMA_MODELS} models, user-scoped, cascade deletes`);

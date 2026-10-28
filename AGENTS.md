@@ -606,6 +606,41 @@ bite hardest here:
   every downstream wait vacuous — `expect(resp.ok(), ...)` on every create, and when a
   fixture value feeds a locator filter, assert it is truthy FIRST.
 
+## The with-data Dashboard contracts (Session-23 pins — F-121)
+
+- **The Dashboard surface is pinned WITH DATA end-to-end**
+  (`tests/e2e/with-data-dashboard-walk.spec.ts`): the walk provisions an
+  idempotent chain (category → product with an "ok" stock status — never
+  perturbing the Low Stock derivation → register → shift → one cash sale →
+  the shift CLOSED, the self-clean law) and asserts the four stat testids
+  (`stat-today-s-sales`/`stat-transactions`/`stat-products`/
+  `stat-low-stock`), the category-breakdown rows with their share-bar
+  widths, the chart's topmost NUMERIC tick ≥ the API-derived today revenue,
+  and the last x-label = today's weekday — all EXACTLY against values
+  DERIVED FROM THE APIs at runtime, never hardcoded.
+- **The today pair mirrors `inPeriod(sale, 1, now)`'s calendar-bucket
+  semantics** (created >= today's LOCAL midnight && <= now), the Low Stock
+  mirror inverts `stockStatus`'s "ok" condition
+  (`active && !(stock > 0 && stock > minStock)`), and the category rows
+  mirror the view's own derivation (count > 0, count-desc,
+  "Uncategorized" appended, bar = round(count/total×100)%). When a seam's
+  semantics and a spec's mirror disagree, fix the MIRROR — the seam is the
+  contract (both sides then compute the same thing at any hour, including
+  across midnight).
+- **TWO specs now persist sales — the ordering law, extended**: the
+  dashboard walk sorts between the drift-sweep and the reports walk
+  (d < r), all after every empty-state pin of what they create
+  (surfaces.spec's empty-Reports pin included). Between the two walks the
+  relative order is FLEXIBLE — each derives its expectations from the API
+  at runtime (robust to the other's data) — but the file names keep the
+  reports walk last by convention. A third persisting spec must be checked
+  against BOTH before it lands.
+- **The chart's tick texts MIX numbers and weekday labels** (the s18
+  lesson, now suite-tier): filter to strictly numeric
+  (`/^\d+(\.\d+)?$/`) before reducing — `Math.max` over `["0","Wed"]` is
+  NaN. The 7-day window's RIGHT edge is today: the last tick text is
+  today's weekday abbreviation.
+
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
 `src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px
