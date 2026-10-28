@@ -1781,3 +1781,71 @@ self-provisioning `scripts/capture-s21-evidence.mjs`, plus the D-1 reference cap
 (`ref-mobile-pos-390-s21.png`). Docs lockstep: this worklog entry,
 remediation-plan-session-21 (the full ledger + record), session_37.md (the narration).
 `.env.example` verified against the working `.env`.
+
+## Session-22 — the with-data Reports walk + the fixture POST it caught (velox-pos-2)
+
+**Date:** 2026-10-28 · **Tree:** `126c45d` received (the Session-21 push `182fe3b` + the
+operator's session_38 raw-log commit — a FRESH CLONE this cycle; the sandbox workspace was
+reset, so the documented rebuild ran: `.env` regenerated with a fresh 64-hex secret,
+`bun install`, `db:push` + `db:seed`, chromium-1243 installed) · **Cycle:** the session_37
+"Next" pointer's with-data Reports walk + the operator's mobile-navigation priority check.
+
+**The received tree**: gate FULLY GREEN on arrival — lint 0 (1 documented warning) · tsc ·
+unit **151/151** (15 files) · build · smoke **13/13** · e2e **107/107** (2.9m). Static
+sweeps clean: zero dead files (the census script recreated after the sandbox reset), secrets
+clean (test fixtures only), the documented credential VERIFIES (the checker runs under
+**bun**; its first draft's 4-part hash-shape assumption corrected to the repo's 3-part
+`scrypt$salt$key`), and the Session-21 code review confirmed the surgical `loadCore` fix +
+the walk + the store regression test + the lockstep + the docs, ZERO unplanned production
+code.
+
+**Reference sweep #16: every standing pin HOLDS byte-exact, and the mobile defect is
+STABLE at its Session-21 D-1 shape** (no hamburger, the static 220px sidebar, the document
+contained at exactly 390 with main crushed to 170px — no NEW drift; the D-1 record still
+describes the reference exactly). **The clone's mobile drawer re-verified live on the dev
+server** (the operator's priority): labeled hamburger · dialog semantics + 8 labeled links
+· focus management (open→Close, Escape→hamburger + scroll-lock release) · route-close
+unmount · zero horizontal overflow — plus 13/13 mobile e2e. NO Tailwind v4 regression.
+
+**The NEW depth — the with-data Reports walk (the session_37 pointer)**: the reference's
+Reports surface is EMPTY ($0.00 stats, 2× "No data for this period" — the demo account is
+write-restricted), so the with-data tier is a functional-SUPERSET addition (the s20/s21
+lineage). The ANALYZE measured the clone CORRECT with data (stats exactly the API-derived
+$9.75/2/$4.88; both method tables + share bars; topTick $10 covering the data; contained
+at 390) — **F-119, the protection gap**: every standing Reports pin is empty-state and the
+CHAIN (API → store → memoized summarize/dailySeries/byMethod → DOM) was e2e-invisible. The
+cure: `tests/e2e/with-data-reports-walk.spec.ts` — the exact wiring pin (expected values
+DERIVED FROM THE API at runtime, never hardcoded) + the with-data containment at 390. The
+file name is LOAD-BEARING: it sorts LAST in the chromium project because it persists sales
+(surfaces.spec's empty-Reports pin must run before its data exists).
+
+**The ANALYZE also caught F-120, a latent defect in the STANDING suite**: the provisioning
+script's first sale POST 400'd on `items.0.name` — and the Session-21 drift-sweep walk's
+fixture POST carried the same PRE-contract `quantity` payload, silently 400ing for two
+sessions. `sale.ticket` was always undefined, `filter({ hasText: undefined })` applied NO
+filter, and the Sales leg's settled wait matched ANY row (terminal.spec's sale; the
+empty-state td row on a colder db) — the walk passed 107/107 twice with ZERO "Drift Sweep"
+sales in the db (verified directly against the post-run e2e.db). The cure: the
+contract-correct line payload + `expect(resp.ok())` on every provisioning POST — in the
+walk, the s21 evidence script (captures 99–101 refreshed to show the fixture's own row),
+and the s22 provisioning. The walk re-ran green with the fixture sale VERIFIED in the db
+(T-000001, $5.00).
+
+**E2E 107 → 109 · specs 8 → 9 · desktop 93 → 95** (UNIT stays 151/15) — the count-lockstep
+constants AND every live-tense doc site moved in the SAME commit (docs-counts gate + the
+"Session-21 lock" → "Session-22 lock" literal, README badge/scripts/testing, CLAUDE
+baseline + the persistence-ordering law, AGENTS the Session-22 with-data contracts + the
+F-120 POST-assertion law, PAD **v1.20** + the revision block + the spec map, SKILL
+**v2.18.0** + the Session-22 addendum).
+
+**Gate on the final tree**: lint 0 (1 documented warning) · tsc · unit **151/151** (15
+files — UNMOVED) · build · smoke **13/13** · e2e **109/109 × 2 consecutive full runs**
+(95 desktop + 13 mobile + 1 setup, both fixtures verified in the db) · the three with-data
+harnesses **s16 13/13 · s17 19/19 · s18 20/20**. Evidence: screenshots **102–104** (the
+with-data Reports desktop — the derivation verified live against a warm db carrying THREE
+sales from two different fixtures, $14.75/3; the with-data Reports contained at 390; the
+mobile drawer) via the committed self-provisioning `scripts/capture-s22-evidence.mjs`,
+plus the refreshed 99–101 (the F-120 repair) and the D-1-shape reference capture
+(`ref-mobile-pos-390-s22.png`). Docs lockstep: this worklog entry,
+remediation-plan-session-22 (the full ledger + record), session_39.md (the narration).
+`.env.example` verified against the working `.env`.

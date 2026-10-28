@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.17.0
+version: 2.18.0
 last_updated: 2026-10-28
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-21 lock: unit **151/151** (15 files) · e2e **107/107**
-(93 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-22 lock: unit **151/151** (15 files) · e2e **109/109**
+(95 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -68,7 +68,7 @@ bun run lint                   # eslint flat config — 0 errors, 1 documented w
 bun run typecheck              # tsc --noEmit — strict
 bun run test                   # vitest — tests/unit/** (151)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               playwright (107) — NEEDS the build first (:3100)
+bun run test:e2e               playwright (109) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -433,7 +433,7 @@ SUPERSET instead:
    lockstep gate; store.test.ts pins the F-118 shifts-race at the store seam). New
    `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 107/107)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 109/109)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -445,7 +445,12 @@ SUPERSET instead:
    battery + the chrome-switch contract + the with-data functional-scroll
    containment guard on ALL THREE ledger surfaces (Inventory/Sales/Cashiers
    at 390 — the F-117 three-ledger walk) — the standing visual-regression
-   tier (the master skill §15 gate:full doctrine).
+   tier (the master skill §15 gate:full doctrine). The Session-22 with-data
+   Reports walk (`with-data-reports-walk.spec.ts`): the exact wiring pin —
+   the stats/methods/chart-domain asserted against values DERIVED FROM THE
+   API at runtime — plus the with-data containment at 390; the file sorts
+   LAST in the chromium project because it persists sales (the empty-store
+   specs must run before its data exists).
 3. **Live re-measurement (agent-browser)** — computed styles beat screenshots;
    re-measure the reference before any design-system change and record the
    measurement in the plan doc.
@@ -1423,3 +1428,45 @@ refreshed; history blocks keep their historical statements.
 drift-sweep extension), README, the worklog entry,
 `docs/remediation-plan-session-21.md`, `docs/session_37.md`.
 Skill v2.17.0.
+
+### Session-22 addendum (v2.18.0) — the with-data Reports walk
+
+The session_37 "Next" pointer landed: the Reports surface — the only view
+whose entire value is COMPUTED from the sales ledger — got its with-data
+tier (`tests/e2e/with-data-reports-walk.spec.ts`, F-119). Before it, every
+Reports pin was empty-state; the CHAIN (API → store → memoized
+summarize/dailySeries/byMethod → DOM) was e2e-invisible — a store-wiring
+regression of the F-118 genus, a lost data-testid, a MethodTable that stops
+rendering when data exists, a chart domain that stops covering its data (the
+F-107 class), or a with-data containment break at 390 would ALL have passed.
+
+The walk provisions a cash AND a card sale (the byMethod two-row shape) and
+asserts the stats/methods/chart EXACTLY against values DERIVED FROM THE
+API's own response at runtime (never hardcoded — the s18 harness's
+volatile-expectation lesson): the three stat testids, both method tables
+with counts/shares/bars, the topmost chart tick ≥ the today-bucket revenue,
+the 7-day pill switch keeping the data, and the containment at 390. The
+reference cannot produce this state (write-gated, measured live: $0.00
+stats, 2× "No data for this period") — the tier is a functional superset,
+the s20/s21 lineage.
+
+The ordering lesson: the spec file name is LOAD-BEARING — it sorts LAST in
+the chromium project (after surfaces.spec) because it PERSISTS sales;
+surfaces.spec's empty-Reports pin ("No data for this period" visible) must
+run BEFORE the walk's data exists. A spec that persists data must sort
+after every spec that pins the empty state of what it creates, and it must
+self-clean its shift (the standing law — the mobile POS gate).
+
+The sixteenth reference sweep: every standing pin HOLDS (login card,
+F-76, sidebar, Dashboard date line, Spanish families) and the reference's
+mobile defect is STABLE at its Session-21 D-1 shape (no hamburger, the
+static 220px sidebar, main crushed to 170px, the document contained at 390).
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **151/151**
+(15 files — UNMOVED) · build green · smoke **13/13** · e2e **109/109** (95
+desktop + 13 mobile + 1 setup). Screenshots 102–104. Docs lockstep: the
+count constants + every live-tense site (the "Session-21 lock" literal
+becomes the **Session-22 lock**), PAD v1.20, AGENTS (the Session-22
+with-data contracts), CLAUDE, README, the worklog entry,
+`docs/remediation-plan-session-22.md`, `docs/session_39.md`.
+Skill v2.18.0.

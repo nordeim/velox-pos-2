@@ -1,9 +1,9 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.19
+# VeloxPOS — Master Project Architecture Document (PAD) v1.20
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
 **Companion documents:** `README.md` (tour) · `AGENTS.md` (agent invariants) · `CLAUDE.md` (Claude conventions) · `docs/veloxpos-implementation-plan.md` (the measured reference spec)
-**Last Updated:** 2026-10-28 (Session-21)
+**Last Updated:** 2026-10-28 (Session-22)
 **Audience:** Senior engineers, tech leads, DevOps, onboarding engineers, and AI coding agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -28,7 +28,7 @@ guardrail is enforced by tooling that runs in this checkout.
 **Scale & baselines (verified 2026-10-27, Session-16 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views (9 route spellings — the root `/` page is the
 terminal's reference-parity landing, Session-10 F-60)
-+ login/reset/404 · 151 unit tests (15 files) · 107 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 151 unit tests (15 files) · 109 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -251,7 +251,7 @@ Dependency rule: arrows point downward only. `src/lib` pure seams never import R
  │                           db-path, db, store, api, utils) + server/ (http, auth, entities)
  ├ 📂 prisma               — schema.prisma (9 models) · seed.ts (owner + settings; --demo dataset)
  ├ 📂 tests/unit           — 15 vitest files (the seam registry + the docs-counts gate)
- ├ 📂 tests/e2e            — 8 spec files + auth.setup + kill-port + provisioning
+ ├ 📂 tests/e2e            — 9 spec files + auth.setup + kill-port + provisioning
  ├ 📂 docs                 — implementation plan, runbooks, Tailwind report, screenshots/
  └ ⚙️ next.config.ts · playwright.config.ts · vitest.config.ts · package.json · .env.example
 ```
@@ -299,7 +299,7 @@ lint → typecheck → unit → build → smoke → e2e
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 15 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 107/107):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 109/109):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
@@ -311,7 +311,10 @@ lint → typecheck → unit → build → smoke → e2e
    cart-md-geometry parity pins), `viewport-drift-sweep` (the Session-20 tier, extended
    Session-21: the 8 routes × 4 widths zero-overflow battery + the chrome-switch contract
    + the with-data functional-scroll containment guard at 390 on ALL THREE ledger surfaces
-   — Inventory/Sales/Cashiers, the F-117 three-ledger walk).
+   — Inventory/Sales/Cashiers, the F-117 three-ledger walk), `with-data-reports-walk`
+   (the Session-22 tier: the exact wiring pin over the API-derived stats/methods/
+   chart-domain + the with-data containment at 390 — the file sorts LAST because it
+   persists sales; every empty-state pin of what it creates runs before it).
 3. **Field-tested e2e doctrine:** auth waits for the hydration-gated submit button (`toBeEnabled`)
    before filling; assertions use visibility (not DOM count) for `hidden md:*` elements; the
    scratch db is never replaced while the server lives (clients bind the inode; field-tested
@@ -1385,3 +1388,35 @@ live-tense site (README badge/scripts/testing, CLAUDE baseline + the drift-sweep
 laws, AGENTS the Session-21 contracts + the file count, PAD v1.19, SKILL v2.17.0 with the
 Session-21 addendum), the D-1 reference-drift refresh at every live-tense site, the worklog
 entry, `docs/remediation-plan-session-21.md`, `docs/session_37.md`.
+
+## Revision History — Session-22 (v1.20, 2026-10-28)
+
+**The with-data Reports walk (F-119).** The session_37 "Next" pointer landed: the Reports
+surface — the only view whose entire value is COMPUTED from the sales ledger — got its
+with-data tier (`tests/e2e/with-data-reports-walk.spec.ts`, 2 tests, E2E 107 → 109, specs
+8 → 9). Before it every Reports pin was empty-state; the CHAIN (the API's sales list → the
+store's collection → the memoized summarize/dailySeries/byMethod values → the DOM) was
+e2e-invisible — a store-wiring regression of the F-118 genus, a lost data-testid, a
+MethodTable that stops rendering when data exists, a chart domain that stops covering its
+data (the F-107 class), or a with-data containment break at 390 would ALL have passed the
+suite. The walk provisions a cash AND a card sale (the byMethod two-row shape) and asserts
+the stats/methods/chart EXACTLY against values DERIVED FROM THE API's own response at
+runtime (never hardcoded — the s18 harness's volatile-expectation lesson), plus the 7-day
+pill switch keeping the data and the containment at 390. The reference cannot produce this
+state (its demo account is write-gated; measured live this cycle: $0.00 stats, 2× "No data
+for this period") — the tier is a functional superset, the s20/s21 lineage. Two lessons
+written into the doctrine: (1) a spec that PERSISTS data sorts LAST in the chromium
+project — surfaces.spec's empty-Reports pin must run before the walk's data exists (the
+file name is load-bearing); (2) the method-name span CONTAINS the count span as a child,
+so the exact textContent is the composite "cash(1)" (the first run's lesson). The
+sixteenth reference sweep: every standing pin HOLDS; the reference's mobile defect is
+STABLE at its Session-21 D-1 shape.
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **151/151** (15 files —
+UNMOVED) · build green · smoke **13/13** · e2e **109/109** (95 desktop + 13 mobile + 1
+setup). Screenshots 102–104 (the with-data Reports desktop, the with-data Reports contained
+at 390, the mobile drawer) + the D-1-shape reference capture
+(`ref-mobile-pos-390-s22.png`). Docs lockstep: the count constants + every live-tense site
+(README badge/scripts/testing, CLAUDE baseline + the persistence-ordering law, AGENTS the
+Session-22 with-data contracts, PAD v1.20, SKILL v2.18.0 with the Session-22 addendum),
+the worklog entry, `docs/remediation-plan-session-22.md`, `docs/session_39.md`.

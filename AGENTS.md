@@ -572,6 +572,40 @@ bite hardest here:
   after chromium). terminal.spec has always done this; the drift-sweep walk now does
   too (a closed shift still renders the Cashiers ledger row).
 
+## The with-data computed-surface contracts (Session-22 pins — F-119)
+
+- **The Reports surface is pinned WITH DATA end-to-end**
+  (`tests/e2e/with-data-reports-walk.spec.ts`): the walk provisions a cash AND a card
+  sale (the byMethod two-row shape) and asserts the three stat testids, BOTH method
+  tables (counts, shares, bar widths), and the chart's topmost y-tick EXACTLY against
+  values DERIVED FROM THE API's own `/api/sales` response at runtime — never hardcoded
+  (the volatile-expectation lesson: a hardcoded "$9.75" rots the moment the fixture or
+  the db changes). The chart-domain pin (topmost tick ≥ the today-bucket revenue) is the
+  live form of the F-107 niceScale contract.
+- **A spec that PERSISTS data sorts AFTER every spec that pins the empty state of what
+  it creates** — the file name is LOAD-BEARING: `with-data-reports-walk.spec.ts` sorts
+  LAST in the chromium project (after surfaces.spec's "No data for this period"
+  empty-Reports pin and after every other empty-state assertion). Renaming it into an
+  earlier alphabetical position breaks the suite on the NEXT run.
+- **The exact-value pin derives, never hardcodes**: filter `status === "completed"`,
+  round2 the sums, revenue-desc, share = method/total — mirroring the view's own
+  `summarize`/`byMethod` math (both unit-pinned at the seam; the e2e tier pins the
+  WIRING). The scratch db is fresh per run (global-setup deletes + re-provisions before
+  boot), so every sale is created TODAY — inside every period window deterministically.
+- **The method-name span CONTAINS the count span as a child** (the first run's lesson):
+  the li's `span.capitalize` textContent is the composite `"cash(1)"` — the method name
+  is a bare text node between the dot and the count, so pin the composite, not the name
+  alone.
+- **Every provisioning POST ASSERTS its response** (the F-120 lesson, Session-22): the
+  Session-21 drift-sweep walk's fixture sale POST silently 400'd for two sessions — its
+  payload carried the PRE-contract `quantity` field instead of the `saleCreateSchema` line
+  shape (`name`/`price`/`qty`/`taxRate`), `sale.ticket` stayed `undefined`, and the Sales
+  leg's settled wait (`filter({ hasText: undefined })` — NO filter applied) matched ANY
+  row (terminal.spec's sale; the empty-state td row on a colder db). The walk passed
+  107/107 twice with ZERO fixture sales in the db. An unasserted provisioning POST makes
+  every downstream wait vacuous — `expect(resp.ok(), ...)` on every create, and when a
+  fixture value feeds a locator filter, assert it is truthy FIRST.
+
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
 `src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px

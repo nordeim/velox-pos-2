@@ -154,17 +154,33 @@ test.describe("the four-width drift-sweep battery (Session-20, F-116)", () => {
     let ticket = sales.find((s: { customer: string | null }) => s.customer === "Drift Sweep")
       ?.ticket as string | undefined;
     if (!ticket) {
-      const sale = await json(
-        await page.request.post("/api/sales", {
-          data: {
-            items: [{ productId: prodId, quantity: 2 }],
-            paymentMethod: "cash",
-            amountPaid: 20,
-            customer: "Drift Sweep",
-          },
-        }),
-      );
-      ticket = sale.ticket;
+      // Session-22 (F-120): this POST silently 400'd for two sessions — the
+      // payload carried the PRE-contract `quantity` field instead of the
+      // saleCreateSchema's `name`/`price`/`qty`/`taxRate` line shape, so
+      // `sale.ticket` was always undefined and the Sales leg's settled wait
+      // (`filter({ hasText: undefined })` — no filter) matched ANY row:
+      // terminal.spec's sale when it ran first, the empty-state td row on a
+      // colder db. A provisioning POST ASSERTS its response — a silent 400
+      // makes every downstream wait vacuous.
+      const resp = await page.request.post("/api/sales", {
+        data: {
+          items: [
+            {
+              productId: prodId,
+              name: "Drift Sweep Cola",
+              price: 2.5,
+              qty: 2,
+              taxRate: 0,
+            },
+          ],
+          paymentMethod: "cash",
+          amountPaid: 20,
+          customer: "Drift Sweep",
+        },
+      });
+      expect(resp.ok(), `the fixture sale must create (got ${resp.status()})`).toBe(true);
+      ticket = (await json(resp)).ticket;
+      expect(ticket, "the fixture sale must allocate a ticket").toBeTruthy();
     }
     // The self-clean law (the terminal.spec posture — its shift closes so the
     // mobile spec's POS gate test sees the gate): close this spec's shift

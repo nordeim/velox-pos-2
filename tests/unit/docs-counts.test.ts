@@ -83,12 +83,13 @@ const viewFiles = readdirSync(path.join(root, "src/components/pos/views")).filte
 // (store.test.ts — the shifts-collection bootstrap race, 2 its).
 const UNIT = 151;
 const UNIT_FILES = 15;
-// E2E 107 = the Session-19 105 + the Session-20 F-116 drift-sweep tier
-// (the four-width route battery + the with-data ledger containment guard —
-// the 2 tests of viewport-drift-sweep.spec.ts, the standing visual-regression
-// tier this codebase did not have).
-const E2E = 107;
-const E2E_SPECS = 8;
+// E2E 109 = the Session-20/21 107 + the Session-22 F-119 with-data Reports
+// walk (the 2 tests of with-data-reports-walk.spec.ts — the exact wiring pin
+// over the API-derived stats/methods/chart-domain + the with-data containment
+// at 390; the file sorts LAST in the chromium project because it persists
+// sales — surfaces.spec's empty-Reports pin must run before its data exists).
+const E2E = 109;
+const E2E_SPECS = 9;
 const ROUTE_FILES = 26;
 const PRISMA_MODELS = 9;
 const VIEWS = 8;
@@ -167,8 +168,8 @@ describe("session-8 (F-52): the count-lockstep gate — every live-tense count s
   });
 
   it("the SKILL carries the live counts (header baselines, commands, data model, tiers)", () => {
-    expect(skillFlat).toContain(`Baselines at Session-21 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
-    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (93 desktop + 13 mobile + 1 setup)`);
+    expect(skillFlat).toContain(`Baselines at Session-22 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
+    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (95 desktop + 13 mobile + 1 setup)`);
     expect(skillFlat).toContain(`tests/unit/** (${UNIT})`);
     expect(skillFlat).toContain(`playwright (${E2E})`);
     expect(skillFlat).toContain(`${PRISMA_MODELS} models, user-scoped, cascade deletes`);

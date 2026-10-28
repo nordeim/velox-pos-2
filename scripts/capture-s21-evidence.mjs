@@ -55,12 +55,23 @@ async function provisionFixture(page) {
   const sales = await json(await page.request.get(`${BASE}/api/sales`));
   let ticket = sales.find((s) => s.customer === "Drift Sweep")?.ticket;
   if (!ticket) {
-    const sale = await json(
-      await page.request.post(`${BASE}/api/sales`, {
-        data: { items: [{ productId: prodId, quantity: 2 }], paymentMethod: "cash", amountPaid: 20, customer: "Drift Sweep" },
-      }),
-    );
-    ticket = sale.ticket;
+    // Session-22 (F-120) repair: the original payload carried the
+    // PRE-contract `quantity` field and silently 400'd — the sale never
+    // materialized and capture 99's row-wait matched whatever sales the db
+    // already carried (the saleCreateSchema contract: name/price/qty/taxRate).
+    const resp = await page.request.post(`${BASE}/api/sales`, {
+      data: {
+        items: [{ productId: prodId, name: "Drift Sweep Cola", price: 2.5, qty: 2, taxRate: 0 }],
+        paymentMethod: "cash",
+        amountPaid: 20,
+        customer: "Drift Sweep",
+      },
+    });
+    if (!resp.ok()) {
+      console.error(`fixture sale failed: ${resp.status()} ${await resp.text()}`);
+      process.exit(1);
+    }
+    ticket = (await json(resp)).ticket;
   }
   if (shift.status === "active") {
     await page.request.patch(`${BASE}/api/shifts/${shift.id}`, { data: { countedCash: 110 } });

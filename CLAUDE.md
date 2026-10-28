@@ -276,11 +276,12 @@ No hosted CI exists; the local gate is the only gate.
   (the gate fails until you do; history blocks keep their historical numbers by design).
 - **E2E** (`tests/e2e/**`, Playwright, production standalone on :3100): user journeys through the
   real UI. Two projects — `chromium` (1440×900) and `mobile` (390×844; runs only
-  `mobile-navigation.spec.ts`). **Baseline: 107 tests.** Auth once via `auth.setup.ts` +
+  `mobile-navigation.spec.ts`). **Baseline: 109 tests.** Auth once via `auth.setup.ts` +
   storageState (the rate limiter is 10/IP/15 min). The scratch db (`db/e2e.db`) is provisioned
   by the webServer command (kill-port → provision → boot) and never replaced while the server
   lives — replacing it after boot desynchronizes the login and page-render clients
-  (field-tested failure).
+  (field-tested failure). Specs that PERSIST data sort last (`with-data-reports-walk.spec.ts`
+  provisions sales — every empty-state pin of what it creates must run before it).
 - **Smoke** (`scripts/smoke-test.sh`, tier 3): boots the standalone artifact on :3210 with a
   FRESH `db/smoke.db` + a throwaway AUTH_SECRET, walks the 13-step API ladder (health, the 401
   wall, the SSR shell, the login cookie round-trip, the Zod 400, a CRUD create/DELETE, the
