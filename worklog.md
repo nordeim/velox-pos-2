@@ -2078,3 +2078,86 @@ rendering the fiscal line; the mobile drawer) via the committed self-provisionin
 (`ref-mobile-pos-390-s25.png`). Docs lockstep: this worklog entry,
 remediation-plan-session-25 (the full ledger + record), session_45.md (the narration).
 `.env.example` verified against the working `.env`.
+
+## Session-26 — the password-reset round-trip walk + the s18 money-unit cure (velox-pos-2)
+
+**Date:** 2026-10-29 · **Tree:** `cb3ce09` received (the Session-25 push `f05d765` + the
+two session-log commits; a FRESH CLONE this cycle AGAIN — the second consecutive
+sandbox reset, so the documented rebuild ran: `.env` regenerated with a fresh 64-hex
+secret, `bun install`, `db:push` + `db:seed`, chromium-1243 installed; the persisted
+audit scripts at /home/z/my-project/scripts/ SURVIVED this reset) · **Cycle:** the
+session_45 "Next" pointer's auth candidate — the password-reset round-trip (F-124) —
++ the operator's mobile-navigation priority check + the s18 harness money-unit cure.
+
+**The received tree**: fast gate GREEN on arrival — lint 0 (1 documented warning) ·
+tsc · unit **151/151** (15 files). Static sweeps clean: the census 148 scanned / ZERO
+dead (+2 = the s25 spec + evidence script), secrets clean (the documented locations
+only), the documented credential VERIFIES, and the Session-25 commit review confirmed
+test-tier only (ZERO `src/` files — the fiscal walk spec, the s17/s18 cures, the docs).
+
+**Reference sweep #20 (the TWENTIETH consecutive): every standing pin HOLDS
+byte-exact** — the login card (blur(4px) · white/95 · 16px · h1 30px/700 · inputs
+48px · SSO 54px/16px), the F-76 alert byte-exact (re-verified with wrong
+credentials), the `/` landing + 220px sidebar + 8 links, the Dashboard date line +
+both chart h3s 16px/700, the Spanish families ("Historial de Ventas" ·
+"Cajeros"/"Turnos Recientes" H3), Reports STILL EMPTY (the with-data tiers remain
+the functional superset), and the mobile defect STABLE at its D-1 shape (doc 390 ·
+no hamburger · static 220px sidebar · main 170px). **The clone's mobile drawer
+re-verified live** (REAL clicks throughout — the V14 law): 288px dialog · 8 labeled
+links · `animation-name: enter` · focus-to-close · scroll-lock · Escape restore ·
+route-close · zero overflow. NO Tailwind v4 regression. Reference capture:
+`ref-mobile-pos-390-s26.png`.
+
+**The NEW depth — the password-reset round-trip walk (F-124, the session_45
+pointer's auth candidate)**: `rg "resetPath|resetUrl|PasswordResetToken" tests/`
+returned NOTHING — the Session-13 pins (F-86..F-94) drive FABRICATED tokens into the
+failure branches, and the happy path was e2e-invisible at every tier. The ANALYZE
+measured every leg CORRECT live (register 201 + the 6-digit code · verify-email 200
+· forgot 200 with a REAL 48-hex one-shot token · the reset page from the URL token ·
+the "Password Updated" done state · the new password 200 / the old 401 · the replay
+400) — zero production defects; the gap was pure protection. The cure: 2 tests in
+`auth.spec.ts` (guest-tier) — the full round-trip (the forgot view's
+anti-enumeration notice pinned for the first time + the 48-hex `resetPath` format +
+the done state + the NEW password signing in through the REAL form, landing on the
+shift gate) and the one-shot semantics (the replay rejected + the old password dead
++ the new one signing in). The ordering analysis: the throwaway accounts are
+role=owner by the register default and the Cashiers roster filters role=cashier —
+no downstream pin perturbed; the API legs ride the ISOLATED `request` fixture (the
+coupling trap now law in AGENTS). **First run: BOTH PASS** (characterization).
+
+**E2E 115 → 117 · desktop 101 → 103 · specs 12 (unmoved) · unit 151/15 (unmoved)**
+— the count lockstep in the SAME commit (docs-counts re-anchored + every live-tense
+site: README badge/scripts/testing, CLAUDE baseline + the guest-tier note, AGENTS
+the Session-26 contracts, PAD **v1.24**, SKILL **v2.22.0** + the Session-26
+addendum). One docs-counts negative RE-SCOPED: the historical `"117/117"` ban (the
+retired UNIT count) collided with the live e2e 117/117 — the bans are now
+unit-scoped (`"unit **117/117**"`, `"tests/unit/** (117)"`).
+
+**The gate-time finding — the s18 harness's money() unit bug (the Session-25
+hour-drift genus, striking the TODAY bucket)**: on this cycle's fresh EVENING-seeded
+demo.db (23:09 — the demo seed's now−12/10/8 h sales land INSIDE today, where every
+prior cycle's morning seed landed them YESTERDAY with the today bucket EMPTY), s18
+failed 19/20: expected `$0.37` vs the page's `$36.54` (the count 3/3 agreeing). The
+forensics (the truth query replicated standalone — CORRECT $36.54/3) isolated the
+defect to the check's FORMATTER: `money(cents)` divides by 100 but
+`truth.today.sum` sums Sale.total — DOLLARS. Invisible while the bucket was empty
+(`money(0)` = "$0.00" = the page). The cure (test-tier): money() formats dollars.
+s18 re-ran GREEN **20/20** (s16 13/13 · s17 19/19 — no shared formatter). The
+evidence script's own debugging: playwright-core's APIRequestContext set-cookie
+parsing crashes under BUN (the e2e suite is immune — it runs under the node runner);
+the script's API legs ride bun's NATIVE fetch, the self-clean takes the ABSOLUTE
+datasource URL.
+
+**Gate on the final tree**: lint 0 (1 documented warning) · tsc · unit **151/151**
+(15 files — unmoved) · build · smoke **13/13** · e2e **117/117 × 2 consecutive full
+runs** (103 desktop + 13 mobile + 1 setup; the post-run db verified: settings at
+seed defaults, zero open shifts, both throwaway chains completed, the token math
+explained — 3 created, 2 consumed, 1 open) · the three with-data harnesses **s16
+13/13 · s17 19/19 · s18 20/20**. Evidence: screenshots **114–116** (the reset form
+from a REAL token; the "Password Updated" done state; the mobile drawer at 390) via
+the committed self-provisioning `scripts/capture-s26-evidence.mjs` (captures
+verified DISTINCT; the self-clean verified live — the throwaway deleted, cascade
+tokens). Docs lockstep: this worklog entry,
+remediation-plan-session-26 (the full ledger + record), session_47.md (the
+narration). `.env.example` verified against the working `.env` (COOKIE_SECURE is
+the documented optional escape hatch).

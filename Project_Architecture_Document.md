@@ -1,4 +1,4 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.23
+# VeloxPOS — Master Project Architecture Document (PAD) v1.24
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
@@ -28,7 +28,7 @@ guardrail is enforced by tooling that runs in this checkout.
 **Scale & baselines (verified 2026-10-27, Session-16 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views (9 route spellings — the root `/` page is the
 terminal's reference-parity landing, Session-10 F-60)
-+ login/reset/404 · 151 unit tests (15 files) · 115 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 151 unit tests (15 files) · 117 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -299,10 +299,14 @@ lint → typecheck → unit → build → smoke → e2e
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 15 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 115/115):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 117/117):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
-   suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url),
+   suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url
+   + the Session-26 password-reset round-trip: the REAL one-shot 48-hex token chain —
+   register → verify-email → forgot → the "Password Updated" done state → the NEW password
+   signing in through the real form, the OLD one dead at 401, the consumed token rejecting
+   replays — the fabricated-token Session-13 pins covered only the failure branches),
    `navigation` (sidebar order/activation/collapse/persistence), `mobile-navigation` (the 13
    drawer pins — including the Session-3 focus-trap/restore and md-growth auto-close),
    `inventory` (CRUD + search + CSV-adjacent flows), `registers-shifts` (the
@@ -1581,3 +1585,62 @@ site (README badge/scripts/testing, CLAUDE baseline + the four-walk ordering law
 AGENTS the Session-25 fiscal round-trip contracts + the two-fields-one-label scoping
 law, PAD v1.23, SKILL v2.21.0 with the Session-25 addendum), the worklog entry,
 `docs/remediation-plan-session-25.md`, `docs/session_45.md`.
+
+## Revision History — Session-26 (v1.24, 2026-10-29)
+
+**The password-reset round-trip (F-124) + the count lockstep.** The session_45
+"Next" pointer's auth candidate landed: the password-reset happy path — the
+deepest UNPINNED chain on the auth surface, with ZERO suite references at any
+tier before this session (`rg "resetPath|resetUrl|PasswordResetToken" tests/`
+returned nothing). The Session-13 pins (F-86..F-94) drive FABRICATED tokens
+into the failure branches (the form card, the invalid-token alert, the
+client-side mismatch, the tokenless dead-end); the forgot view's STATIC
+contract was pinned but never its submit. A regression in `generateResetToken`,
+the `PasswordResetToken` creation, the one-shot transaction (the `usedAt`
+consumption riding the SAME transaction as the password write), or the hash
+rotation would have passed the entire 115-test suite green.
+
+The ANALYZE (measured live on the dev server, every leg CORRECT — zero
+production defects): register answers 201 + a 6-digit code; verify-email
+answers 200 AND signs the account in (the login gate 403s unverified
+accounts); forgot answers 200 with `resetPath` carrying a REAL 48-hex token
+(TTL 30 min, no SMTP — the URL in the response IS the delivery); the reset
+page renders the measured form from the URL token; the submit renders the
+"Password Updated" done state (the clone's documented-superset notice — the
+reference's success state is unmeasurable); the new password signs in (200)
+while the old one 401s; a replay of the consumed token 400s with "Invalid or
+expired reset token".
+
+The cure — 2 tests appended to `auth.spec.ts` (guest-tier, the file-level
+empty-storageState opt-out): the full round-trip (the forgot view's
+anti-enumeration notice pinned for the first time + the 48-hex `resetPath`
+format + the done state + the NEW password signing in through the REAL form,
+landing on the shift gate) and the one-shot semantics (the replay rejected +
+the old password dead at 401 + the new one signing in). The ordering
+analysis: the throwaway accounts are role=owner by the register default and
+the Cashiers roster API filters role=cashier — surfaces.spec's
+"0 usuarios registrados" empty-roster pin unperturbed; the e2e db is
+provisioned fresh per run; the namespaced in-memory rate limiters see 2
+register + 2 forgot + a handful of logins; the API legs ride Playwright's
+ISOLATED `request` fixture (the coupling trap — `page.request` would leak
+the verify-email session cookie into the page context) — the law is now in
+AGENTS. The reference sweep #20 (the TWENTIETH consecutive): every standing
+pin HOLDS byte-exact; the reference's own mobile defect STABLE at D-1; the
+clone's mobile drawer re-verified live (REAL clicks — the V14 law): NO
+Tailwind v4 regression.
+
+**E2E 115 → 117 · desktop 101 → 103 · specs 12 (UNMOVED) · unit 151/15
+(UNMOVED)** — the count-lockstep constants AND every live-tense doc site in
+the SAME commit (README badge/scripts/testing, CLAUDE baseline + the
+guest-tier note, AGENTS the Session-26 reset-round-trip contracts + the
+isolated-request-fixture law, PAD v1.24 + the spec map, SKILL v2.22.0 with
+the Session-26 addendum).
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **151/151** (15 files —
+UNMOVED) · build green · smoke **13/13** · e2e **117/117** (103 desktop + 13 mobile + 1
+setup). Screenshots 114–116 + the D-1-shape reference capture
+(`ref-mobile-pos-390-s26.png`). Docs lockstep: the count constants + every live-tense
+site (README badge/scripts/testing, CLAUDE baseline + the guest-tier note, AGENTS the
+Session-26 reset-round-trip contracts + the isolated-request-fixture law, PAD v1.24,
+SKILL v2.22.0 with the Session-26 addendum), the worklog entry,
+`docs/remediation-plan-session-26.md`, `docs/session_47.md`.

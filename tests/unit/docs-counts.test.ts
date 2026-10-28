@@ -104,8 +104,14 @@ const UNIT_FILES = 15;
 // (visible: the exact RUC · business-type template; the gated polarity:
 // the RUC set + the flag off renders nothing) + the full restore; the
 // file sorts after with-data-dashboard-walk and before
-// with-data-inventory-csv — d < f < i < r).
-const E2E = 115;
+// with-data-inventory-csv — d < f < i < r)
+// + the Session-26 F-124 password-reset round-trip (the 2 tests appended to
+// auth.spec.ts — the REAL one-shot 48-hex token chain: register → verify →
+// forgot → the reset page's done state → the new password signing in through
+// the real UI; and the one-shot semantics: the consumed token rejecting
+// replays + the old password dead. Guest-tier, no new spec file — the
+// fabricated-token Session-13 pins could never see this chain).
+const E2E = 117;
 const E2E_SPECS = 12;
 const ROUTE_FILES = 26;
 const PRISMA_MODELS = 9;
@@ -185,8 +191,8 @@ describe("session-8 (F-52): the count-lockstep gate — every live-tense count s
   });
 
   it("the SKILL carries the live counts (header baselines, commands, data model, tiers)", () => {
-    expect(skillFlat).toContain(`Baselines at Session-25 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
-    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (101 desktop + 13 mobile + 1 setup)`);
+    expect(skillFlat).toContain(`Baselines at Session-26 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
+    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (103 desktop + 13 mobile + 1 setup)`);
     expect(skillFlat).toContain(`tests/unit/** (${UNIT})`);
     expect(skillFlat).toContain(`playwright (${E2E})`);
     expect(skillFlat).toContain(`${PRISMA_MODELS} models, user-scoped, cascade deletes`);
@@ -227,10 +233,14 @@ describe("session-8 (F-52): the count-lockstep gate — every live-tense count s
     expect(skillFlat).not.toContain("(12 files)");
 
     // Section-scoped bans — the forms that history quotes elsewhere.
-    expect(skillHeader).not.toContain("117/117");
+    // "117/117" is UNIT-scoped: the retired unit-117 claim must never return,
+    // but e2e 117/117 is the LIVE truth since the Session-26 lock (F-124) — the
+    // ban targets the unit form specifically (the Sessions 6-7 stale pair was
+    // unit 117/117 + e2e 68/68).
+    expect(skillHeader).not.toContain("unit **117/117**");
     expect(skillHeader).not.toContain("68/68");
-    expect(skillCommands).not.toContain("(117)");
-    expect(skillTesting).not.toContain("117/117");
+    expect(skillCommands).not.toContain("tests/unit/** (117)");
+    expect(skillTesting).not.toContain("unit **117/117**");
     expect(skillTesting).not.toContain("68/68");
     expect(skillTesting).not.toContain("12 files");
   });

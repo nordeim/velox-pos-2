@@ -8,8 +8,8 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.21.0
-last_updated: 2026-10-28
+version: 2.22.0
+last_updated: 2026-10-29
 ---
 
 # VeloxPOS — Project Skill
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-25 lock: unit **151/151** (15 files) · e2e **115/115**
-(101 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-26 lock: unit **151/151** (15 files) · e2e **117/117**
+(103 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -68,7 +68,7 @@ bun run lint                   # eslint flat config — 0 errors, 1 documented w
 bun run typecheck              # tsc --noEmit — strict
 bun run test                   # vitest — tests/unit/** (151)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               playwright (115) — NEEDS the build first (:3100)
+bun run test:e2e               playwright (117) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -433,7 +433,7 @@ SUPERSET instead:
    lockstep gate; store.test.ts pins the F-118 shifts-race at the store seam). New
    `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 115/115)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 117/117)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -475,7 +475,16 @@ SUPERSET instead:
    in the hidden-polarity state (the RUC still set, the flag off) — with
    the settings restored to seed defaults at the end; FOUR specs now
    persist data (d < f < i < r), the fiscal walk extending the self-clean
-   law to the settings surface.
+   law to the settings surface. The Session-26 password-reset round-trip (2
+   tests appended to `auth.spec.ts`, guest-tier): the REAL one-shot chain the
+   fabricated-token Session-13 pins could never see — register → verify-email
+   → forgot → the 48-hex `resetPath` format → the reset page's done state →
+   the NEW password signing in through the real UI (landing on the shift
+   gate), plus the one-shot semantics (the consumed token rejecting replays,
+   the old password dead at 401). The throwaway accounts are role=owner by
+   the register default and the Cashiers roster filters role=cashier — no
+   downstream pin perturbed; the API legs ride the ISOLATED `request`
+   fixture so the verify-email session never leaks into the page context.
 3. **Live re-measurement (agent-browser)** — computed styles beat screenshots;
    re-measure the reference before any design-system change and record the
    measurement in the plan doc.
@@ -1672,3 +1681,60 @@ becomes the **Session-25 lock**), PAD v1.23, AGENTS (the Session-25 fiscal
 round-trip contracts + the two-fields-one-label scoping law), CLAUDE, README,
 the worklog entry, `docs/remediation-plan-session-25.md`, `docs/session_45.md`.
 Skill v2.21.0.
+
+### Session-26 addendum (v2.22.0) — the password-reset round-trip
+
+The session_45 "Next" pointer landed: **the password-reset round-trip**
+(F-124) — the auth surface's deepest UNPINNED chain, with ZERO suite
+references before this session (`rg "resetPath|resetUrl|PasswordResetToken"
+tests/` returned nothing). The Session-13 pins (F-86..F-94) drive FABRICATED
+tokens ("a".repeat(48), "f".repeat(48)) into the failure branches — the form
+card, the invalid-token alert, the client-side mismatch, the tokenless
+dead-end — and the forgot view's STATIC contract; the happy path (a REAL
+one-shot token changing a password) was e2e-invisible: a regression in
+`generateResetToken`, the `PasswordResetToken` creation, the one-shot
+transaction (the `usedAt` write riding the SAME transaction as the password
+write), or the hash rotation would ALL have passed the entire suite green.
+
+The ANALYZE measured every leg CORRECT live (the pattern): register answers
+201 + a 6-digit code; verify-email answers 200 AND signs the account in (the
+login gate 403s unverified accounts); forgot answers 200 with `resetPath`
+carrying a REAL 48-hex token (TTL 30 min, no SMTP — the URL in the response
+IS the delivery); the reset page renders the measured form from the URL
+token; the submit renders the "Password Updated" done state (the clone's
+documented-superset notice — the reference's success state is unmeasurable,
+its emails unreachable); the new password signs in (200) while the old one
+401s; a replay of the consumed token 400s with "Invalid or expired reset
+token". The cure — 2 tests appended to `auth.spec.ts` (guest-tier, the
+file-level empty-storageState opt-out): the full round-trip (the forgot
+view's anti-enumeration notice pinned for the first time + the 48-hex
+`resetPath` format + the done state + the new password signing in through
+the REAL form, landing on the shift gate) and the one-shot semantics (the
+replay rejected + the old password dead at 401 + the new one signing in).
+E2E 115 → 117 (desktop 101 → 103); specs stay 12; unit stays 151/15.
+
+The ordering analysis is part of the record: the throwaway accounts are
+role=owner by the register default (register never sets a role) and the
+Cashiers roster API filters `role: "cashier"` — surfaces.spec's
+"0 usuarios registrados" empty-roster pin is unperturbed; the e2e db is
+provisioned fresh by global-setup each run so the fixtures never cross runs;
+the rate limiters are per-process in-memory and namespaced (register:ip /
+forgot:ip / login:ip, a SUCCESSFUL login resetting the login bucket) — the
+two tests consume 2 register + 2 forgot + a handful of logins. The API legs
+ride Playwright's ISOLATED `request` fixture (not `page.request`) so the
+verify-email session cookie never leaks into the page context before the UI
+legs — the coupling trap this cycle's law records in AGENTS. The reference
+sweep #20 held every pin byte-exact (the login card, the F-76 alert, the
+landing/sidebar, the Dashboard h3s, the Spanish families, the empty Reports,
+the D-1 mobile defect); the clone's mobile drawer re-verified live (REAL
+clicks, the V14 law — 288px dialog, 8 links, focus management, scroll-lock,
+Escape restore, route-close, zero overflow): NO Tailwind v4 regression.
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **151/151**
+(15 files — UNMOVED) · build green · smoke **13/13** · e2e **117/117** (103
+desktop + 13 mobile + 1 setup). Screenshots 114–116. Docs lockstep: the
+count constants + every live-tense site (the "Session-25 lock" literal
+becomes the **Session-26 lock**), PAD v1.24, AGENTS (the Session-26
+reset-round-trip contracts + the isolated-request-fixture law), CLAUDE,
+README, the worklog entry, `docs/remediation-plan-session-26.md`,
+`docs/session_47.md`. Skill v2.22.0.

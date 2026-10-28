@@ -713,6 +713,37 @@ bite hardest here:
   settings mutations are restored before the file ends. A fifth persisting
   spec must be checked against ALL FOUR before it lands.
 
+## The password-reset round-trip contracts (Session-26 pins — F-124)
+
+- **The REAL one-shot token chain is pinned end-to-end** (2 tests in
+  `tests/e2e/auth.spec.ts`, the guest tier): register (201 + the 6-digit
+  code) → verify-email (200 — the login gate 403s unverified accounts, so
+  the fixture MUST verify) → forgot-password (200 + `resetPath` carrying a
+  48-hex token, TTL 30 min, no SMTP — the URL in the response IS the
+  delivery) → the reset page rendering the form from the URL token → the
+  submit's done state ("Password Updated") → the NEW password signing in
+  through the real form; and the one-shot semantics: the consumed token
+  rejecting replays (400 "Invalid or expired reset token") + the OLD
+  password dead at 401. The Session-13 pins (F-86..F-94) drive FABRICATED
+  tokens into the failure branches — never weaken the round-trip pins to
+  fabricated tokens; the real chain is the protection.
+- **The one-shot transaction is law**
+  (`src/app/api/auth/reset-password/route.ts`): the `usedAt` consumption
+  rides the SAME `db.$transaction` as the password write — a replay can
+  never land between them. Never split the transaction.
+- **The isolated-request-fixture law**: guest-tier API legs in e2e specs
+  ride Playwright's standalone `request` fixture, NEVER `page.request` —
+  `page.request` shares the page's cookie jar, and the verify-email call
+  SETS a session cookie that would leak into the page context and redirect
+  the subsequent UI legs (the coupling trap caught during this session's
+  design).
+- **Register defaults to role=owner** (`prisma/schema.prisma`
+  `@default("owner")`) and the Cashiers roster API filters
+  `role: "cashier"` — auth-tier throwaway accounts never perturb the
+  roster's empty-state pins. The register route's 200-without-code branch
+  is the enumeration-safe "verified account exists" response; a
+  200-WITH-code is an unverified re-register (a fresh code).
+
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
 `src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px

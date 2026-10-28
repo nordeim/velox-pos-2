@@ -319,7 +319,15 @@ try {
     return { h1: h1?.textContent.trim(), stats, h3s, pathCount: paths.length, firstPathD: paths[0]?.getAttribute("d")?.slice(0, 40), grid, ticks, catRows };
   });
 
-  const money = (cents) => `$${(cents / 100).toFixed(2)}`;
+  // The today bucket sums the Sale.total column — DOLLARS (the schema's
+  // Float, not the money seam's internal cents). The first draft formatted
+  // it with a cents divider ("/100"): invisible while the today bucket was
+  // empty ("$0.00" === money(0)) in every prior cycle's morning-seeded
+  // demo.db (the seed's now−12/10/8 h sales all land YESTERDAY from a
+  // morning seed), exposed the moment this cycle's EVENING seed placed them
+  // inside TODAY (money(36.54) → "$0.37" ≠ the page's "$36.54") — the
+  // Session-25 hour-drift class, cured by the same law: mirror the unit.
+  const money = (dollars) => `$${dollars.toFixed(2)}`;
   ok(
     "the Dashboard h1 renders",
     dash.h1 === "Dashboard",

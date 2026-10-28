@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type APIRequestContext } from "@playwright/test";
 
 // ---------------------------------------------------------------------------
 // The auth surface: logged-OUT flows only (the suite's storageState is
@@ -579,4 +579,158 @@ test("the tokenless reset-password visit renders the reference's Invalid Reset L
   await expect(
     page.getByRole("heading", { name: "Welcome to VeloxPOS (Point Of Sale)" }),
   ).toBeVisible();
+});
+
+// ---------------------------------------------------------------------------
+// Session-26 (F-124): the password-reset ROUND-TRIP — the happy path the
+// fabricated-token pins (F-86..F-94) could never see. The Session-13 pins
+// drive IMAGINARY tokens ("a".repeat(48), "f".repeat(48)) into the failure
+// branches; NOTHING pinned the real chain: register → verify-email (the
+// login gate's 403 for unverified accounts demands it) → forgot-password
+// returning resetPath with a REAL 48-hex one-shot token (TTL 30 min, no
+// SMTP — the URL in the response IS the delivery) → the reset page
+// rendering the form from the URL token → the submit writing the password
+// AND consuming the token in ONE transaction → the "Password Updated" done
+// state → the NEW password signing in while the OLD one is dead → the
+// consumed token rejecting replays. A regression in generateResetToken,
+// the PasswordResetToken creation, the one-shot transaction, or the hash
+// rotation would have passed the entire suite green.
+//
+// The ANALYZE facts this spec transcribes (measured live on the dev server
+// before the spec was written): register answers 201 + a 6-digit code; a
+// re-register of an UNVERIFIED account re-issues a fresh code at 200;
+// verify-email answers 200 and signs the account in; forgot answers 200
+// with resetPath "/reset-password?token=<48-hex>"; the reset page's done
+// state renders "Password Updated" + the note + the "Back to Login" link
+// and ZERO inputs; the new password logs in (200), the old one 401s; the
+// replay 400s with "Invalid or expired reset token".
+//
+// ORDERING (safe by construction): the throwaway accounts are role=owner
+// by the schema default (register never sets a role) and the Cashiers
+// roster API filters role=cashier — surfaces.spec's "0 usuarios
+// registrados" empty-roster pin is unperturbed. The API legs ride the
+// ISOLATED `request` fixture (not page.request) so the verify-email
+// session cookie never leaks into the page context before the UI legs.
+// The rate limiters are per-process in-memory and namespaced (register:ip
+// / forgot:ip / login:ip, and a SUCCESSFUL login resets the login bucket)
+// — the two tests consume 2 register + 2 forgot + a handful of logins,
+// far inside every budget. The e2e db is provisioned fresh by global-setup
+// each run, so the fixtures never cross runs.
+// ---------------------------------------------------------------------------
+
+/** Register + verify + sanity-login a throwaway account for the reset walks.
+ *  Idempotent per email: a 201 or a 200-with-code (an unverified re-register)
+ *  both carry the 6-digit code; a 200 WITHOUT a code is the enumeration-safe
+ *  "verified account exists" branch — the verify leg is skipped. */
+async function provisionResetAccount(
+  request: APIRequestContext,
+  email: string,
+  password: string,
+): Promise<void> {
+  const reg = await request.post("/api/auth/register", {
+    data: { name: "Reset Walk", email, password },
+  });
+  expect([200, 201]).toContain(reg.status());
+  const body = (await reg.json()) as { ok: boolean; code?: string };
+  expect(body.ok).toBe(true);
+  if (body.code) {
+    expect(body.code).toMatch(/^\d{6}$/);
+    const verify = await request.post("/api/auth/verify-email", {
+      data: { email, code: body.code },
+    });
+    expect(verify.status()).toBe(200);
+  }
+  const sanity = await request.post("/api/auth/login", { data: { email, password } });
+  expect(sanity.status()).toBe(200);
+}
+
+test("the reset round-trip: a real one-shot token changes the password end-to-end", async ({
+  page,
+  request,
+}) => {
+  const email = "reset.walk.a@veloxpos.test";
+  const newPassword = "NewWalkPass2!";
+  await provisionResetAccount(request, email, "OldWalkPass1!");
+
+  // The forgot view's submit (UI): the anti-enumeration notice — pinned for
+  // the first time (the Session-12 pins covered the view's statics only).
+  await page.goto("/login");
+  await page.getByRole("button", { name: "Forgot password?" }).click();
+  await page.getByLabel("Email").fill(email);
+  await page.getByRole("button", { name: "Send reset link" }).click();
+  await expect(
+    page.getByText("If that email exists, a reset link is on its way. Check your inbox."),
+  ).toBeVisible();
+
+  // The token (API): a REAL 48-hex one-shot (the format itself is pinned).
+  const forgot = await request.post("/api/auth/forgot-password", { data: { email } });
+  expect(forgot.status()).toBe(200);
+  const { resetPath } = (await forgot.json()) as { ok: boolean; resetPath: string };
+  expect(resetPath).toMatch(/^\/reset-password\?token=[0-9a-f]{48}$/);
+
+  // The reset page (UI): the REAL token renders the measured form.
+  await page.goto(resetPath);
+  await expect(page.getByRole("heading", { name: "Set new password" })).toBeVisible();
+  await page.getByLabel("New Password", { exact: true }).fill(newPassword);
+  await page.getByLabel("Confirm New Password").fill(newPassword);
+  await page.getByRole("button", { name: "Reset password" }).click();
+  // The done state: the clone's documented-superset notice.
+  await expect(page.getByRole("heading", { name: "Password Updated" })).toBeVisible();
+  await expect(
+    page.getByText("Your password has been updated. Sign in with the new password."),
+  ).toBeVisible();
+  await expect(page.locator("main.reset-canvas input")).toHaveCount(0);
+
+  // The landing (UI): the NEW password signs in through the real form (the
+  // password ACTUALLY changed — test 88's mirrored assertions).
+  await page.getByRole("link", { name: "Back to Login" }).click();
+  await page.waitForURL(/\/login/);
+  await expect(page.getByTestId("login-submit")).toBeEnabled();
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill(newPassword);
+  await page.getByTestId("login-submit").click();
+  await page.waitForURL((url) => url.pathname === "/");
+  await expect(page.getByRole("heading", { name: "No active shift" })).toBeVisible();
+  await expect(page.getByTestId("charge-button")).toBeDisabled();
+});
+
+test("the one-shot semantics: the consumed token rejects replays and the old password is dead", async ({
+  request,
+}) => {
+  const email = "reset.walk.b@veloxpos.test";
+  const oldPassword = "OldReplayPass3!";
+  const newPassword = "ReplayDead4!";
+  await provisionResetAccount(request, email, oldPassword);
+
+  const forgot = await request.post("/api/auth/forgot-password", { data: { email } });
+  expect(forgot.status()).toBe(200);
+  const { resetPath } = (await forgot.json()) as { ok: boolean; resetPath: string };
+  const token = resetPath.split("token=")[1] ?? "";
+  expect(token).toMatch(/^[0-9a-f]{48}$/);
+
+  // The completion (API): the password write + the usedAt consumption.
+  const reset = await request.post("/api/auth/reset-password", {
+    data: { token, password: newPassword },
+  });
+  expect(reset.status()).toBe(200);
+
+  // The replay (API): the SAME token is dead — the one-shot invariant.
+  const replay = await request.post("/api/auth/reset-password", {
+    data: { token, password: "ThirdPass5!" },
+  });
+  expect(replay.status()).toBe(400);
+  expect(((await replay.json()) as { error: string }).error).toBe(
+    "Invalid or expired reset token",
+  );
+
+  // The old password is dead (401, not 403 — the account IS verified); the
+  // new one signs in: the rotation completed.
+  const oldLogin = await request.post("/api/auth/login", {
+    data: { email, password: oldPassword },
+  });
+  expect(oldLogin.status()).toBe(401);
+  const newLogin = await request.post("/api/auth/login", {
+    data: { email, password: newPassword },
+  });
+  expect(newLogin.status()).toBe(200);
 });

@@ -276,8 +276,13 @@ No hosted CI exists; the local gate is the only gate.
   (the gate fails until you do; history blocks keep their historical numbers by design).
 - **E2E** (`tests/e2e/**`, Playwright, production standalone on :3100): user journeys through the
   real UI. Two projects — `chromium` (1440×900) and `mobile` (390×844; runs only
-  `mobile-navigation.spec.ts`). **Baseline: 115 tests.** Auth once via `auth.setup.ts` +
-  storageState (the rate limiter is 10/IP/15 min). The scratch db (`db/e2e.db`) is provisioned
+  `mobile-navigation.spec.ts`). **Baseline: 117 tests.** Auth once via `auth.setup.ts` +
+  storageState (the rate limiter is 10/IP/15 min); `auth.spec.ts` opts out with an
+  empty storageState (the guest tier — its Session-26 password-reset round-trip pins
+  the REAL one-shot token chain: register → verify → forgot → the reset page's done
+  state → the new password signing in, the consumed token rejecting replays; the
+  throwaway accounts are role=owner by the register default, so the Cashiers roster's
+  role=cashier filter keeps every empty-roster pin safe). The scratch db (`db/e2e.db`) is provisioned
   by the webServer command (kill-port → provision → boot) and never replaced while the server
   lives — replacing it after boot desynchronizes the login and page-render clients
   (field-tested failure). Specs that PERSIST data sort last (`with-data-dashboard-walk.spec.ts`,
