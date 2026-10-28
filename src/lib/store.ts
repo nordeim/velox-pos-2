@@ -239,11 +239,22 @@ export const usePosStore = create<PosStore>((set, get) => ({
   },
 
   loadCore: async () => {
-    const [shifts, settings] = await Promise.all([
-      apiGet<Shift[]>("/api/shifts?status=active").catch(() => []),
-      apiGet<StoreSettingsRow>("/api/store-settings").catch(() => null),
-    ]);
-    set({ shifts, settings });
+    // Session-21 (F-118): this action previously fetched
+    // /api/shifts?status=active and wrote the ACTIVE-ONLY list into the
+    // SAME `shifts` key loadAll fills with the full ledger list. The
+    // bootstrap hook runs both actions in one Promise.all, so the two
+    // writes raced and the collection's final value was nondeterministic —
+    // when this action's write landed last, the Cashiers/Registers ledgers
+    // lost their closed-shift history ("Sin turnos registrados" on a store
+    // with three closed shifts, caught live by the Session-21 three-ledger
+    // walk; unit-pinned by tests/unit/store.test.ts). No consumer reads
+    // the active-only value — the terminal gate finds its active shift by
+    // FILTERING the collection (shifts.find(sh => sh.status === "active")).
+    // loadCore refreshes settings only.
+    const settings = await apiGet<StoreSettingsRow>(
+      "/api/store-settings",
+    ).catch(() => null);
+    set({ settings });
   },
 
   toggleSidebar: () => {

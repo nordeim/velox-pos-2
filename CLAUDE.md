@@ -240,23 +240,37 @@ No hosted CI exists; the local gate is the only gate.
   old pattern; covering only new pins leaves the old ones red.
 - **The 10 documented v4 traps** live in the `globals.css` header; the mobile-nav-critical ones
   are repeated in `AGENTS.md`.
-- **The four-width drift-sweep tier is e2e-pinned** (Session-20, F-116,
+- **The four-width drift-sweep tier is e2e-pinned** (Session-20, F-116, extended Session-21
+  F-117,
   `tests/e2e/viewport-drift-sweep.spec.ts`): every route at 390/768/1024/1440
   computes doc/main `scrollWidth ≤ clientWidth` (zero horizontal overflow), the
   chrome switches exactly at md (the hamburger owns the sub-md chrome, the
   sidebar the md+ chrome — VISIBILITY pins, never count), and the with-data
-  ledger stays contained AND functionally scrollable at 390 (the
-  `scrollLeft` read-back probe — the mutation-proven observable: a
-  frame-level pin alone cannot catch the inner-container break, the outer
-  `overflow-hidden` absorbs it). The container lookup is
-  `table.closest(".vpx-scroll")` — `main` itself carries `.vpx-scroll` and
-  contains every table; a document-order find picks MAIN and no-ops.
+  ledgers stay contained AND functionally scrollable at 390 on ALL THREE
+  ledger surfaces — Inventory (760 floor), Sales (720), Cashiers (640) — via
+  one provisioning chain (category → product → register → shift → sale; the
+  spec CLOSES its shift — the self-clean law, an active shift would leak into
+  the downstream specs' POS gate). The `scrollLeft` read-back probe is the
+  mutation-proven observable: a frame-level pin alone cannot catch the
+  inner-container break, the outer `overflow-hidden` absorbs it. The container
+  lookup is `table.closest(".vpx-scroll")` — `main` itself carries `.vpx-scroll`
+  and contains every table; a document-order find picks MAIN and no-ops.
+- **The store's `shifts` collection has ONE writer per refresh** (Session-21, F-118,
+  unit-pinned by `tests/unit/store.test.ts`): `loadAll` owns the collection
+  (the full ledger list); `loadCore` refreshes settings ONLY. The pre-fix
+  `loadCore` wrote the active-only list into the same key while the bootstrap
+  ran both in one `Promise.all` — a last-writer race that made the
+  Cashiers/Registers ledgers intermittently lose their closed-shift history
+  ("Sin turnos registrados" with three closed shifts in the db — invisible to
+  the empty-store e2e by construction, caught live by the with-data walk).
+  No consumer needs the active-only value: the terminal gate finds its active
+  shift by FILTERING the collection (`shifts.find(sh => sh.status === "active")`).
 
 ## Testing conventions
 
 - **Unit** (`tests/unit/**`, vitest): only the pure seams. If you add a `src/lib` seam, add its
   file here — red → green (TDD) for new logic, regression tests for fixes. Expected baseline:
-  149 tests / 14 files. **`docs-counts.test.ts` is the lockstep gate** (Session-8, F-52): it
+  151 tests / 15 files. **`docs-counts.test.ts` is the lockstep gate** (Session-8, F-52): it
   LIVE-censuses the test/source tree and pins every live-tense count site in the docs to the
   constants — when a suite grows, update the constants AND every doc site in the SAME commit
   (the gate fails until you do; history blocks keep their historical numbers by design).

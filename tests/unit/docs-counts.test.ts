@@ -78,10 +78,11 @@ const viewFiles = readdirSync(path.join(root, "src/components/pos/views")).filte
 ).length;
 
 // ---- the constants (re-anchored in the same commit as any suite growth) ----
-// UNIT 149 = the Session-15 146 + the F-110 saleTimestamp seam's 3 its
-// (the byte-stable receipt timestamp — reports.test.ts 24→27).
-const UNIT = 149;
-const UNIT_FILES = 14;
+// UNIT 151 = the Session-15 146 + the F-110 saleTimestamp seam's 3 its
+// (reports.test.ts 24→27) + the Session-21 F-118 store-race regressions
+// (store.test.ts — the shifts-collection bootstrap race, 2 its).
+const UNIT = 151;
+const UNIT_FILES = 15;
 // E2E 107 = the Session-19 105 + the Session-20 F-116 drift-sweep tier
 // (the four-width route battery + the with-data ledger containment guard —
 // the 2 tests of viewport-drift-sweep.spec.ts, the standing visual-regression
@@ -166,7 +167,7 @@ describe("session-8 (F-52): the count-lockstep gate — every live-tense count s
   });
 
   it("the SKILL carries the live counts (header baselines, commands, data model, tiers)", () => {
-    expect(skillFlat).toContain(`Baselines at Session-20 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
+    expect(skillFlat).toContain(`Baselines at Session-21 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
     expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (93 desktop + 13 mobile + 1 setup)`);
     expect(skillFlat).toContain(`tests/unit/** (${UNIT})`);
     expect(skillFlat).toContain(`playwright (${E2E})`);

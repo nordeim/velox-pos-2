@@ -4,7 +4,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6)
-![Tests](https://img.shields.io/badge/unit%20tests-149%20%2F%20149-brightgreen)
+![Tests](https://img.shields.io/badge/unit%20tests-151%20%2F%20151-brightgreen)
 ![E2E](https://img.shields.io/badge/e2e-107%20%2F%20107-brightgreen)
 ![License](https://img.shields.io/badge/license-Proprietary-lightgrey)
 
@@ -24,7 +24,8 @@ The application replicates the reference POS (`veloxposen.base44.app`) view-for-
 routes, the same dark glass design system, the same mixed English/Spanish copy — and extends it
 where the reference's demo account is write-restricted: full CRUD everywhere, shift close with
 cash-count variance, cash checkout with change, printable receipts, CSV import/export, and a
-working mobile navigation drawer (the reference keeps a broken 220px overlay on phones).
+working mobile navigation drawer (the reference keeps a broken phone layout: a static 220px
+sidebar squeezing main to 170px at 390px, no hamburger).
 
 ## Screenshots
 
@@ -97,7 +98,7 @@ register, a closed shift, and a week of sales).
 | `bun run build` | Standalone production build (`next build` + static/public copy) |
 | `bun run lint` | ESLint (flat config) |
 | `bun run typecheck` | `tsc --noEmit` (strict) |
-| `bun run test` | Vitest unit suite — the pure domain seams (149 tests / 14 files) |
+| `bun run test` | Vitest unit suite — the pure domain seams (151 tests / 15 files) |
 | `bun run test:e2e` | Playwright suite against the production standalone build (107 tests; desktop 1440×900 + mobile 390×844 projects, plus the four-width 390/768/1024/1440 drift-sweep battery) |
 | `bun run smoke` | The 13-step API smoke ladder against the standalone artifact on :3210 (own scratch `db/smoke.db`; health → auth wall → Zod seam → CRUD → rate limit → boot gate → artifact hygiene) |
 | `bun run gate` | The full pre-push gate: `lint → typecheck → test → build → smoke → e2e` |
@@ -156,7 +157,7 @@ Browser ──► /POS /Dashboard /Inventory /Sales /Registers /Cashiers /Report
  └ 📂 lib/server         — http.ts (error mapper + CRUD factories), auth.ts (cookies), entities.ts
 📂 prisma                — schema.prisma (9 models) + seed.ts
 📂 tests
- ├ 📂 unit/              — 14 vitest files over the pure seams
+ ├ 📂 unit/              — 15 vitest files over the pure seams
  └ 📂 e2e/               — Playwright specs (desktop + mobile projects)
 ```
 
@@ -186,9 +187,9 @@ All endpoints return domain JSON; errors use `{ error: string }` with the docume
 ## Testing
 
 ```bash
-bun run test            # unit: 149 tests / 14 files — the pure seams (money, cart, shift,
+bun run test            # unit: 151 tests / 15 files — the pure seams (money, cart, shift,
                         # reports, inventory-status, currency, router, validation, auth,
-                        # db-path, env-check, site) + the docs-counts lockstep gate
+                        # db-path, env-check, site, store, chart-path) + the docs-counts lockstep gate
 bun run test:e2e        # e2e: 107 tests — needs `bun run build` first (boots the standalone
                         # build on :3100 with its own scratch db, db/e2e.db)
 bun run smoke           # the 13-step API smoke ladder — also needs the build (boots the
@@ -204,8 +205,8 @@ storageState reuse) to respect the 10/IP/15-minute rate limit. The scratch db is
 webServer command itself (kill-port → provision → boot) and never replaced while the server lives.
 The Session-20 drift-sweep tier (`viewport-drift-sweep.spec.ts`) pins the responsive frame at all
 four audit widths — 390/768/1024/1440 — across every route (zero horizontal overflow + the
-chrome-switch contract), and the with-data ledger containment at 390 (the functional-scroll
-guard).
+chrome-switch contract), and the with-data ledger containment at 390 on all THREE ledger
+surfaces — Inventory, Sales, Cashiers — (the functional-scroll guard, extended in Session-21).
 
 ## Design System
 

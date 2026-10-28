@@ -15,7 +15,17 @@ import { expect, test } from "@playwright/test";
 // md (the sidebar `hidden md:flex`, the hamburger `md:hidden`); the ledger
 // tables (min-w 720–760) stay contained inside their `.vpx-scroll
 // overflow-x-auto` containers. The reference itself ships the regression
-// class (its own static 220px sidebar scrolls the 390px document to 1280px).
+// class (its own static 220px sidebar on phones — no hamburger, main
+// squeezed to 170px beside it after the reference's own layout change; the
+// Session-21 D-1 drift record).
+//
+// Session-21 (F-117) extended the with-data guard from Inventory-only to the
+// THREE-ledger walk (the session_35 "Next" pointer): the clone ships three
+// wide ledger tables — Inventory min-w-[760px], Sales min-w-[720px],
+// Cashiers min-w-[640px] — each in its own .vpx-scroll container, and the
+// s20 guard visited only Inventory. The frame battery stays blind to the
+// inner-container break on ALL of them (the V18 proof), so Sales/Cashiers
+// had no functional protection at all until this walk.
 //
 // The containment pin's observable is FUNCTIONAL, not structural — the V18
 // mutation proof: a frame-level pin alone cannot catch the inner-container
@@ -86,80 +96,150 @@ test.describe("the four-width drift-sweep battery (Session-20, F-116)", () => {
     }
   });
 
-  test("the with-data ledger stays contained and scrollable at 390 (the M-109c1 guard)", async ({ page }) => {
+  test("the with-data ledgers stay contained and scrollable at 390 (the M-109c1 guard — the three-ledger walk)", async ({ page }) => {
     // Self-owned data (the s19 provisionFixture posture — the serial
-    // one-worker suite; the name is unique to this spec).
-    const cats = await (await page.request.get("/api/categories")).json();
+    // one-worker suite; the names are unique to this spec). Session-21
+    // (F-117) extended the chain past the product: ONE chain feeds all
+    // THREE ledgers — the product → Inventory, the sale → Sales, the
+    // shift → Cashiers ("Turnos Recientes" is a SHIFTS table and the
+    // shifts POST route pins cashierId to the owner, so the owner's shift
+    // renders as the ledger row).
+    const json = (r: { json: () => Promise<unknown> }) => r.json() as Promise<any>;
+    const cats = await json(await page.request.get("/api/categories"));
     let catId = cats.find((c: { name: string }) => c.name === "Drift Sweep")?.id;
     if (!catId) {
       const cat = await page.request.post("/api/categories", {
         data: { name: "Drift Sweep" },
       });
-      catId = (await cat.json()).id;
+      catId = (await json(cat)).id;
     }
-    await page.request.post("/api/products", {
-      data: {
-        name: "Drift Sweep Cola",
-        price: 2.5,
-        categoryId: catId,
-        stock: 50,
-        minStock: 2,
-        barcode: "DSWEEP-390",
-        taxRate: 0,
-      },
-    });
+    const prods = await json(await page.request.get("/api/products"));
+    let prodId = prods.find((p: { barcode: string }) => p.barcode === "DSWEEP-390")?.id;
+    if (!prodId) {
+      const prod = await page.request.post("/api/products", {
+        data: {
+          name: "Drift Sweep Cola",
+          price: 2.5,
+          categoryId: catId,
+          stock: 50,
+          minStock: 2,
+          barcode: "DSWEEP-390",
+          taxRate: 0,
+        },
+      });
+      prodId = (await json(prod)).id;
+    }
+    // The register → active-shift → sale chain (Session-21): the checkout
+    // pins to the latest ACTIVE shift, so the shift must exist first. All
+    // three creates are idempotent on re-runs against a warm scratch db.
+    const regs = await json(await page.request.get("/api/registers"));
+    let reg = regs.find((r: { name: string }) => r.name === "Drift Sweep Register");
+    if (!reg) {
+      reg = await json(
+        await page.request.post("/api/registers", {
+          data: { name: "Drift Sweep Register", openingFloat: 100 },
+        }),
+      );
+    }
+    const activeShifts = await json(await page.request.get("/api/shifts?status=active"));
+    let shift = activeShifts.find((s: { registerId: string }) => s.registerId === reg.id);
+    if (!shift) {
+      shift = await json(
+        await page.request.post("/api/shifts", {
+          data: { registerId: reg.id, openingFloat: 100 },
+        }),
+      );
+    }
+    const sales = await json(await page.request.get("/api/sales"));
+    let ticket = sales.find((s: { customer: string | null }) => s.customer === "Drift Sweep")
+      ?.ticket as string | undefined;
+    if (!ticket) {
+      const sale = await json(
+        await page.request.post("/api/sales", {
+          data: {
+            items: [{ productId: prodId, quantity: 2 }],
+            paymentMethod: "cash",
+            amountPaid: 20,
+            customer: "Drift Sweep",
+          },
+        }),
+      );
+      ticket = sale.ticket;
+    }
+    // The self-clean law (the terminal.spec posture — its shift closes so the
+    // mobile spec's POS gate test sees the gate): close this spec's shift
+    // BEFORE the walk. An ACTIVE shift would leak into every downstream
+    // spec's terminal surface (the mobile project runs after chromium). A
+    // CLOSED shift still renders the Cashiers ledger row — "Turnos
+    // Recientes" lists recent shifts of ANY status ("Cerrado") — so the
+    // walk's settled wait is unaffected.
+    if (shift.status === "active") {
+      await page.request.patch(`/api/shifts/${shift.id}`, {
+        data: { countedCash: 110 },
+      });
+    }
 
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/Inventory", { waitUntil: "domcontentloaded" });
-    // The settled wait (the s16 bootstrap-race lesson): the product row IS
-    // the settled state — never a timer.
-    await page
-      .locator("table tbody tr")
-      .filter({ hasText: "Drift Sweep Cola" })
-      .first()
-      .waitFor({ state: "visible", timeout: 15_000 });
+    // The three-surface walk (the session_35 "Next" pointer): each route's
+    // settled state is its OWN row — the product row (Inventory), the
+    // ticket row (Sales), the shift row carrying the register name
+    // (Cashiers) — the s16 bootstrap-race lesson: never a timer.
+    const surfaces = [
+      { route: "/Inventory", row: "Drift Sweep Cola", floor: 760 },
+      { route: "/Sales", row: ticket, floor: 720 },
+      { route: "/Cashiers", row: "Drift Sweep Register", floor: 640 },
+    ] as const;
+    for (const surface of surfaces) {
+      await page.goto(surface.route, { waitUntil: "domcontentloaded" });
+      await page
+        .locator("table tbody tr")
+        .filter({ hasText: surface.row })
+        .first()
+        .waitFor({ state: "visible", timeout: 15_000 });
 
-    const probe = await page.evaluate(() => {
-      const de = document.documentElement;
-      const main = document.querySelector("main");
-      // the ledger container = the table's OWN .vpx-scroll wrapper
-      // (table.closest) — NEVER a document-order .find(): `main` itself
-      // carries .vpx-scroll (the app-shell's overflow-y-auto) and contains
-      // the table, so a `.find(c => c.querySelector("table"))` picks MAIN,
-      // which is not a horizontal scroll container (the first run's lesson)
-      const table = document.querySelector("table");
-      const container = table ? table.closest(".vpx-scroll") : null;
-      // THE FUNCTIONAL SCROLL PROBE (the V18 mutation-proven observable):
-      // under overflow-x: visible the assignment no-ops — scrollWidth
-      // cannot distinguish, scrollLeft CAN.
-      let functionalScroll = false;
-      if (container) {
-        container.scrollLeft = 50;
-        functionalScroll = container.scrollLeft > 0;
-        container.scrollLeft = 0;
-      }
-      return {
-        docScrollW: de.scrollWidth,
-        clientW: de.clientWidth,
-        mainScrollW: main ? main.scrollWidth : null,
-        functionalScroll,
-        tableScrollW: table ? table.scrollWidth : null,
-      };
-    });
-    expect(
-      probe.docScrollW,
-      "the document must stay contained at 390 with data",
-    ).toBeLessThanOrEqual(probe.clientW);
-    expect(probe.mainScrollW, "main must stay contained at 390 with data").toBeLessThanOrEqual(
-      probe.clientW,
-    );
-    expect(
-      probe.functionalScroll,
-      "the ledger container must be a FUNCTIONAL scroll region (scrollLeft assignment works — the V18 mutation-proven observable)",
-    ).toBe(true);
-    expect(
-      probe.tableScrollW,
-      "the table keeps its min-width floor (min-w-[760px]) — the container contains, the table never shrinks",
-    ).toBeGreaterThanOrEqual(760);
+      const probe = await page.evaluate(() => {
+        const de = document.documentElement;
+        const main = document.querySelector("main");
+        // the ledger container = the table's OWN .vpx-scroll wrapper
+        // (table.closest) — NEVER a document-order .find(): `main` itself
+        // carries .vpx-scroll (the app-shell's overflow-y-auto) and contains
+        // the table, so a `.find(c => c.querySelector("table"))` picks MAIN,
+        // which is not a horizontal scroll container (the first run's lesson)
+        const table = document.querySelector("table");
+        const container = table ? table.closest(".vpx-scroll") : null;
+        // THE FUNCTIONAL SCROLL PROBE (the V18/V17 mutation-proven
+        // observable): under overflow-x: visible the assignment no-ops —
+        // scrollWidth cannot distinguish, scrollLeft CAN.
+        let functionalScroll = false;
+        if (container) {
+          container.scrollLeft = 50;
+          functionalScroll = container.scrollLeft > 0;
+          container.scrollLeft = 0;
+        }
+        return {
+          docScrollW: de.scrollWidth,
+          clientW: de.clientWidth,
+          mainScrollW: main ? main.scrollWidth : null,
+          functionalScroll,
+          tableScrollW: table ? table.scrollWidth : null,
+        };
+      });
+      expect(
+        probe.docScrollW,
+        `${surface.route}: the document must stay contained at 390 with data`,
+      ).toBeLessThanOrEqual(probe.clientW);
+      expect(
+        probe.mainScrollW,
+        `${surface.route}: main must stay contained at 390 with data`,
+      ).toBeLessThanOrEqual(probe.clientW);
+      expect(
+        probe.functionalScroll,
+        `${surface.route}: the ledger container must be a FUNCTIONAL scroll region (scrollLeft assignment works — the V18/V17 mutation-proven observable)`,
+      ).toBe(true);
+      expect(
+        probe.tableScrollW,
+        `${surface.route}: the table keeps its min-width floor (min-w-[${surface.floor}px]) — the container contains, the table never shrinks`,
+      ).toBeGreaterThanOrEqual(surface.floor);
+    }
   });
 });

@@ -1,9 +1,9 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.18
+# VeloxPOS — Master Project Architecture Document (PAD) v1.19
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
 **Companion documents:** `README.md` (tour) · `AGENTS.md` (agent invariants) · `CLAUDE.md` (Claude conventions) · `docs/veloxpos-implementation-plan.md` (the measured reference spec)
-**Last Updated:** 2026-10-28 (Session-20)
+**Last Updated:** 2026-10-28 (Session-21)
 **Audience:** Senior engineers, tech leads, DevOps, onboarding engineers, and AI coding agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -28,7 +28,7 @@ guardrail is enforced by tooling that runs in this checkout.
 **Scale & baselines (verified 2026-10-27, Session-16 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views (9 route spellings — the root `/` page is the
 terminal's reference-parity landing, Session-10 F-60)
-+ login/reset/404 · 149 unit tests (14 files) · 107 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 151 unit tests (15 files) · 107 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -107,8 +107,10 @@ implementation.
 ### ADR-004 — The mobile drawer a11y superset
 **Decision:** Below `md`, navigation is a labeled hamburger → slide-in `role="dialog"` drawer
 (glass-dark, backdrop, Escape, route-change unmount, scroll lock). **Rationale:** the reference
-keeps a 220px sidebar overlaying phone content with no dismissal — a genuine defect (measured at
-390×844: no hamburger, content clipped behind the cart panel). The clone keeps desktop parity
+keeps a 220px sidebar on phone content with no dismissal — a genuine defect (measured at
+390×844: no hamburger, content clipped behind the cart panel; the Session-21 re-measure caught
+the defect's own drift — the document no longer overflows, main is now squeezed to 170px beside
+the static sidebar — the class persists, the observable changed). The clone keeps desktop parity
 pixel-faithful and replaces the broken mobile experience with the documented accessible pattern;
 the contract is pinned by `tests/e2e/mobile-navigation.spec.ts` (13 tests).
 
@@ -248,7 +250,7 @@ Dependency rule: arrows point downward only. `src/lib` pure seams never import R
  │                           currency, router, validation, auth, chart-path, site, env-check,
  │                           db-path, db, store, api, utils) + server/ (http, auth, entities)
  ├ 📂 prisma               — schema.prisma (9 models) · seed.ts (owner + settings; --demo dataset)
- ├ 📂 tests/unit           — 14 vitest files (the seam registry + the docs-counts gate)
+ ├ 📂 tests/unit           — 15 vitest files (the seam registry + the docs-counts gate)
  ├ 📂 tests/e2e            — 8 spec files + auth.setup + kill-port + provisioning
  ├ 📂 docs                 — implementation plan, runbooks, Tailwind report, screenshots/
  └ ⚙️ next.config.ts · playwright.config.ts · vitest.config.ts · package.json · .env.example
@@ -292,11 +294,11 @@ auth-support pair — `VerificationToken` (6-digit OTP, 15-minute window) and
 lint → typecheck → unit → build → smoke → e2e
 ```
 
-1. **Unit (Vitest, 149/149):** the pure seams — money (cents math, formatting), cart (reducer,
+1. **Unit (Vitest, 151/151):** the pure seams — money (cents math, formatting), cart (reducer,
    totals, charge gate), shift (state machine, variance), reports (bucketing, shares),
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
-   Baseline: 14 files. New seams arrive with their file; fixes arrive with regression tests.
+   Baseline: 15 files. New seams arrive with their file; fixes arrive with regression tests.
 2. **E2E (Playwright, 107/107):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
@@ -306,9 +308,10 @@ lint → typecheck → unit → build → smoke → e2e
    `inventory` (CRUD + search + CSV-adjacent flows), `registers-shifts` (the
    lifecycle), `terminal` (cart math, cash checkout + change, ticket, receipt, stock decrement),
    `surfaces` (Sales/Cashiers/Reports/Settings/404/health + the dialog-animation and
-   cart-md-geometry parity pins), `viewport-drift-sweep` (the Session-20 tier: the 8 routes ×
-   4 widths zero-overflow battery + the chrome-switch contract + the with-data
-   functional-scroll containment guard at 390).
+   cart-md-geometry parity pins), `viewport-drift-sweep` (the Session-20 tier, extended
+   Session-21: the 8 routes × 4 widths zero-overflow battery + the chrome-switch contract
+   + the with-data functional-scroll containment guard at 390 on ALL THREE ledger surfaces
+   — Inventory/Sales/Cashiers, the F-117 three-ledger walk).
 3. **Field-tested e2e doctrine:** auth waits for the hydration-gated submit button (`toBeEnabled`)
    before filling; assertions use visibility (not DOM count) for `hidden md:*` elements; the
    scratch db is never replaced while the server lives (clients bind the inode; field-tested
@@ -1343,3 +1346,42 @@ and the regression-class evidence is the injected-mutation probe.
 v2.16.0 Session-20 addendum, docs-counts.test.ts (the "Session-19 lock" literal becomes
 the **Session-20 lock**), the worklog entry, `docs/remediation-plan-session-20.md`,
 `docs/session_35.md`.
+
+## Revision History — Session-21 (v1.19, 2026-10-28)
+
+**Scope:** the with-data mobile walk of the remaining ledger surfaces (the session_35 "Next"
+pointer) on the Session-20 tree (`e9513d7` — a git-pull refresh; the workspace persisted).
+Received-tree gate green (lint 0 · tsc · unit 149/149 · build · smoke 13/13 · e2e 107/107 —
+the Session-20 lock held). FIFTEENTH reference sweep: every standing pin byte-exact EXCEPT the
+reference's own mobile defect, which DRIFTED (D-1): the document no longer scrolls to 1280px —
+main is now squeezed to 170px beside the static 220px sidebar, still no hamburger. The defect
+class persists; the observable changed; the clone's drawer superset remains strictly better.
+
+**The NEW depth — the three-ledger with-data walk (F-117) caught a REAL production race
+(F-118).** The walk (Sales + Cashiers at 390, the two tables the s20 guard covered only by
+the frame contract) flaked twice in four full-suite runs: the Cashiers ledger rendered "Sin
+turnos registrados" with three closed shifts in the db. Root cause: the store's `shifts`
+collection had TWO writers — `loadAll` (the full ledger list) and `loadCore` (the
+active-only list) — racing in the bootstrap hook's `Promise.all`; whichever write landed
+last won, and the ledgers intermittently lost their closed-shift history. Invisible to 20
+sessions of empty-store e2e by construction (no closed shifts exist to lose — the s15 V24
+doctrine, now proven twice). The mutation-probe ANALYZE had measured both surfaces correct;
+the race only manifests under the full suite's sustained-load interleaving.
+
+**The TDD cure:** the deterministic regression FIRST (`tests/unit/store.test.ts` — the
+path-dispatched transport mock with the active-only fetch resolving LAST; RED on the
+pre-fix store, both its) → the surgical fix (`loadCore` refreshes settings ONLY — no
+consumer reads the active-only value; the terminal gate filters the collection itself) →
+GREEN. UNIT 149 → 151 (14 → 15 files — the store seam joins the registry); E2E stays 107
+(the walk restructures the s20 guard's second test: one provisioning chain — category →
+product → register → shift → sale, self-cleaning by CLOSING the shift — visits all three
+ledger routes with per-route frame + functional-scroll + floor assertions, 760/720/640).
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **151/151** (15 files) ·
+build green · smoke **13/13** · e2e **107/107** (93 desktop + 13 mobile + 1 setup — the
+walk green across repeated full runs). Screenshots 99–101 (the with-data Sales and Cashiers
+ledgers contained at 390 + the mobile drawer). Docs lockstep: the count constants + every
+live-tense site (README badge/scripts/testing, CLAUDE baseline + the drift-sweep + store
+laws, AGENTS the Session-21 contracts + the file count, PAD v1.19, SKILL v2.17.0 with the
+Session-21 addendum), the D-1 reference-drift refresh at every live-tense site, the worklog
+entry, `docs/remediation-plan-session-21.md`, `docs/session_37.md`.

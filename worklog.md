@@ -1709,3 +1709,75 @@ the e2e suite itself (the battery + the containment guard run on every
 `bun run test:e2e`). Docs lockstep: this worklog entry, remediation-plan-session-20
 (the full ledger + record), session_35.md (the narration). `.env.example` verified
 against the working `.env`.
+
+## Session-21 — the three-ledger with-data walk + the store race it caught (velox-pos-2)
+
+**Date:** 2026-10-28 · **Tree:** `e9513d7` received (the Session-20 push `927bc98` + the
+operator's session_36 raw-log commit — a GIT PULL this cycle; the workspace persisted
+from Session-20) · **Cycle:** the session_35 "Next" pointer's with-data mobile walk of
+the Sales/Cashiers ledgers + the operator's mobile-navigation priority check.
+
+**The received tree**: gate FULLY GREEN on arrival — lint 0 (1 documented warning) ·
+tsc · unit **149/149** (14 files) · build · smoke **13/13** · e2e **107/107** (2.9m).
+Environment re-verified with ONE repair (the `.env` had reverted to the template's
+unevaluated `AUTH_SECRET="$(openssl rand -hex 32)"` literal — a fresh 64-hex secret
+generated; `db/` at the repo root persisted; chromium-1243 cached). Static sweeps
+clean: zero dead files, secrets clean (test fixtures only), the documented credential
+VERIFIES (the checker runs under **bun** — it imports `bun:sqlite`), and the Session-20
+code review confirmed the spec + docs + evidence exactly as planned.
+
+**Reference sweep #15: every standing pin HOLDS byte-exact EXCEPT the reference's own
+mobile defect, which DRIFTED (D-1)** — the FOURTEEN prior cycles had measured no
+hamburger + the static 220px sidebar + the 390px document scrolling to 1280px; this
+cycle measured the document contained at exactly 390 on every route with **main
+squeezed to 170px** beside the rail (its own `overflow-x: auto`). The defect class
+persists, the observable changed — the clone's drawer superset remains strictly better;
+every live-tense doc site stating the old observable was refreshed (AGENTS/PAD
+ADR-004/README/the SKILL's live sections; history blocks keep their statements). **The
+clone's mobile drawer re-verified live on the dev server** (the operator's priority):
+labeled hamburger · dialog semantics + 8 labeled links · focus management (open→Close,
+Escape→hamburger + scroll-lock release) · route-close unmount · zero horizontal
+overflow — plus 13/13 mobile e2e. NO Tailwind v4 regression.
+
+**The NEW depth — the with-data walk of Sales/Cashiers at 390 (the session_35
+pointer)**: the ANALYZE measured both surfaces CORRECT with data (contained, functional
+scroll, floors 720/640) + the mutation proofs re-run live on both (the injected
+regression no-ops the scrollLeft read-back on each) — F-117, the protection gap (the
+s20 guard visited Inventory only). The cure restructured the guard's second test into
+the **three-ledger walk**: ONE chain (category → product → register → shift → sale)
+visits /Inventory, /Sales, /Cashiers at 390 with per-route frame + functional-scroll +
+floor assertions (760/720/640).
+
+**The walk then caught TWO live lessons**: (1) the self-clean law — its first version
+left the shift ACTIVE and failed the mobile project's terminal-gate test on the next
+run; the spec now CLOSES its shift before the walk (a closed shift still renders the
+Cashiers row). (2) **F-118, a REAL production race**: the Cashiers leg flaked 2-in-4
+full runs ("Sin turnos registrados" with three closed shifts in the db). The trace
+forensics isolated it to the CLIENT store — `loadCore` wrote the active-only shifts
+into the SAME `shifts` key `loadAll` fills with the full ledger list, racing inside the
+bootstrap's `Promise.all` (the last writer won). Twenty sessions of empty-store e2e
+never saw it (no closed shifts to lose — the s15 V24 doctrine, proven twice).
+
+**TDD cure (F-118)**: `tests/unit/store.test.ts` (the store seam's first unit file —
+the path-dispatched transport mock, the active-only-fetch-resolves-LAST interleaving)
+→ **RED on the pre-fix store** → `loadCore` refreshes settings ONLY (no consumer reads
+the active-only value; the terminal gate filters the collection itself) → **GREEN**.
+
+**UNIT 149 → 151 (14 → 15 files) · E2E stays 107** (the walk restructures the existing
+test) — the count-lockstep constants AND every live-tense doc site moved in the SAME
+commit (docs-counts gate + the "Session-20 lock" → "Session-21 lock" literal,
+vitest.config.ts header, README badge/scripts/tree/testing, CLAUDE baseline + the
+drift-sweep extension + the store law, AGENTS the Session-21 store-writer contracts +
+the file count, PAD **v1.19** + the revision block + ADR-004's drift note, SKILL
+**v2.17.0** + the Session-21 addendum).
+
+**Gate on the final tree**: lint 0 (1 documented warning) · tsc · unit **151/151**
+(15 files) · build · smoke **13/13** · e2e **107/107 × 2 consecutive full runs** (the
+race cure verified) · the three with-data harnesses **s16 13/13 · s17 19/19 · s18
+20/20**. Evidence: screenshots **99–101** (the with-data Sales ledger contained at
+390, the with-data Cashiers ledger with the closed shift rendering "Cerrado" — the
+F-118 surface cured and proven live, the mobile drawer) via the committed
+self-provisioning `scripts/capture-s21-evidence.mjs`, plus the D-1 reference capture
+(`ref-mobile-pos-390-s21.png`). Docs lockstep: this worklog entry,
+remediation-plan-session-21 (the full ledger + record), session_37.md (the narration).
+`.env.example` verified against the working `.env`.

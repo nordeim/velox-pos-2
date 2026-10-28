@@ -522,12 +522,17 @@ bite hardest here:
   sub-md chrome, the sidebar the md+ chrome. VISIBILITY pins (`toBeVisible`/
   `not.toBeVisible`), never count — `hidden md:flex` elements stay in the DOM below md
   (the standing law). The reference itself ships the regression class (its own static
-  220px sidebar scrolls the 390px document to 1280px — the 14th consecutive drift sweep).
-- **The with-data ledger containment is FUNCTIONALLY pinned at 390** (the M-109c1 guard,
-  the neo-crm genus): with a self-provisioned product, Inventory at 390 keeps main
-  contained, the ledger container (`.vpx-scroll`) is a FUNCTIONAL scroll region, and the
-  table keeps its `min-w-[760px]` floor — the container contains, the table never
-  shrinks.
+  220px sidebar on phones — Session-21 caught the reference's layout drift: the document no
+  longer scrolls to 1280px; main is now SQUEEZED to 170px beside the static sidebar, still
+  with no hamburger — the defect class persists, the observable changed).
+- **The with-data ledger containment is FUNCTIONALLY pinned at 390 on ALL THREE ledger
+  surfaces** (the M-109c1 guard, extended Session-21/F-117): with one self-provisioned chain
+  (category → product → register → shift → sale), the walk visits Inventory, Sales, and
+  Cashiers at 390 — each keeps main contained, the ledger container (`.vpx-scroll`) is a
+  FUNCTIONAL scroll region, and each table keeps its `min-w-*` floor (760/720/640 — the
+  container contains, the table never shrinks). The spec CLOSES its shift before the walk
+  (the self-clean law — an ACTIVE shift would leak into the downstream specs' POS gate; a
+  closed shift still renders the Cashiers ledger row, "Cerrado").
 - **The containment pin's observable is the `scrollLeft` READ-BACK** (the cycle's
   mutation proof): a frame-level pin alone cannot catch the inner-container break (the
   outer `glass-card overflow-hidden` absorbs the spill — measured live); Chromium reports
@@ -544,6 +549,28 @@ bite hardest here:
   protection gap (the code currently correct), the pins land and must PASS on the
   standing build, and the regression-class evidence is the injected-mutation probe
   (recorded in the plan's ledger) — not a contrived failing assertion.
+
+## The store-writer contracts (Session-21 pins — F-118)
+
+- **The store's `shifts` collection has ONE writer per refresh**: `loadAll` owns it (the
+  FULL ledger list — the Cashiers "Turnos Recientes" and Registers history invariant);
+  `loadCore` refreshes settings ONLY. The pre-fix `loadCore` fetched
+  `/api/shifts?status=active` and wrote the active-only list into the SAME key while the
+  bootstrap hook ran both actions in one `Promise.all` — a last-writer race: when
+  loadCore's write landed last, the ledgers lost their closed-shift history ("Sin turnos
+  registrados" with three closed shifts in the db). Unit-pinned by
+  `tests/unit/store.test.ts` (the deterministic interleaving: the active-only fetch
+  resolves LAST). No consumer needs the active-only value — the terminal gate finds its
+  active shift by FILTERING the collection (`shifts.find(sh => sh.status === "active")`).
+- **A new with-data e2e surface can EXPOSE latent empty-store-invisible races** (the s15
+  V24 doctrine, now proven twice): the three-ledger walk caught the F-118 race live —
+  flaky twice in four full-suite runs — while 20 sessions of empty-store e2e never saw
+  it. When a with-data pin flakes, suspect the PRODUCTION code first, reproduce with a
+  deterministic seam test, then fix the root cause (never re-roll the suite).
+- **A spec that opens a shift CLOSES it** (the self-clean law, now written down): an
+  ACTIVE shift leaks into every downstream spec's POS gate (the mobile project runs
+  after chromium). terminal.spec has always done this; the drift-sweep walk now does
+  too (a closed shift still renders the Cashiers ledger row).
 
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
@@ -577,7 +604,7 @@ drawer + backdrop `animate-in` (tw-animate-css), and Radix dialogs compute a liv
 
 ## Testing rules
 
-- Unit tests live at the pure seams (`tests/unit/**`, vitest, node env). The 14 existing files are
+- Unit tests live at the pure seams (`tests/unit/**`, vitest, node env). The 15 existing files are
   the seam registry + the docs-counts lockstep gate — new `src/lib` seams get a file; UI
   components don't get unit tests.
 - E2E (`tests/e2e/**`) runs against the PRODUCTION standalone build with its own scratch db

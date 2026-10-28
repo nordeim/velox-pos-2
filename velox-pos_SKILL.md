@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.16.0
+version: 2.17.0
 last_updated: 2026-10-28
 ---
 
@@ -28,7 +28,7 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-20 lock: unit **149/149** (14 files) · e2e **107/107**
+Baselines at Session-21 lock: unit **151/151** (15 files) · e2e **107/107**
 (93 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
@@ -66,7 +66,7 @@ removed `quill`, `web-vitals`, `tailwindcss-animate`, `@radix-ui/react-radio-gro
 bun run dev                    # :3000 (output teed to dev.log)
 bun run lint                   # eslint flat config — 0 errors, 1 documented warning
 bun run typecheck              # tsc --noEmit — strict
-bun run test                   # vitest — tests/unit/** (149)
+bun run test                   # vitest — tests/unit/** (151)
 bun run build                  # standalone build + static/public copy
 bun run test:e2e               playwright (107) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
@@ -429,8 +429,9 @@ SUPERSET instead:
 
 ## 12. Testing strategy (three tiers)
 
-1. **Unit (Vitest, 149/149, 14 files)** — the pure seams only (plus the docs-counts
-   lockstep gate). New `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
+1. **Unit (Vitest, 151/151, 15 files)** — the pure seams only (plus the docs-counts
+   lockstep gate; store.test.ts pins the F-118 shifts-race at the store seam). New
+   `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
 2. **E2E (Playwright, 107/107)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
@@ -439,10 +440,12 @@ SUPERSET instead:
    `chromium` — the full browser; chrome-headless-shell has a cookie quirk on
    plain-HTTP localhost) and `mobile` (390×844, runs only the drawer spec).
    Auth once via storageState (the rate limiter); `auth.spec.ts` opts out.
-   The Session-20 drift-sweep tier (`viewport-drift-sweep.spec.ts`): the 8
-   routes × 4 widths (390/768/1024/1440) zero-overflow battery + the chrome-
-   switch contract + the with-data functional-scroll containment guard — the
-   standing visual-regression tier (the master skill §15 gate:full doctrine).
+   The Session-20 drift-sweep tier (`viewport-drift-sweep.spec.ts`, extended
+   Session-21): the 8 routes × 4 widths (390/768/1024/1440) zero-overflow
+   battery + the chrome-switch contract + the with-data functional-scroll
+   containment guard on ALL THREE ledger surfaces (Inventory/Sales/Cashiers
+   at 390 — the F-117 three-ledger walk) — the standing visual-regression
+   tier (the master skill §15 gate:full doctrine).
 3. **Live re-measurement (agent-browser)** — computed styles beat screenshots;
    re-measure the reference before any design-system change and record the
    measurement in the plan doc.
@@ -1367,3 +1370,56 @@ Session-20 contracts), CLAUDE (the baseline + the drift-sweep line), PAD
 v1.18, README (badge + scripts + testing), the worklog entry,
 `docs/remediation-plan-session-20.md`, `docs/session_35.md`.
 Skill v2.16.0.
+
+### Session-21 addendum (v2.17.0) — the three-ledger walk + the store race it caught
+
+**The with-data walk of the remaining ledger surfaces (the session_35 "Next"
+pointer)**: the s20 guard visited Inventory only; Sales (`min-w-[720px]`) and
+Cashiers (`min-w-[640px]`) were covered only by the frame battery — which the
+V18 mutation proof had already established is blind to the inner-container
+break. The extension restructures the guard's second test into the
+THREE-ledger walk: ONE provisioning chain (category → product → register →
+shift → sale — the shift's `cashierId` is the owner, so it renders the
+Cashiers "Turnos Recientes" row) visits /Inventory, /Sales, /Cashiers at
+390×844, each with the settled row wait, the frame pair, the functional-scroll
+probe, and the per-route floor (760/720/640). The spec CLOSES its shift before
+the walk (the self-clean law — an ACTIVE shift leaks into the downstream
+specs' POS gate; a closed shift still renders the ledger row, "Cerrado").
+
+**The walk caught a real production race (F-118) — the s15 V24 doctrine
+proven twice.** The Cashiers leg flaked twice in four full-suite runs: "Sin
+turnos registrados" with three closed shifts in the db. Root cause: the
+store's `shifts` collection had TWO writers — `loadAll` (the full ledger
+list) and `loadCore` (the active-only list) — racing inside the bootstrap
+hook's `Promise.all([loadAll(), loadCore()])`; the last writer won, and the
+ledgers intermittently lost their closed-shift history. Twenty sessions of
+empty-store e2e never saw it (no closed shifts exist to lose). The mutation
+ANALYZE had measured the surfaces correct — the race only manifests under
+the full suite's sustained-load interleaving. THE LESSON: a with-data pin
+that flakes is a PRODUCTION suspect first — reproduce deterministically at
+the seam (the path-dispatched transport mock, the active-only fetch
+resolving LAST), fix the root cause, never re-roll the suite.
+
+**The cure:** `tests/unit/store.test.ts` (2 its — RED on the pre-fix store)
+→ `loadCore` refreshes settings ONLY (no consumer reads the active-only
+value; the terminal gate filters the collection itself:
+`shifts.find(sh => sh.status === "active")`) → GREEN. UNIT 149 → 151, files
+14 → 15 (the store seam joins the registry); E2E stays 107 (the walk
+restructures the existing test).
+
+**The reference's own mobile defect DRIFTED (D-1, the 15th sweep):** the
+document no longer scrolls to 1280px at 390 — main is now SQUEEZED to 170px
+beside the static 220px sidebar (no hamburger still). The defect class
+persists, the observable changed; the clone's drawer superset remains
+strictly better. Every live-tense doc site stating the old observable was
+refreshed; history blocks keep their historical statements.
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **151/151**
+(15 files) · build green · smoke **13/13** · e2e **107/107** (93 desktop +
+13 mobile + 1 setup — the walk green across repeated full runs). Screenshots
+99–101. Docs lockstep: the count constants + every live-tense site (the
+"Session-20 lock" literal becomes the **Session-21 lock**), PAD v1.19, AGENTS
+(the Session-21 store-writer contracts), CLAUDE (the store law + the
+drift-sweep extension), README, the worklog entry,
+`docs/remediation-plan-session-21.md`, `docs/session_37.md`.
+Skill v2.17.0.
