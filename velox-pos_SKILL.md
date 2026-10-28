@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.19.0
+version: 2.20.0
 last_updated: 2026-10-28
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-23 lock: unit **151/151** (15 files) · e2e **111/111**
-(97 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-24 lock: unit **151/151** (15 files) · e2e **113/113**
+(99 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -68,7 +68,7 @@ bun run lint                   # eslint flat config — 0 errors, 1 documented w
 bun run typecheck              # tsc --noEmit — strict
 bun run test                   # vitest — tests/unit/** (151)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               playwright (111) — NEEDS the build first (:3100)
+bun run test:e2e               playwright (113) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -433,7 +433,7 @@ SUPERSET instead:
    lockstep gate; store.test.ts pins the F-118 shifts-race at the store seam). New
    `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 111/111)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 113/113)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -456,7 +456,16 @@ SUPERSET instead:
    and share bars, and the chart's niceScale domain, all derived from the
    sales/products/categories APIs at runtime — plus the with-data
    containment at the remaining widths (768/1024/390, the chrome switch
-   with data).
+   with data). The Session-24 with-data Inventory CSV round-trip walk
+   (`with-data-inventory-csv.spec.ts`): the superset feature's full chain —
+   the import (setInputFiles with an in-spec buffer → the per-row POSTs →
+   the store upserts → the ledger re-render → the "Import complete"
+   toast), the export (the download's `products.csv` content: the header
+   byte-exact, the fixture lines byte-exact with the category-NAME
+   resolution both ways, the line count = 1 + the API-derived total), and
+   the error path (a blank-name row → "Import failed: name is required",
+   zero rows imported) — THREE specs now persist data; the CSV walk sorts
+   between the dashboard and reports walks (d < i < r).
 3. **Live re-measurement (agent-browser)** — computed styles beat screenshots;
    re-measure the reference before any design-system change and record the
    measurement in the plan doc.
@@ -1530,3 +1539,61 @@ becomes the **Session-23 lock**), PAD v1.21, AGENTS (the Session-23
 with-data Dashboard contracts), CLAUDE, README, the worklog entry,
 `docs/remediation-plan-session-23.md`, `docs/session_41.md`.
 Skill v2.19.0.
+
+### Session-24 addendum (v2.20.0) — the with-data Inventory CSV round-trip walk
+
+The session_41 "Next" pointer landed: **the Inventory CSV round-trip e2e
+walk** (F-122) — a README-advertised superset feature ("CSV export +
+import") whose full UI chain had ZERO e2e protection. The unit tier pins
+the pure seam (`parseCsv`/`parseCsvRow`/`productsToCsv`), but the WIRING
+was e2e-invisible: the import chain (the hidden file input → the parse →
+the per-row POSTs → `upsertProduct` → the ledger re-render → the "Import
+complete" toast), the export chain (the store → `productsToCsv` with its
+category-NAME resolution — a store-dependent derivation the unit tier
+cannot test → the Blob → the `a.download="products.csv"` trigger → the
+file content), and the error path (a blank-name row → "Import failed:
+name is required", zero rows imported). The ANALYZE (V16) measured every
+leg CORRECT live on the dev server (import 3→5 with both rows + the
+toast; the export's header + rows byte-exact with `String(number)`
+semantics; the error toast + unchanged count) — the finding is the
+missing tier, not a live defect.
+
+The cure (`tests/e2e/with-data-inventory-csv.spec.ts`, 2 tests): the
+round-trip wiring pin — a "CSV Walk" category provisioned through the API
+(POST asserted, the F-120 law), a two-row import CSV built IN-SPEC as a
+buffer (`setInputFiles({ name, mimeType, buffer })` — no temp files, the
+rows chosen to serialize byte-stably: cost `1.5` never `1.50`, the empty
+category/cost columns as empty strings), then the import leg (the toast,
+the API-derived count +2, both Product cells, the API verify — row 1's
+`categoryId` resolved by NAME, row 2 null), then the export leg
+(`waitForEvent("download")` → `suggestedFilename()` = `products.csv` →
+the content: the header byte-exact, both fixture lines BYTE-EXACT, the
+line count = 1 + the API-derived total — `toContain` per line, NEVER
+full-file equality, the export is the FULL ledger). The second test pins
+the error path: the blank-name buffer → the exact toast → the count
+UNCHANGED → the barcode absent from the API.
+
+The ordering law, extended again: THREE specs now persist data — the CSV
+walk (i) sorts between the dashboard walk (d) and the reports walk (r);
+its products perturb NO sale-derived pin (the reports walk derives from
+sales; the dashboard walk runs before it), and inventory.spec's
+"No products found"/"1 products registered" pins run before its imports
+exist (i < w, workers: 1). A fourth persisting spec must be checked
+against ALL THREE before it lands.
+
+The eighteenth reference sweep: every standing pin HOLDS and the
+reference's mobile defect is STABLE at its D-1 shape; the reference's
+Reports surface is still EMPTY — the with-data tiers remain a functional
+superset. The clone's mobile drawer re-verified live (the operator's
+priority) with a probe-methodology lesson recorded (the V14 law, now in
+AGENTS: a synthetic `el.click()` inside `page.evaluate` does NOT move
+focus — the drawer's Escape-restore pin needs a REAL click probe).
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **151/151**
+(15 files — UNMOVED) · build green · smoke **13/13** · e2e **113/113** (99
+desktop + 13 mobile + 1 setup). Screenshots 108–110. Docs lockstep: the
+count constants + every live-tense site (the "Session-23 lock" literal
+becomes the **Session-24 lock**), PAD v1.22, AGENTS (the Session-24 CSV
+round-trip contracts + the probe-methodology law), CLAUDE, README, the
+worklog entry, `docs/remediation-plan-session-24.md`, `docs/session_43.md`.
+Skill v2.20.0.

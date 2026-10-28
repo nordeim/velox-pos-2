@@ -1923,3 +1923,80 @@ self-provisioning `scripts/capture-s23-evidence.mjs`, plus the D-1-shape referen
 capture (`ref-mobile-pos-390-s23.png`). Docs lockstep: this worklog entry,
 remediation-plan-session-23 (the full ledger + record), session_41.md (the narration).
 `.env.example` verified against the working `.env`.
+
+## Session-24 — the with-data Inventory CSV round-trip walk (velox-pos-2)
+
+**Date:** 2026-10-28 · **Tree:** `ae2d395` received (the Session-23 push `d17f129` + the
+operator's session_42 raw-log commit; a `git pull` fast-forward this cycle — the workspace
+SURVIVED, so the documented rebuild was not needed) · **Cycle:** the session_41 "Next"
+pointer's Inventory CSV round-trip walk + the operator's mobile-navigation priority check.
+
+**The received tree**: fast gate GREEN on arrival — lint 0 (1 documented warning) · tsc ·
+unit **151/151** (15 files). Static sweeps clean: zero dead files (144 scanned, +2 from
+Session-23's spec + evidence script), secrets clean (the known demo-credential constants
+aside), the documented credential VERIFIES, and the Session-23 code review confirmed the
+cycle's changes were test-tier only (the dashboard-walk spec, the s23 evidence script, the
+count lockstep, the docs) — ZERO unplanned production code.
+
+**Reference sweep #18: every standing pin HOLDS byte-exact** — the login card
+(blur(4px) · white/95 · 16px · h1 30px/700 · inputs 48px/12px · SSO 54px/16px), the F-76
+error alert byte-exact ("Invalid email or password" · red-50/0.7 · 12px), the `/` landing +
+220px sidebar + 8 links, the Dashboard date line ("Wednesday, October 28, 2026") + both
+chart h3s 16px/700, the Spanish families ("Historial de Ventas", "Cajeros"/"Turnos
+Recientes" H3), and the mobile defect STABLE at its Session-21 D-1 shape (no hamburger, the
+static 220px sidebar, main 170px, the document contained at exactly 390 on every route).
+The reference's Reports surface is still EMPTY (2× "No data for this period") — the
+with-data tiers remain the functional superset. Reference capture refreshed:
+`ref-mobile-pos-390-s24.png`. **The clone's mobile drawer re-verified live on the dev
+server** (the operator's priority): labeled hamburger · dialog semantics + 8 labeled links
+at 288px · focus management (open→Close, Escape→hamburger + scroll-lock release) ·
+route-close unmount · `animation-name: enter` · zero horizontal overflow — plus 13/13
+mobile e2e. NO Tailwind v4 regression. **A probe-methodology lesson recorded (V14):** a
+synthetic `el.click()` inside `page.evaluate` does NOT move focus (the drawer saves
+`document.activeElement` at open) — the Escape-restore probe must use a REAL click; the
+law is now in AGENTS.
+
+**The NEW depth — the with-data Inventory CSV round-trip walk (the session_41 pointer)**:
+the ANALYZE measured every leg CORRECT live on the dev server (the import: the toast
+"Import complete", the count 3 → 5, both fixture rows rendering; the export: the header
+byte-exact, the rows serializing back exactly with the category-NAME resolution and
+`String(number)` cost semantics; the error path: "Import failed: name is required" with
+the count unchanged) — **F-122, the protection gap**: the CSV round-trip is a
+README-advertised superset feature whose full UI chain (the hidden file input → the parse
+→ the per-row POSTs → `upsertProduct` → the ledger re-render → the toast; the store →
+`productsToCsv` with its category-NAME resolution → the Blob → the download's content;
+the blank-name error path) had ZERO e2e protection — the unit tier pins the pure seam
+only. The cure: `tests/e2e/with-data-inventory-csv.spec.ts` — the round-trip wiring pin
+(a "CSV Walk" category provisioned with the POST asserted; a two-row import CSV built
+in-spec as a `setInputFiles` buffer, the values chosen to serialize byte-stably — cost
+`1.5` never `1.50`; the toast + the API-derived count +2 + both Product cells + the API
+verify (the category resolved by NAME, row 2 null); the export leg —
+`waitForEvent("download")` → `suggestedFilename()` = `products.csv` → the content: the
+header byte-exact, both fixture lines BYTE-EXACT, the line count = 1 + the API-derived
+total, `toContain` per line never full-file equality) + the error-path test (the
+blank-name buffer → the exact toast → the count UNCHANGED → the barcode absent from the
+API). The file sorts between the dashboard walk and the reports walk (d < i < r) — THREE
+specs now persist data; the CSV walk's products perturb no sale-derived pin, and
+inventory.spec's empty-state pins run before its imports exist (i < w, workers: 1).
+
+**E2E 111 → 113 · specs 10 → 11 · desktop 97 → 99** (UNIT stays 151/15) — the count-lockstep
+constants AND every live-tense doc site moved in the SAME commit (docs-counts gate + the
+"Session-23 lock" → "Session-24 lock" literal, README badge/scripts/testing, CLAUDE
+baseline + the three-walk ordering law, AGENTS the Session-24 CSV round-trip contracts +
+the V14 probe-methodology law, PAD **v1.22** + the revision block + the spec map, SKILL
+**v2.20.0** + the Session-24 addendum).
+
+**Gate on the final tree**: lint 0 (1 documented warning) · tsc · unit **151/151** (15
+files — UNMOVED) · build · smoke **13/13** · e2e **113/113 × 2 consecutive full runs**
+(99 desktop + 13 mobile + 1 setup, the fixtures verified in the post-run e2e.db — both
+CSVRT rows with the category resolved, the error row absent, the other walks' fixtures
+intact) · the three with-data harnesses **s16 13/13 · s17 19/19 · s18 20/20** (the older
+captures restored). Evidence: screenshots **108–110** (the with-data Inventory ledger with
+the imported rows — the count derived live 5 → 7; the import-complete toast moment; the
+mobile drawer) via the committed self-provisioning `scripts/capture-s24-evidence.mjs`,
+plus the D-1-shape reference capture (`ref-mobile-pos-390-s24.png`). A
+capture-methodology catch recorded: the first evidence pass produced byte-identical
+108/109 (the toast's 5s window spans both captures) — the fix waits for the toast's
+`hidden` state before the settled capture. Docs lockstep: this worklog entry,
+remediation-plan-session-24 (the full ledger + record), session_43.md (the narration).
+`.env.example` verified against the working `.env`.

@@ -641,6 +641,42 @@ bite hardest here:
   NaN. The 7-day window's RIGHT edge is today: the last tick text is
   today's weekday abbreviation.
 
+## The CSV round-trip contracts (Session-24 pins — F-122)
+
+- **The Inventory CSV round-trip is pinned end-to-end**
+  (`tests/e2e/with-data-inventory-csv.spec.ts`): the import leg (the
+  hidden `input[aria-label="Import products from CSV"]` via `setInputFiles`
+  with an in-spec BUFFER — no temp files → `parseCsv`/`parseCsvRow` → the
+  per-row POSTs → `upsertProduct` → the ledger count + both Product cells →
+  the "Import complete" toast in the Notifications region), the export leg
+  (`page.waitForEvent("download")` around the "Export products as CSV"
+  click → `suggestedFilename()` = `products.csv` → the file content), and
+  the error leg (a blank-name row → "Import failed: name is required", the
+  count UNCHANGED, the barcode absent from the API).
+- **The export-content pins are BYTE-EXACT per LINE, never full-file**:
+  the header (`name,barcode,category,price,cost,stock,minStock,taxRate,unit,active`)
+  + both fixture lines + the line count = 1 + the API-derived product total
+  (the export is the FULL ledger; the other fixtures' rows ride along by
+  design). The fixture values are chosen to serialize byte-stably through
+  `String(number)` (cost `1.5`, never `1.50`; the empty cost/category
+  columns round-trip as empty strings).
+- **The category resolution is pinned BOTH WAYS**: the import matches the
+  CSV's category NAME (case-insensitive) to a store category (`categoryId`
+  set; unmatched → null), and the export resolves `categoryId` back to the
+  name — the store-dependent derivation the unit tier cannot test.
+- **THREE specs now persist data — the ordering law, extended again**: the
+  CSV walk sorts between the dashboard walk and the reports walk (d < i <
+  r). Its products perturb NO sale-derived pin (the reports walk derives
+  from sales; the dashboard walk runs BEFORE it), and inventory.spec's
+  "No products found"/"1 products registered" pins run before it exists
+  (i < w, workers: 1). A fourth persisting spec must be checked against
+  ALL THREE before it lands.
+- **Probe-methodology law (V14, Session-24)**: a synthetic `el.click()`
+  inside `page.evaluate` does NOT move focus — the drawer saves
+  `document.activeElement` at open, so an eval-click probe falsely reads
+  "focus not restored". Probe focus behavior with a REAL click
+  (Playwright's `.click()`), never an eval dispatch.
+
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
 `src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px
