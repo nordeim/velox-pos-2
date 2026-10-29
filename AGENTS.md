@@ -706,12 +706,42 @@ bite hardest here:
   ALWAYS scope fiscal-field locators to the
   `region "Fiscal / Tax Data"` (the unscoped `getByLabel` is a strict-mode
   violation; caught live in this cycle's first run).
-- **FOUR specs now persist data — the ordering law, extended again**: the
-  fiscal walk sorts between the dashboard walk and the inventory CSV walk
-  (d < f < i < r). Its sales/products perturb no product- or sale-derived
-  pin (every downstream walk derives from the API at runtime), and its
-  settings mutations are restored before the file ends. A fifth persisting
-  spec must be checked against ALL FOUR before it lands.
+- **FIVE specs now persist data — the ordering law, extended again**: the
+  ledger walk sorts FIRST, the fiscal walk between the dashboard and CSV
+  walks (c < d < f < i < r). Every walk's sales/products/shifts perturb no
+  downstream walk's pins (each derives from the API at runtime), and the
+  settings mutations are restored before the fiscal file ends. A sixth
+  persisting spec must be checked against ALL FIVE before it lands.
+
+## The Cashiers shift-ledger contracts (Session-27 pins — F-125)
+
+- **The "Turnos Recientes" four-way join is pinned WITH DATA**
+  (`tests/e2e/with-data-cashiers-ledger-walk.spec.ts`): the closed row's
+  six cells — the cashier identity (`s.cashier?.fullName ||
+  s.cashier?.email || "—"`), the register name, the INICIO cell
+  (`shiftTime(openedAt) · shiftDuration(openedAt, closedAt)`), the FIN
+  polarity fork (`s.closedAt ? shiftTime(closedAt) : "—"`), the VENTAS
+  join cell (`formatMoney(sum of the shift's sales) (n)` — the filter
+  `sale.shiftId === s.id`), the Estado chip (Abierto on emerald-500/15 |
+  Cerrado on white/5 + white/50) — plus the six Spanish headers
+  (Cajero/Caja/Inicio/Fin/Ventas/Estado, pinned in the SOURCE case; CSS
+  uppercases visually).
+- **The ledger's data source is `/api/shifts`** (openedAt desc, register +
+  cashier included) bootstrapped once by the store — the ledger does NOT
+  poll. A spec that mutates shifts/sales mid-view must RE-MOUNT the page
+  (a fresh `goto`), never wait for an update. The view slices
+  `shifts.slice(0, 10)` — a fixture shift is always the NEWEST row
+  (`.first()`).
+- **The identity-cell mirror law**: derive the expected CAJERO cell from
+  the ledger's OWN `/api/shifts` payload (the shift's `cashier` include) —
+  NOT from `/api/auth/me`, whose `publicUser` OMITS `fullName` (the
+  Session-27 first-run catch). The shifts POST pins `cashierId` to the
+  OWNER, so the seed's "Store Owner" renders — no cashier users are ever
+  created, keeping the roster's role=cashier empty-state pins safe.
+- **The seam-math mirror**: `shiftTime` (local HH:MM via
+  getHours/getMinutes padStart) and `shiftDuration` (rounded minutes,
+  `Xh Ym` | `Ym`) are mirrored in-spec — the "fix the MIRROR" rule (the
+  s17 law). Never hardcode a time or a duration in a ledger pin.
 
 ## The password-reset round-trip contracts (Session-26 pins — F-124)
 

@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.22.0
+version: 2.23.0
 last_updated: 2026-10-29
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-26 lock: unit **151/151** (15 files) · e2e **117/117**
-(103 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-27 lock: unit **151/151** (15 files) · e2e **119/119**
+(105 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -68,7 +68,7 @@ bun run lint                   # eslint flat config — 0 errors, 1 documented w
 bun run typecheck              # tsc --noEmit — strict
 bun run test                   # vitest — tests/unit/** (151)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               playwright (117) — NEEDS the build first (:3100)
+bun run test:e2e               playwright (119) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -433,7 +433,7 @@ SUPERSET instead:
    lockstep gate; store.test.ts pins the F-118 shifts-race at the store seam). New
    `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 117/117)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 119/119)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -485,6 +485,15 @@ SUPERSET instead:
    the register default and the Cashiers roster filters role=cashier — no
    downstream pin perturbed; the API legs ride the ISOLATED `request`
    fixture so the verify-email session never leaks into the page context.
+   The Session-27 Cashiers shift-ledger walk
+   (`with-data-cashiers-ledger-walk.spec.ts`): the "Turnos Recientes"
+   four-way join pinned WITH DATA — the closed row's six cells (the cashier
+   identity from the ledger's own /api/shifts payload, the register, the
+   mirrored shiftTime·shiftDuration math, the FIN close time, the
+   join-derived `$total (n)` cell, the Cerrado chip) + the six Spanish
+   headers, and the active polarity (Fin —, `$0.00 (0)`, the Abierto chip)
+   flipping to closed on the exact-variance close. FIVE specs now persist
+   data — the ledger walk sorts FIRST among the walks (c < d < f < i < r).
 3. **Live re-measurement (agent-browser)** — computed styles beat screenshots;
    re-measure the reference before any design-system change and record the
    measurement in the plan doc.
@@ -1738,3 +1747,64 @@ becomes the **Session-26 lock**), PAD v1.24, AGENTS (the Session-26
 reset-round-trip contracts + the isolated-request-fixture law), CLAUDE,
 README, the worklog entry, `docs/remediation-plan-session-26.md`,
 `docs/session_47.md`. Skill v2.22.0.
+
+### Session-27 addendum (v2.23.0) — the Cashiers shift-ledger walk
+
+The session_47 "Next" pointer's LEADING candidate landed: **the Cashiers
+shift-ledger with-data walk** (F-125) — the "Turnos Recientes" table's
+DERIVATION, with zero with-data protection before this session. The drift
+sweep's F-117 containment test provisions a shift and asserts only that its
+ROW IS VISIBLE at 390; surfaces.spec pins the EMPTY states + the roster
+flow; registers-shifts.spec pins the shift DIALOGS on another surface.
+NOTHING pinned the join: a sale landing on the wrong shift's row, a count
+drifting from its total, a polarity flip in the FIN ternary, or a
+mis-ordered list would ALL have passed the entire suite green. The
+reference's OWN ledger is permanently empty (write-gated — "Sin turnos
+registrados"), so this tier is a functional-SUPERSET pin.
+
+The ledger row is a FOUR-WAY JOIN rendered client-side (cashiers-view.tsx):
+the store's shifts (bootstrapped from /api/shifts, openedAt desc, register +
+cashier included) × the store's sales — per row the cashier cell (the shifts
+POST pins cashierId to the OWNER, so the seed's "Store Owner" renders; no
+cashier users are ever created, keeping the roster's role=cashier
+empty-state pins safe), the register cell, the INICIO cell
+(shiftTime·shiftDuration — local HH:MM + rounded minutes, MIRRORED
+in-spec), the FIN polarity fork (shiftTime(closedAt) | "—"), the VENTAS
+join cell (formatMoney(sum of the shift's sales) + the count), and the
+Abierto (emerald-500/15) / Cerrado (white/5 + white/50) chips.
+
+The ANALYZE measured every leg CORRECT live on the dev server (the active
+row `["Store Owner", "Ledger Walk Register", "00:19 · 0m", "—", "$9.00 (1)",
+"Abierto"]`; after the exact-variance close the closed row
+`["Store Owner", "Ledger Walk Register", "00:19 · 1m", "00:20", "$9.00 (1)",
+"Cerrado"]`). The cure — `tests/e2e/with-data-cashiers-ledger-walk.spec.ts`
+(2 tests): the closed row (the fixture chain: shift → TWO sales pinned by
+shiftId → the exact-variance close → all SIX cells exact against
+API-derived expectations + the six Spanish headers Cajero/Caja/Inicio/Fin/
+Ventas/Estado in the SOURCE case), and the active polarity (the zero state
+— Fin "—", "$0.00 (0)", Abierto → the live join after a sale → the flip to
+Cerrado with the FIN cell filled). ONE authoring iteration: the first run's
+identity-cell expectation derived from /api/auth/me — whose publicUser
+OMITS fullName (the row renders "Store Owner" from the shift's own cashier
+include) — fixed by deriving from the ledger's OWN /api/shifts payload (the
+view's exact input, the true "fix the MIRROR" rule).
+
+E2E 117 → 119 (desktop 103 → 105) · specs 12 → 13 · unit stays 151/15.
+FIVE specs now persist data — the ledger walk sorts FIRST among the walks
+(c < d < f < i < r): the four existing walks derive their expectations from
+the APIs at runtime, so the walk's extra product/sale/shift perturbs none
+of them; the walk SELF-CLEANS both its shifts (closed with exact-variance
+counts), keeping "No active shift" true for the mobile project. The
+reference sweep #21 held every pin byte-exact (the login card, the F-76
+alert, the landing/sidebar, the Dashboard h3s, the Spanish families, the
+empty Reports, the D-1 mobile defect); the clone's mobile drawer
+re-verified live (REAL clicks, the V14 law): NO Tailwind v4 regression.
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **151/151**
+(15 files — UNMOVED) · build green · smoke **13/13** · e2e **119/119** (105
+desktop + 13 mobile + 1 setup). Screenshots 117–119. Docs lockstep: the
+count constants + every live-tense site (the "Session-26 lock" literal
+becomes the **Session-27 lock**), PAD v1.25, AGENTS (the Session-27
+ledger-derivation contracts + the five-specs ordering law), CLAUDE, README,
+the worklog entry, `docs/remediation-plan-session-27.md`,
+`docs/session_49.md`. Skill v2.23.0.

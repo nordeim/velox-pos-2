@@ -1,4 +1,4 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.24
+# VeloxPOS — Master Project Architecture Document (PAD) v1.25
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
@@ -28,7 +28,7 @@ guardrail is enforced by tooling that runs in this checkout.
 **Scale & baselines (verified 2026-10-27, Session-16 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views (9 route spellings — the root `/` page is the
 terminal's reference-parity landing, Session-10 F-60)
-+ login/reset/404 · 151 unit tests (15 files) · 117 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 151 unit tests (15 files) · 119 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -251,7 +251,7 @@ Dependency rule: arrows point downward only. `src/lib` pure seams never import R
  │                           db-path, db, store, api, utils) + server/ (http, auth, entities)
  ├ 📂 prisma               — schema.prisma (9 models) · seed.ts (owner + settings; --demo dataset)
  ├ 📂 tests/unit           — 15 vitest files (the seam registry + the docs-counts gate)
- ├ 📂 tests/e2e            — 12 spec files + auth.setup + kill-port + provisioning
+ ├ 📂 tests/e2e            — 13 spec files + auth.setup + kill-port + provisioning
  ├ 📂 docs                 — implementation plan, runbooks, Tailwind report, screenshots/
  └ ⚙️ next.config.ts · playwright.config.ts · vitest.config.ts · package.json · .env.example
 ```
@@ -299,7 +299,7 @@ lint → typecheck → unit → build → smoke → e2e
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 15 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 117/117):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 119/119):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url
@@ -315,7 +315,12 @@ lint → typecheck → unit → build → smoke → e2e
    cart-md-geometry parity pins), `viewport-drift-sweep` (the Session-20 tier, extended
    Session-21: the 8 routes × 4 widths zero-overflow battery + the chrome-switch contract
    + the with-data functional-scroll containment guard at 390 on ALL THREE ledger surfaces
-   — Inventory/Sales/Cashiers, the F-117 three-ledger walk), `with-data-dashboard-walk`
+   — Inventory/Sales/Cashiers, the F-117 three-ledger walk), `with-data-cashiers-ledger-walk`
+   (the Session-27 tier: the "Turnos Recientes" four-way join pinned WITH DATA — the
+   closed row's six cells against API-derived expectations + the six Spanish headers,
+   and the active polarity — Fin "—", `$0.00 (0)`, the Abierto chip — flipping to closed
+   on the exact-variance close; FIVE specs now persist data, c < d < f < i < r),
+   `with-data-dashboard-walk`
    (the Session-23 tier: the landing view's exact wiring pin — the today/stats testids,
    the category-breakdown rows + share bars, the chart's niceScale domain, all derived
    from the sales/products/categories APIs at runtime — plus the with-data containment
@@ -1644,3 +1649,61 @@ site (README badge/scripts/testing, CLAUDE baseline + the guest-tier note, AGENT
 Session-26 reset-round-trip contracts + the isolated-request-fixture law, PAD v1.24,
 SKILL v2.22.0 with the Session-26 addendum), the worklog entry,
 `docs/remediation-plan-session-26.md`, `docs/session_47.md`.
+
+## Revision History — Session-27 (v1.25, 2026-10-29)
+
+**The Cashiers shift-ledger with-data walk (F-125) + the count lockstep.** The
+session_47 "Next" pointer's LEADING candidate landed: the "Turnos Recientes"
+table's DERIVATION — a FOUR-WAY JOIN with zero with-data protection before this
+session. The drift sweep's F-117 containment test provisions a shift and asserts
+only that its row is VISIBLE at 390; surfaces.spec pins the EMPTY states +
+the roster flow; registers-shifts.spec pins the shift DIALOGS on another
+surface. Nothing pinned the join — a sale landing on the wrong shift's row, a
+count drifting from its total, a polarity flip in the FIN ternary, or a
+mis-ordered list would ALL have passed the entire suite green. The reference's
+OWN ledger is permanently empty (write-gated — "Sin turnos registrados"), so
+this tier is a functional-SUPERSET pin.
+
+The ANALYZE measured every leg CORRECT live on the dev server: the fixture
+chain (category → product CWALK-390 at $4.50 → register with float 50 → shift),
+the checkout pinned to the active shift, the ACTIVE row
+`["Store Owner", "Ledger Walk Register", "00:19 · 0m", "—", "$9.00 (1)",
+"Abierto"]`, the exact-variance close, and the CLOSED row
+`["Store Owner", "Ledger Walk Register", "00:19 · 1m", "00:20", "$9.00 (1)",
+"Cerrado"]` — the FIN cell filled, the duration recomputed, the chip family
+flipped. Zero production defects — the gap was pure protection.
+
+The cure — `tests/e2e/with-data-cashiers-ledger-walk.spec.ts` (2 tests): the
+closed row (the fixture chain: shift → TWO sales pinned by shiftId → the
+exact-variance close → all SIX cells exact against API-derived expectations +
+the six Spanish headers Cajero/Caja/Inicio/Fin/Ventas/Estado in the SOURCE
+case), and the active polarity (the zero state — Fin "—", "$0.00 (0)", the
+Abierto chip → the live join after a sale → the flip to Cerrado with the FIN
+cell filled). ONE authoring iteration: the first run's identity-cell
+expectation derived from /api/auth/me — whose publicUser OMITS fullName (the
+row renders "Store Owner" from the shift's own cashier include) — fixed by
+deriving from the ledger's OWN /api/shifts payload (the view's exact input,
+the "fix the MIRROR" rule; the law is now in AGENTS). The ordering analysis:
+FIVE specs now persist data — the ledger walk sorts FIRST among the walks
+(c < d < f < i < r), the four existing walks all derive from the APIs at
+runtime, and the walk SELF-CLEANS both its shifts (exact-variance closes —
+"No active shift" stays true for the mobile project). The reference sweep #21
+(the twenty-first consecutive): every standing pin HOLDS byte-exact; the
+reference's own mobile defect STABLE at D-1; the clone's mobile drawer
+re-verified live (REAL clicks — the V14 law): NO Tailwind v4 regression.
+
+**E2E 117 → 119 · desktop 103 → 105 · specs 12 → 13 · unit 151/15 (UNMOVED)**
+— the count-lockstep constants AND every live-tense doc site in the SAME
+commit (README badge/scripts/testing, CLAUDE baseline + the five-walk
+ordering, AGENTS the Session-27 ledger-derivation contracts + the
+identity-cell mirror law + the five-specs ordering law, PAD v1.25 + the spec
+map, SKILL v2.23.0 with the Session-27 addendum).
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **151/151** (15 files —
+UNMOVED) · build green · smoke **13/13** · e2e **119/119** (105 desktop + 13 mobile + 1
+setup). Screenshots 117–119 + the D-1-shape reference capture
+(`ref-mobile-pos-390-s27.png`). Docs lockstep: the count constants + every live-tense
+site (README badge/scripts/testing, CLAUDE baseline + the five-walk ordering, AGENTS
+the Session-27 ledger contracts, PAD v1.25, SKILL v2.23.0 with the Session-27
+addendum), the worklog entry, `docs/remediation-plan-session-27.md`,
+`docs/session_49.md`.

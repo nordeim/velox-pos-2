@@ -5,7 +5,7 @@
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6)
 ![Tests](https://img.shields.io/badge/unit%20tests-151%20%2F%20151-brightgreen)
-![E2E](https://img.shields.io/badge/e2e-117%20%2F%20117-brightgreen)
+![E2E](https://img.shields.io/badge/e2e-119%20%2F%20119-brightgreen)
 ![License](https://img.shields.io/badge/license-Proprietary-lightgrey)
 
 **A production-ready, enterprise-grade Point of Sale web application — a functional superset of
@@ -99,7 +99,7 @@ register, a closed shift, and a week of sales).
 | `bun run lint` | ESLint (flat config) |
 | `bun run typecheck` | `tsc --noEmit` (strict) |
 | `bun run test` | Vitest unit suite — the pure domain seams (151 tests / 15 files) |
-| `bun run test:e2e` | Playwright suite against the production standalone build (117 tests; desktop 1440×900 + mobile 390×844 projects, plus the four-width 390/768/1024/1440 drift-sweep battery, the with-data Reports + Dashboard + Inventory-CSV + fiscal-receipt walks, and the password-reset round-trip) |
+| `bun run test:e2e` | Playwright suite against the production standalone build (119 tests; desktop 1440×900 + mobile 390×844 projects, plus the four-width 390/768/1024/1440 drift-sweep battery, the with-data Cashiers ledger + Reports + Dashboard + Inventory-CSV + fiscal-receipt walks, and the password-reset round-trip) |
 | `bun run smoke` | The 13-step API smoke ladder against the standalone artifact on :3210 (own scratch `db/smoke.db`; health → auth wall → Zod seam → CRUD → rate limit → boot gate → artifact hygiene) |
 | `bun run gate` | The full pre-push gate: `lint → typecheck → test → build → smoke → e2e` |
 | `bun run db:push` | `prisma db push` against `db/custom.db` |
@@ -190,7 +190,7 @@ All endpoints return domain JSON; errors use `{ error: string }` with the docume
 bun run test            # unit: 151 tests / 15 files — the pure seams (money, cart, shift,
                         # reports, inventory-status, currency, router, validation, auth,
                         # db-path, env-check, site, store, chart-path) + the docs-counts lockstep gate
-bun run test:e2e        # e2e: 117 tests — needs `bun run build` first (boots the standalone
+bun run test:e2e        # e2e: 119 tests — needs `bun run build` first (boots the standalone
                         # build on :3100 with its own scratch db, db/e2e.db)
 bun run smoke           # the 13-step API smoke ladder — also needs the build (boots the
                         # artifact on :3210 with db/smoke.db; verifies the boot gate +
@@ -232,7 +232,13 @@ lifecycle the fabricated-token pins could never see: register → verify-email �
 the 48-hex `resetPath` → the reset page's "Password Updated" done state → the NEW
 password signing in through the real form (the old one dead at 401), and the consumed
 token rejecting replays (the one-shot `usedAt` consumption riding the same transaction
-as the password write).
+as the password write). The Session-27 Cashiers shift-ledger walk
+(`with-data-cashiers-ledger-walk.spec.ts`) pins the "Turnos Recientes" four-way join
+WITH DATA — the closed row's six cells (cashier · register · the mirrored
+shiftTime·shiftDuration math · the FIN close time · the join-derived `$total (n)`
+cell · the Cerrado chip) plus the six Spanish headers, and the active polarity
+(Fin "—", `$0.00 (0)`, the Abierto chip) flipping to closed on the exact-variance
+close — with both shifts self-cleaned for the mobile project.
 
 ## Design System
 

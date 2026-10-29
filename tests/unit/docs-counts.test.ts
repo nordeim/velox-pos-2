@@ -110,9 +110,15 @@ const UNIT_FILES = 15;
 // forgot → the reset page's done state → the new password signing in through
 // the real UI; and the one-shot semantics: the consumed token rejecting
 // replays + the old password dead. Guest-tier, no new spec file — the
-// fabricated-token Session-13 pins could never see this chain).
-const E2E = 117;
-const E2E_SPECS = 12;
+// fabricated-token Session-13 pins could never see this chain)
+// + the Session-27 F-125 Cashiers shift-ledger walk (the 2 tests of
+// with-data-cashiers-ledger-walk.spec.ts — the "Turnos Recientes" four-way
+// join pinned with data: the closed row's cashier·register·times·total/count
+// derivation + the headers, and the active polarity (Fin —, zero sales, the
+// Abierto chip) flipping to closed; the file sorts FIRST among the walks,
+// c < d < f < i < r).
+const E2E = 119;
+const E2E_SPECS = 13;
 const ROUTE_FILES = 26;
 const PRISMA_MODELS = 9;
 const VIEWS = 8;
@@ -191,8 +197,8 @@ describe("session-8 (F-52): the count-lockstep gate — every live-tense count s
   });
 
   it("the SKILL carries the live counts (header baselines, commands, data model, tiers)", () => {
-    expect(skillFlat).toContain(`Baselines at Session-26 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
-    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (103 desktop + 13 mobile + 1 setup)`);
+    expect(skillFlat).toContain(`Baselines at Session-27 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
+    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (105 desktop + 13 mobile + 1 setup)`);
     expect(skillFlat).toContain(`tests/unit/** (${UNIT})`);
     expect(skillFlat).toContain(`playwright (${E2E})`);
     expect(skillFlat).toContain(`${PRISMA_MODELS} models, user-scoped, cascade deletes`);

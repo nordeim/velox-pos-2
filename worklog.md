@@ -2161,3 +2161,56 @@ tokens). Docs lockstep: this worklog entry,
 remediation-plan-session-26 (the full ledger + record), session_47.md (the
 narration). `.env.example` verified against the working `.env` (COOKIE_SECURE is
 the documented optional escape hatch).
+
+## Session-27 — the Cashiers shift-ledger walk (F-125) (velox-pos-2)
+
+**Date:** 2026-10-29 · **Tree:** `b75fd88` received (the Session-26 push `f5b8a4e` + the
+operator's session_48 raw-log commit; the workspace SURVIVED this cycle — the first
+non-reset since Session-24: `.env`, db, node_modules, chromium all intact, no rebuild
+needed) · **Cycle:** the session_47 "Next" pointer's LEADING candidate — the Cashiers
+shift-ledger with-data walk (F-125) — + the operator's mobile-navigation priority check.
+
+**The received tree**: fast gate GREEN on arrival — lint 0 (1 documented warning) ·
+tsc · unit **151/151** (15 files). Static sweeps clean: the census 149 scanned / ZERO
+dead, secrets clean, the documented credential VERIFIES. Reference sweep **#21** (the
+twenty-first consecutive): every standing pin HOLDS byte-exact (the login card, the
+F-76 alert, the `/` landing + 220px sidebar + 8 links, the Dashboard date line + h3s
+16px/700, the Spanish families, the empty Reports, the D-1 mobile defect STABLE —
+no hamburger · static 220px · main 170px). **The clone's mobile drawer re-verified
+live** (REAL clicks, the V14 law): 288px dialog · 8 links · `enter` animation ·
+focus-to-close · scroll-lock · Escape restore · route-close · zero overflow. NO
+Tailwind v4 regression. Reference capture: `ref-mobile-pos-390-s27.png`.
+
+**The NEW depth — F-125, the "Turnos Recientes" four-way join**: the drift sweep's
+F-117 pin asserts only row VISIBILITY; surfaces.spec pins the empty states;
+registers-shifts.spec pins the dialogs. NOTHING pinned the ledger's DERIVATION — a
+sale landing on the wrong shift's row, a count drifting from its total, a polarity
+flip in the FIN ternary, or a mis-ordered list would ALL have passed green. The
+ANALYZE measured every leg CORRECT live (the fixture chain → the active row
+`["Store Owner", "Ledger Walk Register", "00:19 · 0m", "—", "$9.00 (1)", "Abierto"]`
+→ the exact-variance close → the closed row with FIN filled + duration recomputed +
+the chip family flipped). The cure: `with-data-cashiers-ledger-walk.spec.ts` (2
+tests) — the closed row (all SIX cells exact against API-derived expectations +
+the six Spanish headers) and the active polarity (Fin "—", `$0.00 (0)`, Abierto →
+the live join → the flip to Cerrado). ONE authoring catch: `/api/auth/me`'s
+publicUser OMITS fullName — the identity cell now derives from the ledger's OWN
+/api/shifts payload (the view's exact input; the law in AGENTS). FIVE specs now
+persist data (c < d < f < i < r — the ledger walk sorts FIRST, safe by
+construction); the walk SELF-CLEANS both shifts (exact-variance closes).
+
+**E2E 117 → 119 · desktop 103 → 105 · specs 12 → 13 · unit 151/15 (unmoved)** — the
+count lockstep in the SAME commit (docs-counts re-anchored + every live-tense site:
+README badge/scripts/testing, CLAUDE baseline + the five-walk ordering, AGENTS the
+Session-27 ledger contracts + the identity-cell mirror law, PAD **v1.25** + the spec
+map + the 13-spec file tree, SKILL **v2.23.0** + the Session-27 addendum).
+
+**Gate on the final tree**: lint 0 (1 documented warning) · tsc · unit **151/151** ·
+build · smoke **13/13** · e2e **119/119 × 2 consecutive full runs** (105 desktop +
+13 mobile + 1 setup; the post-run db verified: settings at seed defaults, ZERO open
+shifts, both walk shifts closed, 3 idempotent walk sales) · the three with-data
+harnesses **s16 13/13 · s17 19/19 · s18 20/20**. Evidence: screenshots **117–119**
+(the closed ledger row + headers; the active Abierto row; the mobile drawer at 390)
+via the committed self-provisioning `scripts/capture-s27-evidence.mjs` (captures
+verified DISTINCT; the self-clean verified live). Docs lockstep: this worklog entry,
+remediation-plan-session-27 (the full ledger + record), session_49.md (the
+narration). `.env.example` verified against the working `.env`.

@@ -276,7 +276,7 @@ No hosted CI exists; the local gate is the only gate.
   (the gate fails until you do; history blocks keep their historical numbers by design).
 - **E2E** (`tests/e2e/**`, Playwright, production standalone on :3100): user journeys through the
   real UI. Two projects — `chromium` (1440×900) and `mobile` (390×844; runs only
-  `mobile-navigation.spec.ts`). **Baseline: 117 tests.** Auth once via `auth.setup.ts` +
+  `mobile-navigation.spec.ts`). **Baseline: 119 tests.** Auth once via `auth.setup.ts` +
   storageState (the rate limiter is 10/IP/15 min); `auth.spec.ts` opts out with an
   empty storageState (the guest tier — its Session-26 password-reset round-trip pins
   the REAL one-shot token chain: register → verify → forgot → the reset page's done
@@ -285,16 +285,20 @@ No hosted CI exists; the local gate is the only gate.
   role=cashier filter keeps every empty-roster pin safe). The scratch db (`db/e2e.db`) is provisioned
   by the webServer command (kill-port → provision → boot) and never replaced while the server
   lives — replacing it after boot desynchronizes the login and page-render clients
-  (field-tested failure). Specs that PERSIST data sort last (`with-data-dashboard-walk.spec.ts`,
-  `with-data-fiscal-receipt-walk.spec.ts`, `with-data-inventory-csv.spec.ts`, and
-  `with-data-reports-walk.spec.ts` provision sales/products/settings — every empty-state pin
-  of what they create, surfaces.spec's empty-Reports "No data for this period" and
-  inventory.spec's "No products found"/"1 products registered" included, must run before
-  them; among the four walks the relative order is flexible — each derives its expected
-  values from the API at runtime (the fiscal walk's sales/products perturb no product- or
-  sale-derived pin) — but the names keep the reports walk LAST by convention (d < f < i < r).
-  The fiscal walk RESTORES the settings to seed defaults at its end (both shifts closed, the
-  toggle hidden, the RUC empty) — the self-clean law extended to the settings surface.
+  (field-tested failure). Specs that PERSIST data sort last (`with-data-cashiers-ledger-walk.spec.ts`,
+  `with-data-dashboard-walk.spec.ts`, `with-data-fiscal-receipt-walk.spec.ts`,
+  `with-data-inventory-csv.spec.ts`, and `with-data-reports-walk.spec.ts` provision
+  sales/products/shifts/settings — every empty-state pin of what they create,
+  surfaces.spec's empty-Reports "No data for this period" and inventory.spec's
+  "No products found"/"1 products registered" included, must run before them; among
+  the five walks the relative order is flexible — each derives its expected values
+  from the API at runtime (the ledger walk's shifts/sales perturb no downstream
+  walk's pins) — but the names keep the reports walk LAST by convention
+  (c < d < f < i < r). The ledger walk and the fiscal walk both CLOSE their
+  shifts with exact-variance counts, and the fiscal walk RESTORES the settings
+  to seed defaults at its end (the toggle hidden, the RUC empty) — the
+  self-clean law extended to both the shift and the settings surfaces ("No
+  active shift" stays true for the mobile project).
 - **Smoke** (`scripts/smoke-test.sh`, tier 3): boots the standalone artifact on :3210 with a
   FRESH `db/smoke.db` + a throwaway AUTH_SECRET, walks the 13-step API ladder (health, the 401
   wall, the SSR shell, the login cookie round-trip, the Zod 400, a CRUD create/DELETE, the
