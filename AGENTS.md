@@ -832,6 +832,34 @@ bite hardest here:
   sale refunded (the scratch db is per-run). A seventh persisting spec must
   be checked against ALL SIX before it lands.
 
+## The receipt PDF contracts (Session-29 pins — F-127)
+
+- **The receipt PDF is HAND-ROLLED — zero PDF dependencies**
+  (`src/lib/receipt-pdf.ts`): PDF 1.4, A4, Courier with WinAnsiEncoding, the
+  xref table with EXACT byte offsets, `%%EOF`. DETERMINISM is law (no
+  CreationDate — same input, identical bytes; unit-pinned). The charts'
+  hand-rolled-SVG doctrine extended to PDF; never add a PDF library.
+- **Formatting stays at the EDGE**: the seam's input carries PRE-FORMATTED
+  strings (`formatMoney`/`saleTimestamp` composed in the route — the
+  `/api/sales/[id]/receipt` shell); the seam is pure bytes. The input's
+  `fiscal` is the terminal receipt's exact conditional + template
+  (`{ruc|taxId}{biz ? ` · ${biz}` : ""}`, hidden when the flag is on).
+- **Text is latin-1 (WinAnsi)**: × = 0xD7, · = 0xB7, the Spanish diacritics
+  are single-byte. Characters outside latin-1 are a DOCUMENTED limitation
+  (mangled to '?', never a crash) — the es/en receipt domain the reference
+  itself ships.
+- **The no-SMTP posture is law**: the PDF endpoint IS the receipt's delivery
+  (download, archive, attach) — NEVER stub an email send; no transport
+  exists in this deployment story.
+- **The UI affordance stays OUTSIDE `.receipt-print`** with the other footer
+  buttons (they never print — F-115); the anchor rides Content-Disposition
+  for the filename (`<ticket>.pdf`). The e2e leg is the F-122 download-event
+  pattern: `waitForEvent("download")` → `suggestedFilename()` → the saved
+  file's bytes byte-identical to the API's.
+- **The ownership wall is the standard one**: the sale by
+  `findFirst({ where: { id, userId } })` → NotFoundError → 404; unauthenticated
+  → 401. The bogus-id probe and the no-cookie probe are both e2e-pinned.
+
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
 `src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px
@@ -864,7 +892,7 @@ drawer + backdrop `animate-in` (tw-animate-css), and Radix dialogs compute a liv
 
 ## Testing rules
 
-- Unit tests live at the pure seams (`tests/unit/**`, vitest, node env). The 15 existing files are
+- Unit tests live at the pure seams (`tests/unit/**`, vitest, node env). The 16 existing files are
   the seam registry + the docs-counts lockstep gate — new `src/lib` seams get a file; UI
   components don't get unit tests.
 - E2E (`tests/e2e/**`) runs against the PRODUCTION standalone build with its own scratch db

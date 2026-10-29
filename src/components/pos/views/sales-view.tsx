@@ -8,7 +8,7 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { Eye, Search } from "lucide-react";
+import { Download, Eye, Search } from "lucide-react";
 
 import {
   Dialog,
@@ -71,6 +71,21 @@ function SaleDetailDialog({ sale, onClose }: { sale: Sale | null; onClose: () =>
           </div>
         </div>
         <DialogFooter>
+          {/* Session-29 (F-127): the server-side receipt PDF — the anchor
+              rides Content-Disposition for the filename (T-000001.pdf) and
+              stays OUTSIDE .receipt-print with the other footer buttons
+              (they never print). The no-SMTP posture: the PDF endpoint IS
+              the receipt's delivery. */}
+          <Button variant="ghost" asChild className="glass-button rounded-xl border-0">
+            <a
+              href={`/api/sales/${sale.id}/receipt`}
+              download
+              aria-label={`Descargar PDF ${sale.ticket}`}
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+              PDF
+            </a>
+          </Button>
           <Button variant="ghost" onClick={onClose} className="glass-button rounded-xl border-0">
             Cerrar
           </Button>

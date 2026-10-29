@@ -38,6 +38,7 @@ No hosted CI exists; the local gate is the only gate.
 | Reports | `src/lib/reports.ts` | Period windows (7/14/30/90), `dailySeries`, `byMethod`, `categorySlices`. |
 | Inventory | `src/lib/inventory-status.ts` | `stockStatus`, `lowStockCount`, the CSV round-trip. |
 | Routes | `src/lib/router.ts` | The 8 reference paths + `viewFromPath` (unknown → null → the Spanish 404). |
+| Receipts PDF | `src/lib/receipt-pdf.ts` | The hand-rolled PDF 1.4 renderer (F-127) — zero PDF dependencies, WinAnsi latin-1, deterministic bytes; formatting stays at the edge (the route composes `formatMoney`/`saleTimestamp` and passes PRE-FORMATTED strings). |
 | Validation | `src/lib/validation.ts` | Every Zod contract (products, categories, registers, shifts, sales, settings, cashiers, auth). Strip mode; `"" → null` transforms for cleared relations. |
 | Store | `src/lib/store.ts` | THE Zustand store: collections + cart + chrome. Cart mutations delegate to the cart seam. |
 | API plumbing | `src/lib/server/http.ts` | `withUser`/`withUserParams` wrappers, the error→status mapper, `makeCollectionRoutes`/`makeItemRoutes` factories. Route files stay 3-line shells. |
@@ -270,13 +271,13 @@ No hosted CI exists; the local gate is the only gate.
 
 - **Unit** (`tests/unit/**`, vitest): only the pure seams. If you add a `src/lib` seam, add its
   file here — red → green (TDD) for new logic, regression tests for fixes. Expected baseline:
-  151 tests / 15 files. **`docs-counts.test.ts` is the lockstep gate** (Session-8, F-52): it
+  157 tests / 16 files. **`docs-counts.test.ts` is the lockstep gate** (Session-8, F-52): it
   LIVE-censuses the test/source tree and pins every live-tense count site in the docs to the
   constants — when a suite grows, update the constants AND every doc site in the SAME commit
   (the gate fails until you do; history blocks keep their historical numbers by design).
 - **E2E** (`tests/e2e/**`, Playwright, production standalone on :3100): user journeys through the
   real UI. Two projects — `chromium` (1440×900) and `mobile` (390×844; runs only
-  `mobile-navigation.spec.ts`). **Baseline: 123 tests.** Auth once via `auth.setup.ts` +
+  `mobile-navigation.spec.ts`). **Baseline: 124 tests.** Auth once via `auth.setup.ts` +
   storageState (the rate limiter is 10/IP/15 min); `auth.spec.ts` opts out with an
   empty storageState (the guest tier — its Session-26 password-reset round-trip pins
   the REAL one-shot token chain: register → verify → forgot → the reset page's done

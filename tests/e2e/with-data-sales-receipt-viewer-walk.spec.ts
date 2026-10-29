@@ -337,6 +337,60 @@ test("the search narrows by ticket, customer, and cashier — and the no-match s
   await search.fill("");
 });
 
+test("the receipt PDF endpoint renders the sale server-side (F-127 — the zero-dependency PDF)", async ({
+  page,
+}) => {
+  const live = await walkSale(page);
+  expect(live.status, "the PDF test rides the completed sale (before the refund test flips it)").toBe("completed");
+
+  // ---- The API leg: headers + bytes + the ownership-scoped 404 wall -------
+  const apiResp = await page.request.get(`/api/sales/${live.id}/receipt`);
+  expect(apiResp.status()).toBe(200);
+  expect(apiResp.headers()["content-type"]).toBe("application/pdf");
+  expect(apiResp.headers()["content-disposition"]).toBe(
+    `attachment; filename="${live.ticket}.pdf"`,
+  );
+  const apiBytes = Buffer.from(await apiResp.body());
+  const apiText = apiBytes.toString("latin1");
+  // The PDF 1.4 magic (the seam's unit-pinned contract, now wired end-to-end).
+  expect(apiText).toMatch(/^%PDF-1\.4/);
+  expect(apiText.endsWith("%%EOF\n")).toBe(true);
+  // The content family — the settings row (store name, footer) + the sale
+  // (ticket, the F-110 stamp form, the lines with latin-1 × 0xD7, the money).
+  expect(apiText).toContain("My Store");
+  expect(apiText).toContain(live.ticket);
+  expect(apiText).toContain("2 \xd7 Viewer Walk Coffee");
+  expect(apiText).toContain("$9.00");
+  expect(apiText).toContain("Cash / Change");
+  expect(apiText).toContain("Thank you for your purchase!");
+  // A bogus id never reaches the renderer — the 404 wall.
+  expect((await page.request.get("/api/sales/does-not-exist/receipt")).status()).toBe(404);
+
+  // ---- The UI leg: the "Descargar PDF" anchor triggers the download with
+  // the Content-Disposition filename, and the downloaded bytes are
+  // byte-identical to the API's (the F-122 download-event pattern). -------
+  await page.goto("/Sales");
+  const row = walkRow(page, live.ticket);
+  await row.waitFor({ state: "visible", timeout: 15_000 });
+  await page.getByRole("button", { name: `Ver ${live.ticket}` }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    dialog.getByRole("link", { name: `Descargar PDF ${live.ticket}` }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe(`${live.ticket}.pdf`);
+  const content = (await download.path()) as string;
+  const { readFileSync } = await import("node:fs");
+  const fileBytes = readFileSync(content);
+  expect(fileBytes.equals(apiBytes), "the downloaded file is the API's exact bytes").toBe(true);
+  // The anchor stays OUTSIDE .receipt-print — the footer never prints (F-115).
+  const receipt = dialog.locator(".receipt-print");
+  await expect(receipt.getByRole("link")).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Cerrar" }).click();
+  await expect(dialog).not.toBeVisible();
+});
+
 test("the refund round-trip flips the Estado chip (one-way) and the viewer opens on the refunded sale", async ({
   page,
 }) => {

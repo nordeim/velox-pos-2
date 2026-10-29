@@ -2281,3 +2281,69 @@ measured the byTicket/byCashier search arms live (the ANALYZE's lost probes).
 Docs lockstep: this worklog entry, remediation-plan-session-28 (the full ledger +
 record), session_51.md (the narration). `.env.example` verified key-for-key against
 the working `.env` (COOKIE_SECURE the documented optional escape hatch).
+
+## Session-29 — the receipt PDF superset build (F-127) (velox-pos-2)
+
+**Date:** 2026-10-29 · **Tree:** `31a103c` received (the Session-28 push `c0761de` + the
+operator's session_52 raw-log commit — exactly one file, +92). The workspace was RESET a
+FOURTH time (the whole environment: the repo, `/home/z/my-project/scripts/`, and `bin/`
+all gone) — fresh clone + the documented rebuild ladder, the audit helpers rebuilt from
+their plan-corpus/SKILL descriptions (the census, the scrypt credential checker, the
+with-dev-server bundle, the Appendix-A ssh shim), chromium-1243 restored.
+
+**The received tree**: fast gate GREEN on arrival — lint 0 (1 documented warning) · tsc
+· unit **151/151** (15 files) · the delta exactly `docs/session_52.md` · census **158
+scanned, ZERO dead** (the +2 = the s28 evidence script + the sales walk spec, as
+recorded) · the credential VERIFIES. Reference sweep **#23** (the twenty-third
+consecutive): every standing pin HOLDS byte-exact — and **Session-28's bare-table
+finding re-confirmed** (the reference's empty Turnos ledger: six headers, ZERO tbody
+rows, no "Sin turnos" copy, settled at 3.5s). The D-1 mobile defect STABLE. **The
+clone's mobile drawer re-verified live** (REAL clicks, the V14 law): 288px · 8 links ·
+`animation-name: enter` on the `[role=dialog]` element · focus-to-close · scroll-lock ·
+Escape restore · route-close · zero overflow. NO Tailwind v4 regression.
+
+**The cure — F-127, the receipt PDF superset** (the LAST standing session_47 candidate,
+deferred three times): the receipts existed only on-screen and in the browser's print
+dialog — no server-side artifact. The build (the codebase's own doctrines, no new
+dependency): a HAND-ROLLED PDF 1.4 renderer at a new pure seam
+(`src/lib/receipt-pdf.ts` — the charts' hand-rolled-SVG doctrine extended; WinAnsi
+latin-1 text; DETERMINISM as law, no CreationDate), unit-pinned TDD-first
+(`tests/unit/receipt-pdf.test.ts`, 6 tests: the magic, the xref byte-math — every
+offset points EXACTLY at its `N 0 obj`, the latin-1 content family, the PDF string
+escaping, the conditionals, determinism — the xref test itself needed one authoring
+fix: a 12-char slice compared against a 7-char expected, corrected to startsWith);
+the ownership-scoped route (`GET /api/sales/[id]/receipt` → `application/pdf` +
+Content-Disposition `<ticket>.pdf`; the settings row supplies the store name / fiscal
+block / footer; formatting composed at the edge); and the Sales viewer's "Descargar
+PDF" footer anchor (outside `.receipt-print` — F-115 untouched). **The "email" question
+decided**: no SMTP exists — the PDF endpoint IS the receipt's delivery; never stub a
+send (now law in AGENTS).
+
+**The verification**: the live probe (curl + PYPDF authoritative extraction — the full
+receipt content parses in a real PDF reader; the 404 wall on a bogus id; the 401 wall
+without a cookie; the self-clean closed at exact variance) — then the e2e leg (the
+F-122 download-event pattern, a 4th test in the sales walk placed before the refund
+test): the anchor's click → the download event → the suggested filename
+`T-000001.pdf` → the downloaded bytes BYTE-IDENTICAL to the API's — **first-run green**.
+
+**UNIT 151 → 157 (files 15 → 16) · E2E 123 → 124 (desktop 109 → 110) · ROUTE_FILES
+26 → 27** — the count lockstep in the SAME commit (docs-counts re-anchored + every
+live-tense site: README badges/scripts/testing + the API table's receipt row + the
+architecture table's PDF row, CLAUDE baseline + the seam table, AGENTS the Session-29
+PDF contracts + the no-SMTP law + the registry line at 16, PAD **v1.27** + the spec
+map + the revision block, SKILL **v2.25.0** + the addendum, vitest.config.ts's header).
+Note: two full `bun run test` invocations hung mid-run in the sandbox (the
+process-kill behavior); direct `bunx vitest run` runs clean — noted for future cycles.
+
+**Gate on the final tree**: lint 0 (1 documented warning) · tsc · unit **157/157**
+(16 files) · build · smoke **13/13** · e2e **124/124 × 2 consecutive full runs** (110
+desktop + 13 mobile + 1 setup; the post-run db verified: the settings at seed
+defaults, ZERO open shifts, 11 fixture sales, 1 refunded) · the three with-data
+harnesses **s16 13/13 · s17 19/19 · s18 20/20**. Evidence: screenshots **123–125**
+(the viewer with the Descargar PDF affordance; the receipt PDF rendered in the
+browser — the download event verified byte-identical first; the mobile drawer at 390)
+via the committed `scripts/capture-s29-evidence.mjs`, whose live log carries the pypdf
+authoritative extraction (the receipt content as text). s16's capture 82 re-commits
+INTENTIONALLY (the receipt viewer's new footer button); the other harness captures
+restored content-identical. `.env.example` verified key-for-key (COOKIE_SECURE the
+documented optional escape hatch).

@@ -81,8 +81,12 @@ const viewFiles = readdirSync(path.join(root, "src/components/pos/views")).filte
 // UNIT 151 = the Session-15 146 + the F-110 saleTimestamp seam's 3 its
 // (reports.test.ts 24→27) + the Session-21 F-118 store-race regressions
 // (store.test.ts — the shifts-collection bootstrap race, 2 its).
-const UNIT = 151;
-const UNIT_FILES = 15;
+// UNIT 157 = the Session-15/21/26 lineage 151 + the Session-29 F-127
+// receipt-pdf seam's 6 its (tests/unit/receipt-pdf.test.ts — the PDF 1.4
+// magic, the xref byte-math contract, the latin-1 content family, the PDF
+// string escaping, the cash/fiscal/footer conditionals, determinism).
+const UNIT = 157;
+const UNIT_FILES = 16;
 // E2E 113 = the Session-20/21 107 + the Session-22 F-119 with-data Reports
 // walk (the 2 tests of with-data-reports-walk.spec.ts — the exact wiring pin
 // over the API-derived stats/methods/chart-domain + the with-data containment
@@ -128,10 +132,15 @@ const UNIT_FILES = 15;
 // + the Session-28 F-126-a zero-shift bare-Turnos-ledger pin (1 test in
 // navigation.spec.ts — the empty-ledger shape; the pin lives in navigation
 // BY THE ORDERING LAW'S INVERSE: n < r, so it reads the zero-shift state
-// before registers-shifts.spec's shift lands and renders a row forever).
-const E2E = 123;
+// before registers-shifts.spec's shift lands and renders a row forever)
+// + the Session-29 F-127 receipt PDF test (1 test in the sales walk — the
+// API leg: 200 application/pdf + the %PDF magic + the latin-1 content
+// family + the bogus-id 404 wall; the UI leg: the "Descargar PDF" anchor
+// → the download event → the suggested filename <ticket>.pdf → the
+// downloaded bytes byte-identical to the API's).
+const E2E = 124;
 const E2E_SPECS = 14;
-const ROUTE_FILES = 26;
+const ROUTE_FILES = 27;
 const PRISMA_MODELS = 9;
 const VIEWS = 8;
 
@@ -209,8 +218,8 @@ describe("session-8 (F-52): the count-lockstep gate — every live-tense count s
   });
 
   it("the SKILL carries the live counts (header baselines, commands, data model, tiers)", () => {
-    expect(skillFlat).toContain(`Baselines at Session-28 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
-    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (109 desktop + 13 mobile + 1 setup)`);
+    expect(skillFlat).toContain(`Baselines at Session-29 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
+    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (110 desktop + 13 mobile + 1 setup)`);
     expect(skillFlat).toContain(`tests/unit/** (${UNIT})`);
     expect(skillFlat).toContain(`playwright (${E2E})`);
     expect(skillFlat).toContain(`${PRISMA_MODELS} models, user-scoped, cascade deletes`);

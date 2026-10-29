@@ -1,9 +1,9 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.26
+# VeloxPOS — Master Project Architecture Document (PAD) v1.27
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
 **Companion documents:** `README.md` (tour) · `AGENTS.md` (agent invariants) · `CLAUDE.md` (Claude conventions) · `docs/veloxpos-implementation-plan.md` (the measured reference spec)
-**Last Updated:** 2026-10-29 (Session-28)
+**Last Updated:** 2026-10-29 (Session-29)
 **Audience:** Senior engineers, tech leads, DevOps, onboarding engineers, and AI coding agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -25,10 +25,10 @@ reports, validation) underneath **server-gated thin routes**, a **single Zustand
 (lint → typecheck → unit → build → e2e) is the only gate — there is no hosted CI — so every
 guardrail is enforced by tooling that runs in this checkout.
 
-**Scale & baselines (verified 2026-10-27, Session-16 re-certification):** 9 Prisma models · 26 API
+**Scale & baselines (verified 2026-10-29, Session-29 re-certification):** 9 Prisma models · 27 API
 route files · 8 gated views (9 route spellings — the root `/` page is the
 terminal's reference-parity landing, Session-10 F-60)
-+ login/reset/404 · 151 unit tests (15 files) · 123 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 157 unit tests (16 files) · 124 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -250,7 +250,7 @@ Dependency rule: arrows point downward only. `src/lib` pure seams never import R
  │                           currency, router, validation, auth, chart-path, site, env-check,
  │                           db-path, db, store, api, utils) + server/ (http, auth, entities)
  ├ 📂 prisma               — schema.prisma (9 models) · seed.ts (owner + settings; --demo dataset)
- ├ 📂 tests/unit           — 15 vitest files (the seam registry + the docs-counts gate)
+ ├ 📂 tests/unit           — 16 vitest files (the seam registry + the docs-counts gate)
  ├ 📂 tests/e2e            — 14 spec files + auth.setup + kill-port + provisioning
  ├ 📂 docs                 — implementation plan, runbooks, Tailwind report, screenshots/
  └ ⚙️ next.config.ts · playwright.config.ts · vitest.config.ts · package.json · .env.example
@@ -294,12 +294,14 @@ auth-support pair — `VerificationToken` (6-digit OTP, 15-minute window) and
 lint → typecheck → unit → build → smoke → e2e
 ```
 
-1. **Unit (Vitest, 151/151):** the pure seams — money (cents math, formatting), cart (reducer,
+1. **Unit (Vitest, 157/157):** the pure seams — money (cents math, formatting), cart (reducer,
    totals, charge gate), shift (state machine, variance), reports (bucketing, shares),
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
-   matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
-   Baseline: 15 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 123/123):** production standalone on :3100, scratch db (`db/e2e.db`)
+   matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site,
+   receipt-pdf (the F-127 hand-rolled PDF: the magic, the xref byte-math, latin-1 content,
+   escaping, conditionals, determinism).
+   Baseline: 16 files. New seams arrive with their file; fixes arrive with regression tests.
+2. **E2E (Playwright, 124/124):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url
@@ -357,7 +359,12 @@ lint → typecheck → unit → build → smoke → e2e
    .receipt-print), the search's three arms (ticket || customer || cashier + the
    no-match "Sin ventas" row), and the refund round-trip (the one-way 400 guard,
    the idempotent same-status re-PATCH, the Reembolsada chip flip on the re-mounted
-   ledger, the viewer opening on the refunded sale); SIX specs now persist data —
+   ledger, the viewer opening on the refunded sale) — extended in Session-29 with
+   the receipt-PDF leg: the API leg (200 application/pdf + the Content-Disposition
+   `<ticket>.pdf` + the %PDF magic + the latin-1 content family + the bogus-id
+   404 wall) and the UI leg (the "Descargar PDF" anchor → the download event →
+   the suggested filename → the downloaded bytes byte-identical to the API's);
+   SIX specs now persist data —
    c < d < f < i < r < s, the sales walk LAST; its shift self-closes at exact
    variance).
 3. **Field-tested e2e doctrine:** auth waits for the hydration-gated submit button (`toBeEnabled`)
@@ -1775,3 +1782,59 @@ desktop + 13 mobile + 1 setup). Screenshots 120–122 + the D-1-shape reference
 capture (`ref-mobile-pos-390-s28.png`). Docs lockstep: this revision, the
 worklog's Session-28 entry, `docs/remediation-plan-session-28.md`, and
 `docs/session_51.md` (the narration).
+
+
+## Revision History — Session-29 (v1.27, 2026-10-29)
+
+**The cycle:** the FOURTH full sandbox reset (the whole environment — the repo,
+`scripts/`, and `bin/` all gone); fresh clone + the documented rebuild ladder,
+the audit helpers rebuilt from their plan-corpus descriptions (census, the
+scrypt credential checker, the with-dev-server bundle, the Appendix-A ssh
+shim). The reference sweep #23 (the twenty-third consecutive) held every
+standing pin byte-exact — the login card, the F-76 alert, the landing + 220px
+sidebar + 8 links, the Dashboard date line + both 16px/700 h3s, the Spanish
+families, the still-empty Reports, the STABLE D-1 mobile defect — and
+re-confirmed Session-28's bare-table finding on the reference's empty Turnos
+ledger. The clone's mobile drawer re-verified live with REAL clicks (288px
+dialog, 8 links, `animation-name: enter` on the `[role=dialog]` element, focus
+management, scroll-lock, Escape restore, route-close, zero overflow): NO
+Tailwind v4 regression.
+
+**The cure — F-127, the receipt PDF superset** (the LAST standing session_47
+candidate, deferred three times): the receipts existed only on-screen and in
+the browser's print dialog; no server-side artifact an integration could
+fetch, archive, or attach. The build: a HAND-ROLLED PDF 1.4 renderer at a new
+pure seam (`src/lib/receipt-pdf.ts` — ZERO PDF dependencies, the charts'
+hand-rolled-SVG doctrine extended; WinAnsi latin-1 text; deterministic bytes —
+no CreationDate), unit-pinned TDD-first at `tests/unit/receipt-pdf.test.ts`
+(6 tests: the magic, the xref byte-math contract — every offset points
+EXACTLY at its `N 0 obj`, the latin-1 content family, the PDF string
+escaping, the cash/fiscal/footer conditionals, determinism), the ownership-
+scoped route (`GET /api/sales/[id]/receipt` → `application/pdf` +
+Content-Disposition `<ticket>.pdf`; the settings row supplies the store
+name / fiscal block / footer; formatting composed at the edge), and the
+Sales viewer's "Descargar PDF" footer anchor (outside `.receipt-print` —
+F-115 untouched). The "email" question decided: no SMTP exists — the PDF
+endpoint IS the receipt's delivery; never stub a send (now law in AGENTS).
+
+**The verification**: the live probe (curl + pypdf authoritative extraction)
+— the full receipt content parses correctly in a real PDF reader; the 404
+wall (bogus id) and the 401 wall (no cookie) both hold; the self-clean closed
+the walk shift at exact variance. The e2e leg (the F-122 download-event
+pattern) landed FIRST-RUN green: the anchor's click → the download event →
+the suggested filename `T-000001.pdf` → the downloaded bytes byte-identical
+to the API's.
+
+**UNIT 151 → 157 (files 15 → 16) · E2E 123 → 124 (desktop 109 → 110) ·
+ROUTE_FILES 26 → 27** — the count-lockstep constants AND every live-tense
+doc site in the SAME commit (README badge/scripts/testing + the API table +
+the architecture table's PDF row, CLAUDE baseline + the seam table, AGENTS
+the Session-29 PDF contracts + the no-SMTP law, PAD v1.27 + the spec map,
+SKILL v2.25.0 with the Session-29 addendum, vitest.config.ts's header).
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **157/157**
+(16 files) · build green · smoke **13/13** · e2e **124/124** (110 desktop +
+13 mobile + 1 setup). Screenshots 123–125 + the D-1-shape reference capture
+(`ref-mobile-pos-390-s29.png`). Docs lockstep: this revision, the worklog's
+Session-29 entry, `docs/remediation-plan-session-29.md`, and
+`docs/session_53.md` (the narration).

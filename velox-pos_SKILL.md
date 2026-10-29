@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.24.0
+version: 2.25.0
 last_updated: 2026-10-29
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-28 lock: unit **151/151** (15 files) · e2e **123/123**
-(109 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-29 lock: unit **157/157** (16 files) · e2e **124/124**
+(110 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -66,9 +66,9 @@ removed `quill`, `web-vitals`, `tailwindcss-animate`, `@radix-ui/react-radio-gro
 bun run dev                    # :3000 (output teed to dev.log)
 bun run lint                   # eslint flat config — 0 errors, 1 documented warning
 bun run typecheck              # tsc --noEmit — strict
-bun run test                   # vitest — tests/unit/** (151)
+bun run test                   # vitest — tests/unit/** (157)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               playwright (123) — NEEDS the build first (:3100)
+bun run test:e2e               playwright (124) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -429,11 +429,11 @@ SUPERSET instead:
 
 ## 12. Testing strategy (three tiers)
 
-1. **Unit (Vitest, 151/151, 15 files)** — the pure seams only (plus the docs-counts
+1. **Unit (Vitest, 157/157, 16 files)** — the pure seams only (plus the docs-counts
    lockstep gate; store.test.ts pins the F-118 shifts-race at the store seam). New
    `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 123/123)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 124/124)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -502,7 +502,11 @@ SUPERSET instead:
    (ticket || customer || cashier + the no-match "Sin ventas" row), and the
    refund round-trip (the one-way 400 guard, the idempotent same-status
    re-PATCH, the Reembolsada chip flip, the viewer opening on the refunded
-   sale). SIX specs now persist data — the ledger walk sorts FIRST, the sales
+   sale) — extended in Session-29 with the receipt-PDF leg (the API leg:
+   200 application/pdf + the Content-Disposition filename + the %PDF magic
+   + the latin-1 content family + the bogus-id 404 wall; the UI leg: the
+   "Descargar PDF" anchor → the download event → the byte-identical file).
+   SIX specs now persist data — the ledger walk sorts FIRST, the sales
    walk LAST (c < d < f < i < r < s).
 3. **Live re-measurement (agent-browser)** — computed styles beat screenshots;
    re-measure the reference before any design-system change and record the
@@ -1884,3 +1888,44 @@ every live-tense site (the "Session-27 lock" literal becomes the **Session-28
 lock**), PAD v1.26, AGENTS (the Session-28 Sales contracts + the six-specs
 ordering law), CLAUDE, README, the worklog entry,
 `docs/remediation-plan-session-28.md`, `docs/session_51.md`. Skill v2.24.0.
+
+
+### Session-29 addendum (v2.25.0) — the receipt PDF superset build (F-127)
+
+The LAST standing session_47 candidate landed (deferred three times): the
+receipts existed only on-screen and in the browser's print dialog — no
+server-side artifact. The build follows the codebase's own doctrines: a
+HAND-ROLLED PDF 1.4 renderer at a new pure seam (`src/lib/receipt-pdf.ts`)
+— ZERO PDF dependencies (the charts' hand-rolled-SVG precedent extended),
+WinAnsi latin-1 text (× 0xD7, · 0xB7, the Spanish diacritics single-byte;
+outside-latin-1 mangled to '?', never a crash — a documented limitation),
+and DETERMINISM as law (no CreationDate: same input, identical bytes).
+Formatting stays at the edge — the `/api/sales/[id]/receipt` route composes
+`formatMoney`/`saleTimestamp` and passes PRE-FORMATTED strings; the seam is
+pure bytes. The unit contract (TDD, `tests/unit/receipt-pdf.test.ts`, 6
+tests): the %PDF magic, the xref byte-math (every offset points EXACTLY at
+its `N 0 obj`; startxref at the xref itself), the latin-1 content family,
+the PDF string escaping, the conditionals, determinism.
+
+The live verification: curl + PYPDF authoritative extraction (the full
+receipt content parses in a real PDF reader) + the 404/401 walls + the
+self-clean. The e2e leg (the F-122 download-event pattern, a 4th test in
+the Session-28 sales walk, placed before the refund test): the
+"Descargar PDF" anchor → `waitForEvent("download")` → the suggested
+filename `T-000001.pdf` → the downloaded bytes BYTE-IDENTICAL to the
+API's — first-run green.
+
+The "email" question decided (the no-SMTP posture): the PDF endpoint IS
+the receipt's delivery — never stub a send. Now law in AGENTS.
+
+UNIT 151 → 157 (files 15 → 16) · E2E 123 → 124 (desktop 109 → 110) ·
+ROUTE_FILES 26 → 27 — every live-tense site in the same commit (the
+SKILL header baselines, commands, §12 tiers; README's badges + the API
+table + the architecture table's PDF row; CLAUDE's baseline + the seam
+table; AGENTS' registry line + the Session-29 contracts; PAD v1.27;
+vitest.config.ts's header).
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **157/157**
+(16 files) · build green · smoke **13/13** · e2e **124/124** (110 desktop +
+13 mobile + 1 setup). Screenshots 123–125. Docs lockstep: the worklog entry,
+`docs/remediation-plan-session-29.md`, `docs/session_53.md`. Skill v2.25.0.
