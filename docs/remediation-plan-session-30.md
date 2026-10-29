@@ -218,4 +218,12 @@ minted sale stays (the one-way refund guard posture — no deletes).
   the evidence flow should mirror the e2e flow, one sale one dialog).
 - **`.env.example` verified** key-for-key against the working `.env`
   (COOKIE_SECURE the documented optional escape hatch — the only delta).
-- **The ssh push**: *(pending — appended after the push)*
+- **The ssh push**: the Appendix-A shim rebuilt (the fifth reset took `bin/`
+  with everything else) · paramiko 5.1.0 installed · the operator key to
+  /tmp (0600) with the fingerprint matching the oracle
+  (`SHA256:4FSV1Prot+…` ed25519) · the wrapper's dry-run GREEN (remote
+  `e8c8666` → `218e7f0`) · the real push **`218e7f0`** with the wrapper's
+  own remote verification (`refs/heads/main @ 218e7f0 == local HEAD`) ·
+  the HTTPS `ls-remote` dual-channel match · the operator key shredded
+  (`shred -u -z`, the file gone) after the wrapper had already shredded
+  its temp copy.
