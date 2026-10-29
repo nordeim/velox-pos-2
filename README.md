@@ -99,7 +99,7 @@ register, a closed shift, and a week of sales).
 | `bun run lint` | ESLint (flat config) |
 | `bun run typecheck` | `tsc --noEmit` (strict) |
 | `bun run test` | Vitest unit suite — the pure domain seams (157 tests / 16 files) |
-| `bun run test:e2e` | Playwright suite against the production standalone build (124 tests; desktop 1440×900 + mobile 390×844 projects, plus the four-width 390/768/1024/1440 drift-sweep battery, the with-data Cashiers ledger + Sales receipt-viewer (with the F-127 receipt-PDF leg) + Reports + Dashboard + Inventory-CSV + fiscal-receipt walks, and the password-reset round-trip) |
+| `bun run test:e2e` | Playwright suite against the production standalone build (124 tests; desktop 1440×900 + mobile 390×844 projects, plus the four-width 390/768/1024/1440 drift-sweep battery, the with-data Cashiers ledger + Sales receipt-viewer (with the F-127 receipt-PDF leg) + Reports + Dashboard + Inventory-CSV + fiscal-receipt walks, the password-reset round-trip, and the terminal checkout's own F-128 Download-PDF anchor) |
 | `bun run smoke` | The 13-step API smoke ladder against the standalone artifact on :3210 (own scratch `db/smoke.db`; health → auth wall → Zod seam → CRUD → rate limit → boot gate → artifact hygiene) |
 | `bun run gate` | The full pre-push gate: `lint → typecheck → test → build → smoke → e2e` |
 | `bun run db:push` | `prisma db push` against `db/custom.db` |

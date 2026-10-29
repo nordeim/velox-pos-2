@@ -860,6 +860,30 @@ bite hardest here:
   `findFirst({ where: { id, userId } })` → NotFoundError → 404; unauthenticated
   → 401. The bogus-id probe and the no-cookie probe are both e2e-pinned.
 
+## The terminal receipt PDF contracts (Session-30 pins — F-128)
+
+- **Every receipt surface carries the PDF affordance**: the Sales viewer's
+  "Descargar PDF" (Spanish, F-127) and the post-checkout terminal dialog's
+  "Download PDF {ticket}" (ENGLISH — this surface's own family: "Close" /
+  "Print receipt"; each surface is internally consistent, never mixed). The
+  anchor is `Button asChild` + the lucide `Download` icon + the visible "PDF"
+  label, placed FIRST in the footer.
+- **The extend-not-mint law (the pin-collision lesson)**: the terminal
+  spec's checkout test is the ONLY place the terminal anchor is pinned — a
+  NEW test doing its own checkout would mint T-000002 and break the
+  stock-decrement pin (Checkout Juice 39) plus the dashboard chart pins
+  (they measure the suite's real sales). EXTEND the existing checkout test;
+  do not add sale-minting tests to `terminal.spec.ts` without re-deriving
+  every downstream count pin.
+- **The outside-wrapper pin is now on BOTH receipt surfaces**: the anchor
+  stays outside `.receipt-print` (F-115) — pinned in the terminal checkout
+  test (`receipt.locator(".receipt-print").getByRole("link")` → 0) exactly
+  as in the sales walk.
+- **The byte-identity leg rides the anchor's own href** (not a re-derived
+  URL): read `getAttribute("href")` from the pinned anchor, `page.request.get`
+  it, and compare with the downloaded file's bytes — the renderer's
+  determinism makes them identical (F-127's law, verified end-to-end).
+
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
 `src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px

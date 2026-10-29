@@ -173,6 +173,33 @@ test.describe.serial("terminal checkout", () => {
       .toBe("rgb(0, 0, 0)");
     await page.emulateMedia({ media: null });
 
+    // F-128 (Session-30): the receipt dialog carries its own Download PDF
+    // anchor — the F-127 endpoint surfaced on the surface where the receipt
+    // is BORN (the post-checkout dialog), not just the Sales viewer. The
+    // copy is ENGLISH here ("Close" / "Print receipt" — this surface's
+    // family; the Sales viewer's Spanish "Descargar PDF" is that surface's).
+    const pdfAnchor = receipt.getByRole("link", { name: "Download PDF T-000001" });
+    await expect(pdfAnchor).toBeVisible();
+    // The anchor stays OUTSIDE .receipt-print — the footer never prints
+    // (F-115's law, now pinned on the terminal surface too).
+    await expect(receipt.locator(".receipt-print").getByRole("link")).toHaveCount(0);
+
+    // The download event (the F-122/F-127 pattern): the click delivers the
+    // server-rendered PDF with the Content-Disposition filename…
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      pdfAnchor.click(),
+    ]);
+    expect(download.suggestedFilename()).toBe("T-000001.pdf");
+    // …and the downloaded bytes are the API's EXACT bytes (the renderer's
+    // determinism, verified end-to-end through the anchor's own href).
+    const href = await pdfAnchor.getAttribute("href");
+    const apiResp = await page.request.get(href as string);
+    expect(apiResp.status()).toBe(200);
+    const { readFileSync } = await import("node:fs");
+    const downloaded = readFileSync((await download.path()) as string);
+    expect(downloaded.equals(Buffer.from(await apiResp.body())), "the anchor delivers the API's exact bytes").toBe(true);
+
     await receipt.getByRole("button", { name: "Close", exact: true }).first().click();
 
     // The cart resets after checkout.

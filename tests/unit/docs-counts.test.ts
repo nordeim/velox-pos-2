@@ -137,7 +137,12 @@ const UNIT_FILES = 16;
 // API leg: 200 application/pdf + the %PDF magic + the latin-1 content
 // family + the bogus-id 404 wall; the UI leg: the "Descargar PDF" anchor
 // → the download event → the suggested filename <ticket>.pdf → the
-// downloaded bytes byte-identical to the API's).
+// downloaded bytes byte-identical to the API's)
+// + the Session-30 F-128 legs EXTEND the terminal checkout test (no count
+// change): the post-checkout receipt dialog's own "Download PDF" anchor —
+// visible + outside .receipt-print + the download event + the suggested
+// filename T-000001.pdf + the downloaded bytes byte-identical to the
+// API's through the anchor's own href.
 const E2E = 124;
 const E2E_SPECS = 14;
 const ROUTE_FILES = 27;
@@ -218,7 +223,7 @@ describe("session-8 (F-52): the count-lockstep gate — every live-tense count s
   });
 
   it("the SKILL carries the live counts (header baselines, commands, data model, tiers)", () => {
-    expect(skillFlat).toContain(`Baselines at Session-29 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
+    expect(skillFlat).toContain(`Baselines at Session-30 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
     expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (110 desktop + 13 mobile + 1 setup)`);
     expect(skillFlat).toContain(`tests/unit/** (${UNIT})`);
     expect(skillFlat).toContain(`playwright (${E2E})`);

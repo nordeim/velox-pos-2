@@ -205,7 +205,11 @@ No hosted CI exists; the local gate is the only gate.
   with the footer buttons OUTSIDE (the pre-fix Sales viewer's Imprimir printed a
   blank page). The pins are print-media emulation (`emulateMedia({ media:
   "print" })` + polled computed colors) — never weaken the wrapper or the
-  descendant color rule.
+  descendant color rule. Both receipt surfaces also carry the PDF anchor in
+  that outside-the-wrapper footer (Session-30, F-128: the terminal dialog's
+  English "Download PDF {ticket}" beside Close/Print receipt; the Sales
+  viewer's Spanish "Descargar PDF" — each surface internally consistent;
+  both e2e-pinned with the download-event + byte-identity legs).
 - **The chart internals are TWO measured contracts** (Session-14, F-95..F-106,
   e2e-pinned — do not restyle the charts from memory): the Dashboard chart is
   the indigo-500 `#6366f1` 2.5px SMOOTH line (`smoothPath` in

@@ -2347,3 +2347,65 @@ authoritative extraction (the receipt content as text). s16's capture 82 re-comm
 INTENTIONALLY (the receipt viewer's new footer button); the other harness captures
 restored content-identical. `.env.example` verified key-for-key (COOKIE_SECURE the
 documented optional escape hatch).
+
+## Session-30 — the terminal receipt PDF affordance (F-128) (velox-pos-2)
+
+**Date:** 2026-10-30 · **Tree:** `e8c8666` received (the Session-29 push `535385a` + the
+operator's session_54 raw-log commit — exactly one file, +49). The workspace was RESET a
+FIFTH time (the repo, `/home/z/my-project/scripts/`, and `bin/` all gone) — fresh clone +
+the documented rebuild ladder, the audit helpers rebuilt from their plan-corpus/SKILL
+descriptions (the census with its S28/S29 semantics — 156 scanned, ZERO dead, the dep
+report exactly the documented trio; the scrypt credential checker — VERIFIES; the
+with-dev-server bundle), chromium-1243 restored.
+
+**The received tree**: fast gate GREEN on arrival — lint 0 (1 documented warning) · tsc ·
+unit **157/157** (16 files) · the delta exactly `docs/session_54.md` · secrets only in
+the documented family. Reference sweep **#24** (the twenty-fourth consecutive): every
+standing pin HOLDS byte-exact — the login card, the F-76 alert (`rgba(254,242,242,0.7)`
++ red-700 `rgb(185,28,28)`), the landing (220px sidebar, 8 links), the Dashboard date
+line + both 16px/700 h3s, the Spanish families (incl. "Turnos Recientes" **H3** 16px/700),
+the S28 bare-table finding re-confirmed a THIRD time (six headers, ZERO tbody rows), Reports
+still empty (2×), the D-1 mobile defect stable on both routes. **The clone's mobile
+drawer re-verified live** (REAL clicks, the V14 law): 288px · 8 links · `enter` on the
+`[role=dialog]` element · scroll-lock · focus-to-close · Escape restore · route-close ·
+zero overflow — NO Tailwind v4 regression (one probe-script paren bug corrected + re-run;
+the S29 lesson's exact class).
+
+**The cure — F-128, the terminal receipt dialog's own PDF affordance** (the session_53
+pointer's leading candidate, deliberately untouched in S29): the PDF delivery story
+completes — every receipt surface carries the download anchor. The post-checkout terminal
+dialog gets the field-tested F-127 pattern (`Button asChild` + the lucide `Download` icon
++ the visible "PDF" label, FIRST in the footer, OUTSIDE `.receipt-print` — F-115), in
+ENGLISH copy ("Download PDF {ticket}") matching its surface's own family ("Close" /
+"Print receipt"); the Sales viewer's Spanish twin untouched. The F-127 stack (route, seam,
+renderer) serves the anchor as-is — zero changes below the UI. **The extend-not-mint law**
+(this cycle's pin-collision lesson, now in AGENTS): the legs EXTEND the terminal checkout
+test — a new sale-minting test would break the stock-39 pin + the dashboard chart pins.
+
+**TDD**: the e2e legs RED first against the pre-fix build (the anchor's toBeVisible
+timing out), then the two-file src change, then GREEN — all 12 terminal tests first-run
+(the F-122/F-127 download-event pattern: `T-000001.pdf` + the downloaded bytes
+byte-identical to the API's through the anchor's own href).
+
+**NO COUNTS MOVE** (unit 157/16 files · e2e 124 · specs 14 · ROUTE_FILES 27 — the legs
+extend an existing test by design); the lock literal becomes the **Session-30 lock**
+(docs-counts + the SKILL header, same commit). Narrative sites: AGENTS' Session-30
+contracts, README's e2e row, CLAUDE's receipt-print paragraph, PAD **v1.28** + the spec
+map + the revision block, SKILL **v2.26.0** + the addendum.
+
+**Gate on the final tree**: lint 0 (1 documented warning) · tsc · unit **157/157**
+(16 files) · build · smoke **13/13** · e2e **124/124 × 2 consecutive full runs** (110
+desktop + 13 mobile + 1 setup) · the three with-data harnesses **s16 13/13 · s17 19/19 ·
+s18 20/20** (captures restored content-identical — no intentional changes; the terminal
+dialog is not a harness surface). The post-run db verified (seed defaults, ZERO open
+shifts). Evidence: screenshots **126–128** via the committed
+`scripts/capture-s30-evidence.mjs` — 126 the post-checkout dialog with the affordance
+(glass-button `rgba(28,31,52,0.85)`), 127 the anchor-delivered PDF rendered in the
+browser (the download verified byte-identical FIRST; the pypdf extraction in the live
+log carries the live **Cash / Change $5.00 / $0.50** row — a change-generating sale,
+richer than S29's exact-payment fixture), 128 the mobile drawer at 390 — plus the
+D-1-shape reference capture `ref-mobile-pos-390-s30.png`. `.env.example` verified
+key-for-key (COOKIE_SECURE the documented optional escape hatch). Next-cycle candidates:
+a Settings-driven PDF-theme pass (the branding colors reaching the renderer), the
+Reports surface when the reference finally carries data, or whatever the next operator
+log names.

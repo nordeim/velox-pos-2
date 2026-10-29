@@ -28,7 +28,7 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-29 lock: unit **157/157** (16 files) · e2e **124/124**
+Baselines at Session-30 lock: unit **157/157** (16 files) · e2e **124/124**
 (110 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
@@ -1929,3 +1929,41 @@ vitest.config.ts's header).
 (16 files) · build green · smoke **13/13** · e2e **124/124** (110 desktop +
 13 mobile + 1 setup). Screenshots 123–125. Docs lockstep: the worklog entry,
 `docs/remediation-plan-session-29.md`, `docs/session_53.md`. Skill v2.25.0.
+
+### Session-30 addendum (v2.26.0) — the terminal receipt PDF affordance (F-128)
+
+The PDF delivery story completes: every receipt surface now carries the
+download anchor. The post-checkout terminal dialog (the surface where a
+receipt is BORN) gets the field-tested F-127 pattern — `Button asChild` +
+the lucide `Download` icon + the visible "PDF" label, FIRST in the footer,
+OUTSIDE `.receipt-print` (F-115). The copy is ENGLISH on this surface
+("Download PDF {ticket}" beside "Close" / "Print receipt") — each surface
+internally consistent; the Sales viewer's Spanish "Descargar PDF" twin is
+that surface's. The F-127 stack (route, seam, renderer) serves the anchor
+as-is — zero changes below the UI.
+
+The cycle's lesson — **the extend-not-mint law**: the pin-collision survey
+found that a NEW terminal test doing its own checkout would mint T-000002
+and break the stock-decrement pin (Checkout Juice 39) plus the dashboard
+chart pins (they measure the suite's real sales). The F-128 legs therefore
+EXTEND the existing checkout test (the receipt dialog is already open with
+T-000001): the anchor visible · outside `.receipt-print` · the download
+event · the suggested filename `T-000001.pdf` · the downloaded bytes
+byte-identical to the API's through the anchor's OWN href
+(`getAttribute("href")` → `page.request.get` → compare). TDD-first: RED
+against the pre-fix build (the anchor's toBeVisible timing out), then the
+two-file src change, then GREEN — all 12 terminal tests first-run.
+
+**NO COUNTS MOVE** (unit 157 / 16 files, e2e 124, ROUTE_FILES 27 — the
+legs extend an existing test by design); the lock literal becomes the
+**Session-30 lock**. The reference sweep #24: every standing pin HOLDS
+byte-exact (the twenty-fourth consecutive), the S28 bare-table finding
+re-confirmed a third time, the D-1 mobile defect stable; the clone's
+mobile drawer re-verified live with REAL clicks (288px · 8 links · `enter`
+· scroll-lock · focus-close · Escape-restore · route-close · zero
+overflow) — no Tailwind v4 regression.
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **157/157**
+(16 files) · build green · smoke **13/13** · e2e **124/124** (110 desktop +
+13 mobile + 1 setup). Screenshots 126–128. Docs lockstep: the worklog entry,
+`docs/remediation-plan-session-30.md`, `docs/session_55.md`. Skill v2.26.0.

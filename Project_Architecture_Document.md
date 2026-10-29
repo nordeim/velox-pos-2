@@ -1,4 +1,4 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.27
+# VeloxPOS — Master Project Architecture Document (PAD) v1.28
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
@@ -312,7 +312,7 @@ lint → typecheck → unit → build → smoke → e2e
    `navigation` (sidebar order/activation/collapse/persistence + the Session-28 zero-shift bare-Turnos-ledger pin — it lives here BY THE ORDERING LAW'S INVERSE: n < r, so it reads the zero-shift state before registers-shifts' shift lands), `mobile-navigation` (the 13
    drawer pins — including the Session-3 focus-trap/restore and md-growth auto-close),
    `inventory` (CRUD + search + CSV-adjacent flows), `registers-shifts` (the
-   lifecycle), `terminal` (cart math, cash checkout + change, ticket, receipt, stock decrement),
+   lifecycle), `terminal` (cart math, cash checkout + change, ticket, receipt, stock decrement + the Session-30 F-128 receipt-PDF legs: the post-checkout dialog's own "Download PDF" anchor — outside .receipt-print, the download event, the suggested filename, the downloaded bytes byte-identical to the API's through the anchor's own href — extending the checkout test, no count change by the extend-not-mint law),
    `surfaces` (Sales/Cashiers/Reports/Settings/404/health + the dialog-animation and
    cart-md-geometry parity pins), `viewport-drift-sweep` (the Session-20 tier, extended
    Session-21: the 8 routes × 4 widths zero-overflow battery + the chrome-switch contract
@@ -1838,3 +1838,38 @@ SKILL v2.25.0 with the Session-29 addendum, vitest.config.ts's header).
 (`ref-mobile-pos-390-s29.png`). Docs lockstep: this revision, the worklog's
 Session-29 entry, `docs/remediation-plan-session-29.md`, and
 `docs/session_53.md` (the narration).
+
+## Revision History — Session-30 (v1.28, 2026-10-30)
+
+**F-128 — the terminal receipt dialog's own PDF affordance** (the session_53
+pointer's leading candidate, deliberately untouched in Session-29): since
+F-127 the receipt PDF had exactly ONE UI entry point — the Sales viewer's
+"Descargar PDF". The surface where a receipt is BORN — the post-checkout
+terminal dialog — offered only Close and Print receipt. The cure is the
+field-tested anchor pattern on the terminal surface: `Button asChild` + the
+lucide `Download` icon + the visible "PDF" label, placed FIRST in the
+footer, ENGLISH copy ("Download PDF {ticket}") matching that surface's own
+family ("Close" / "Print receipt" — each surface internally consistent; the
+Sales viewer's Spanish twin untouched). The F-127 stack (route, seam,
+renderer) serves this surface as-is — zero route/seam/renderer changes.
+
+**The extend-not-mint law (this cycle's pin-collision lesson, now in
+AGENTS):** the F-128 legs EXTEND the existing terminal checkout test rather
+than minting a new one — a second checkout in a new test would mint T-000002
+and break the stock-decrement pin (Checkout Juice 39) plus the dashboard
+chart pins (they measure the suite's real sales). The TDD ledger: the e2e
+legs written first and run RED against the pre-fix build (the anchor's
+toBeVisible timing out), then the two-file src change (the lucide import +
+the footer anchor), then GREEN — all 12 terminal tests first-run.
+
+**NO COUNTS MOVE** — unit 157 (16 files), e2e 124 (14 specs), ROUTE_FILES
+27: the legs extend an existing test by design. The lock literal moves
+"Session-29 lock" → **"Session-30 lock"** (docs-counts + the SKILL header,
+same commit) — the baseline re-verified.
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **157/157**
+(16 files) · build green · smoke **13/13** · e2e **124/124** (110 desktop +
+13 mobile + 1 setup). Screenshots 126–128 + the D-1-shape reference capture
+(`ref-mobile-pos-390-s30.png`). Docs lockstep: this revision, the worklog's
+Session-30 entry, `docs/remediation-plan-session-30.md`, and
+`docs/session_55.md` (the narration).

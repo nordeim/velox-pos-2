@@ -8,7 +8,7 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { CircleCheck, Minus, Monitor, Plus, ScanLine, ShoppingCart, Trash2 } from "lucide-react";
+import { CircleCheck, Download, Minus, Monitor, Plus, ScanLine, ShoppingCart, Trash2 } from "lucide-react";
 
 import {
   Dialog,
@@ -264,6 +264,16 @@ function ReceiptDialog({ sale, onClose }: { sale: Sale | null; onClose: () => vo
           <p className="mt-3 text-center text-sm text-white/60">{settings?.receiptFooter}</p>
         </div>
         <DialogFooter>
+          {/* F-128 (Session-30): the receipt's own PDF affordance — the F-127
+              endpoint surfaced on the post-checkout surface (the Sales viewer
+              has its Spanish twin). Outside .receipt-print with the other
+              footer controls — buttons never print (the F-115 law). */}
+          <Button variant="ghost" asChild className="glass-button rounded-xl border-0">
+            <a href={`/api/sales/${sale.id}/receipt`} download aria-label={`Download PDF ${sale.ticket}`}>
+              <Download className="h-4 w-4" aria-hidden="true" />
+              PDF
+            </a>
+          </Button>
           <Button variant="ghost" onClick={onClose} className="glass-button rounded-xl border-0">
             Close
           </Button>
