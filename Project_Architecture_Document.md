@@ -1,9 +1,9 @@
-# VeloxPOS — Master Project Architecture Document (PAD) v1.25
+# VeloxPOS — Master Project Architecture Document (PAD) v1.26
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION BLUEPRINT
 **Companion documents:** `README.md` (tour) · `AGENTS.md` (agent invariants) · `CLAUDE.md` (Claude conventions) · `docs/veloxpos-implementation-plan.md` (the measured reference spec)
-**Last Updated:** 2026-10-28 (Session-25)
+**Last Updated:** 2026-10-29 (Session-28)
 **Audience:** Senior engineers, tech leads, DevOps, onboarding engineers, and AI coding agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
@@ -28,7 +28,7 @@ guardrail is enforced by tooling that runs in this checkout.
 **Scale & baselines (verified 2026-10-27, Session-16 re-certification):** 9 Prisma models · 26 API
 route files · 8 gated views (9 route spellings — the root `/` page is the
 terminal's reference-parity landing, Session-10 F-60)
-+ login/reset/404 · 151 unit tests (15 files) · 119 e2e tests (2 browser projects) · standalone
++ login/reset/404 · 151 unit tests (15 files) · 123 e2e tests (2 browser projects) · standalone
 production build.
 
 ## 2. Tech Stack (version-pinned)
@@ -251,7 +251,7 @@ Dependency rule: arrows point downward only. `src/lib` pure seams never import R
  │                           db-path, db, store, api, utils) + server/ (http, auth, entities)
  ├ 📂 prisma               — schema.prisma (9 models) · seed.ts (owner + settings; --demo dataset)
  ├ 📂 tests/unit           — 15 vitest files (the seam registry + the docs-counts gate)
- ├ 📂 tests/e2e            — 13 spec files + auth.setup + kill-port + provisioning
+ ├ 📂 tests/e2e            — 14 spec files + auth.setup + kill-port + provisioning
  ├ 📂 docs                 — implementation plan, runbooks, Tailwind report, screenshots/
  └ ⚙️ next.config.ts · playwright.config.ts · vitest.config.ts · package.json · .env.example
 ```
@@ -299,7 +299,7 @@ lint → typecheck → unit → build → smoke → e2e
    inventory-status + CSV round-trip, currency, router (the route map), validation (accept/reject
    matrix), auth (hash/token/rate-limit), db-path (the resolution contract), env-check, site.
    Baseline: 15 files. New seams arrive with their file; fixes arrive with regression tests.
-2. **E2E (Playwright, 119/119):** production standalone on :3100, scratch db (`db/e2e.db`)
+2. **E2E (Playwright, 123/123):** production standalone on :3100, scratch db (`db/e2e.db`)
    provisioned by the webServer command (kill-port → provision → boot — never touched while the
    server lives). Projects: `chromium` (1440×900; journeys) and `mobile` (390×844; the drawer
    suite). Auth once via storageState. The spec map: `auth` (the light card + gating + from_url
@@ -307,7 +307,7 @@ lint → typecheck → unit → build → smoke → e2e
    register → verify-email → forgot → the "Password Updated" done state → the NEW password
    signing in through the real form, the OLD one dead at 401, the consumed token rejecting
    replays — the fabricated-token Session-13 pins covered only the failure branches),
-   `navigation` (sidebar order/activation/collapse/persistence), `mobile-navigation` (the 13
+   `navigation` (sidebar order/activation/collapse/persistence + the Session-28 zero-shift bare-Turnos-ledger pin — it lives here BY THE ORDERING LAW'S INVERSE: n < r, so it reads the zero-shift state before registers-shifts' shift lands), `mobile-navigation` (the 13
    drawer pins — including the Session-3 focus-trap/restore and md-growth auto-close),
    `inventory` (CRUD + search + CSV-adjacent flows), `registers-shifts` (the
    lifecycle), `terminal` (cart math, cash checkout + change, ticket, receipt, stock decrement),
@@ -319,7 +319,11 @@ lint → typecheck → unit → build → smoke → e2e
    (the Session-27 tier: the "Turnos Recientes" four-way join pinned WITH DATA — the
    closed row's six cells against API-derived expectations + the six Spanish headers,
    and the active polarity — Fin "—", `$0.00 (0)`, the Abierto chip — flipping to closed
-   on the exact-variance close; FIVE specs now persist data, c < d < f < i < r),
+   on the exact-variance close; SIX specs now persist data, c < d < f < i < r < s —
+   the Session-28 sales walk sorts LAST, and Session-28 also aligned the empty
+   Turnos ledger to the live reference: the BARE table, the unmeasured
+   "Sin turnos registrados" row removed, its lost settled-observable recorded
+   in AGENTS),
    `with-data-dashboard-walk`
    (the Session-23 tier: the landing view's exact wiring pin — the today/stats testids,
    the category-breakdown rows + share bars, the chart's niceScale domain, all derived
@@ -340,10 +344,22 @@ lint → typecheck → unit → build → smoke → e2e
    error path — THREE specs now persist data, the CSV walk sorting between the dashboard
    and reports walks, d < i < r),
    `with-data-reports-walk` (the Session-22 tier: the exact wiring pin over the
-   API-derived stats/methods/chart-domain + the with-data containment at 390 — the file
-   sorts LAST because it persists sales; every empty-state pin of what it creates runs
-   before it; the dashboard walk sorts between the drift-sweep and it — d < r — and is
-   robust to the reports walk's data by the same runtime-derivation design).
+   API-derived stats/methods/chart-domain + the with-data containment at 390 — the
+   file persists sales; every empty-state pin of what it creates runs before it; the
+   dashboard walk sorts between the drift-sweep and it — d < r — and it is robust to
+   the other walks' data by the same runtime-derivation design; since Session-28 it
+   no longer sorts LAST — the sales walk follows it, r < s),
+   `with-data-sales-receipt-viewer-walk` (the Session-28 tier: the clone's own
+   working Sales surface pinned end-to-end — the ledger row's derived cells (the
+   es-MX Fecha, the Cajero cell from the sale's own /api/sales payload, the chip
+   families, the money cell), the receipt viewer's content exact (the item-line
+   math, the saleTimestamp description, the Método row, the footer outside
+   .receipt-print), the search's three arms (ticket || customer || cashier + the
+   no-match "Sin ventas" row), and the refund round-trip (the one-way 400 guard,
+   the idempotent same-status re-PATCH, the Reembolsada chip flip on the re-mounted
+   ledger, the viewer opening on the refunded sale); SIX specs now persist data —
+   c < d < f < i < r < s, the sales walk LAST; its shift self-closes at exact
+   variance).
 3. **Field-tested e2e doctrine:** auth waits for the hydration-gated submit button (`toBeEnabled`)
    before filling; assertions use visibility (not DOM count) for `hidden md:*` elements; the
    scratch db is never replaced while the server lives (clients bind the inode; field-tested
@@ -1707,3 +1723,55 @@ site (README badge/scripts/testing, CLAUDE baseline + the five-walk ordering, AG
 the Session-27 ledger contracts, PAD v1.25, SKILL v2.23.0 with the Session-27
 addendum), the worklog entry, `docs/remediation-plan-session-27.md`,
 `docs/session_49.md`.
+
+## Revision History — Session-28 (v1.26, 2026-10-29)
+
+**The cycle:** the workspace was RESET a third time (the whole sandbox —
+`/home/z/my-project/scripts/` died with it); fresh clone + full rebuild, the
+standing audit scripts reconstructed from the plan corpus (the census rebuilt
+with `@/` alias resolution — 156 scanned, ZERO dead, the dep report exactly the
+documented trio), and a NEW sandbox constraint absorbed: background processes
+die between tool calls, so the dev-server posture moved to per-call
+boot→probe→shutdown bundles (`with-dev-server.sh`, outside the repo). The
+reference sweep #22 (the twenty-second consecutive) held every standing pin
+byte-exact — the login card, the F-76 alert, the landing + 220px sidebar + 8
+links, the Dashboard date line + both 16px/700 h3s, the Spanish families, the
+still-empty Reports, the STABLE D-1 mobile defect — and the clone's mobile
+drawer re-verified live with REAL clicks (288px dialog, 8 labeled links,
+`animation-name: enter` on the `[role=dialog]` element itself, focus
+management, scroll-lock, Escape restore, route-close, zero overflow): NO
+Tailwind v4 regression.
+
+**The two-part cure.** **F-126-a** (the cycle's first `src/` change since
+Session-21): sweep #22's settled re-measurement of the reference's EMPTY
+Cashiers "Turnos Recientes" ledger — the BARE table (six headers over ZERO
+tbody rows, NO "Sin turnos registrados" row anywhere in the body; the
+reference's Sales/Inventory empty ledgers DO carry in-table empty rows — the
+convention is PER-SURFACE). The clone's row was an unmeasured Session-2-era
+convention the record had conflated with a reference measurement. Removed from
+`cashiers-view.tsx` for parity, TDD-first (the surfaces.spec bare-table pin
+RED on the standing tree, GREEN after the fix); the lost settled-observable is
+recorded in AGENTS, and the s16 harness's wait arm now rides the demo db's
+"Cerrado" chip. **F-126-b**, the Sales receipt-viewer with-data walk (the
+session_49 pointer): the viewer's content, the ledger row's derived cells, the
+search's three arms, and the refund round-trip had ZERO with-data protection —
+the ANALYZE measured every leg CORRECT live (the row
+`["T-000001", "29 oct 2026", "Store Owner", "cash", "$9.00", "Completada"]`,
+the viewer's item-line/Total/Método rows, the one-way guard trio), and the cure
+— `with-data-sales-receipt-viewer-walk.spec.ts` (3 tests) — landed after ONE
+authoring iteration (a text-filtered locator on an unqualified `div` matched
+the ANCESTOR container; the leaf-class scoping lesson is in AGENTS).
+
+**E2E 119 → 123 · desktop 105 → 109 · specs 13 → 14 · unit 151/15 (UNMOVED)**
+— the count-lockstep constants AND every live-tense doc site in the SAME
+commit (README badge/scripts/testing + the walk paragraph, CLAUDE baseline +
+the six-walk ordering, AGENTS the Session-28 Sales contracts + the
+bare-table law + the six-specs ordering law, PAD v1.26 + the spec map, SKILL
+v2.24.0 with the Session-28 addendum).
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **151/151**
+(15 files — UNMOVED) · build green · smoke **13/13** · e2e **123/123** (109
+desktop + 13 mobile + 1 setup). Screenshots 120–122 + the D-1-shape reference
+capture (`ref-mobile-pos-390-s28.png`). Docs lockstep: this revision, the
+worklog's Session-28 entry, `docs/remediation-plan-session-28.md`, and
+`docs/session_51.md` (the narration).

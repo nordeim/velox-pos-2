@@ -272,15 +272,19 @@ try {
 
   // ---- the WITH-DATA Cashiers shift ledger (V19's census) ------------------
   await page.goto(`${BASE}/Cashiers`);
-  // Bootstrap race: the ledger renders "Sin turnos registrados" until the
-  // shifts collection resolves — default "load" + a fixed sleep lost the
-  // race on the cold route (the audit's networkidle pattern won). Wait for
-  // the SETTLED ledger: either the closed shift's Cerrado chip or the empty
-  // copy — the pin fails honestly if the data never lands.
+  // Bootstrap race: the ledger renders bare headers until the shifts
+  // collection resolves — default "load" + a fixed sleep lost the race on
+  // the cold route (the audit's networkidle pattern won). Wait for the
+  // SETTLED ledger: the closed shift's Cerrado chip (this harness runs on
+  // the demo db, which always carries closed shifts). The pre-Session-28
+  // "Sin turnos" fallback arm died with the parity fix — sweep #22 measured
+  // the reference's empty ledger as the BARE table (no empty-state row), so
+  // an empty ledger now exposes no settled marker; wait on the roster copy
+  // or a with-data row in that case (the AGENTS Session-28 note).
   await page.waitForFunction(
     () => {
       const t = document.body.innerText;
-      return t.includes("Turnos Recientes") && (t.includes("Cerrado") || t.includes("Sin turnos"));
+      return t.includes("Turnos Recientes") && t.includes("Cerrado");
     },
     { timeout: 15000 },
   );

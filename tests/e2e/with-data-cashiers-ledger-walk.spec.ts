@@ -25,7 +25,9 @@ import { expect, test, type Page } from "@playwright/test";
 // sale landing on the wrong shift's row, a count drifting from its total, a
 // polarity flip in the FIN ternary, or a mis-ordered list would ALL have
 // passed the entire suite green. The reference's OWN ledger is permanently
-// empty (write-gated — "Sin turnos registrados"), so this tier is a
+// empty (write-gated — sweep #22 measured it as the BARE table: six headers
+// over zero tbody rows, no empty-state row; Session-28 removed the clone's
+// unmeasured "Sin turnos registrados" row for parity), so this tier is a
 // functional-SUPERSET pin, the s20..s26 lineage.
 //
 // The ANALYZE facts this spec transcribes (measured live on the dev server):

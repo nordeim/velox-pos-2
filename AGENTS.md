@@ -774,6 +774,64 @@ bite hardest here:
   is the enumeration-safe "verified account exists" response; a
   200-WITH-code is an unverified re-register (a fresh code).
 
+## The Sales receipt-viewer contracts (Session-28 pins — F-126)
+
+- **The empty Turnos ledger is the BARE TABLE** (F-126-a, sweep #22 measured
+  live on the reference): six headers over ZERO tbody rows, NO in-table
+  empty-state row. The clone's former "Sin turnos registrados" row was an
+  unmeasured Session-2-era convention (the record had conflated it with a
+  reference measurement) — removed for parity; the shape is pinned in
+  navigation.spec (`columnheader` count 6 + `tbody tr` count 0) BY THE
+  ORDERING LAW'S INVERSE: the pin must read the zero-shift state BEFORE any
+  spec creates a shift, and a CLOSED shift renders a ledger row forever
+  after (no shift DELETE endpoints exist) — n < r, so the pin lives in
+  navigation.spec, never in a file sorting after "r". The reference's
+  Sales/Inventory empty ledgers DO carry in-table empty rows ("Sin ventas" /
+  "No products found") — the convention is PER-SURFACE; never generalize one
+  surface's empty-state treatment to another without a live measurement.
+- **The lost-observable trade-off (recorded)**: with the row gone, the EMPTY
+  Cashiers ledger exposes no post-bootstrap DOM marker. A spec needing the
+  empty ledger's settled state must wait on the roster copy ("0 usuarios
+  registrados" — the cashiers fetch) or a with-data row; never a timer. The
+  s16 harness's wait now rides the demo db's "Cerrado" chip only.
+- **The Sales ledger row and viewer are pinned WITH DATA**
+  (`with-data-sales-receipt-viewer-walk.spec.ts`): the row's cells (the
+  ticket, the es-MX `saleDate` Fecha, the Cajero cell, the "cash" chip
+  textContent, `formatMoney` total, the Estado chip) and the viewer's
+  content (the ticket title, the `saleTimestamp` DD/MM/YYYY HH:MM
+  description, `qty × name` + the line money, the dashed Total row, the
+  "Método"/"cash" row, the Cerrar/Imprimir footer OUTSIDE `.receipt-print`).
+- **The identity-cell mirror law, extended to Sales**: the CAJERO cell and
+  the search's cashier arm derive from the SALE's own `/api/sales` payload
+  (the list `include` — the view's exact input), never `/api/auth/me` (the
+  S27 law; the POST response does not carry the include either — always
+  re-derive from the list).
+- **The capitalize fields are pinned by TEXTCONTENT** ("cash" — the s17
+  lesson): the Método chip and the viewer's method row render "Cash" only
+  via CSS `text-transform`; pin textContent, match innerText
+  case-insensitively in waits.
+- **The search is the three-arm `||` filter** (ticket || customer ||
+  cashier, case-insensitive substrings): byCashier expectations are DERIVED
+  from the API at runtime (every sale's cashier is the owner — the count
+  moves with the other walks' data); the no-match state renders the
+  in-table "Sin ventas" row (`visible.length === 0` — the same treatment as
+  the no-data state).
+- **The refund is ONE-WAY** (`/api/sales/[id]` PATCH): same-status re-PATCH
+  is idempotent 200; `refunded → completed` is 400 "A refunded sale cannot
+  be un-refunded."; the ledger chip flips to "Reembolsada" (orange family)
+  on a RE-MOUNT (the store does not poll — a fresh `goto`); the viewer
+  opens on the refunded sale with the content unchanged.
+- **The locator-scope lesson (this cycle's first-run catch)**: a
+  text-filtered locator must scope to the LEAF row class
+  (`div.flex.justify-between`) — an unqualified `div` filter matches the
+  ANCESTOR container (whose span order silently mis-targets `.last()` pins).
+- **SIX specs now persist data — the ordering law, extended again**: the
+  sales walk sorts LAST among the walks (c < d < f < i < r < s), after every
+  empty-state pin of what it creates. Its shift self-closes at exact
+  variance at the end of its first test; its refund test leaves the fixture
+  sale refunded (the scratch db is per-run). A seventh persisting spec must
+  be checked against ALL SIX before it lands.
+
 ## The mobile drawer contract (e2e-pinned — do not regress)
 
 `src/components/pos/app-shell.tsx` ships the a11y SUPERSET (the reference overlays a 220px

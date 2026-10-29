@@ -2214,3 +2214,70 @@ via the committed self-provisioning `scripts/capture-s27-evidence.mjs` (captures
 verified DISTINCT; the self-clean verified live). Docs lockstep: this worklog entry,
 remediation-plan-session-27 (the full ledger + record), session_49.md (the
 narration). `.env.example` verified against the working `.env`.
+
+## Session-28 — the Sales receipt-viewer walk (F-126) + the empty-Turnos parity cure (velox-pos-2)
+
+**Date:** 2026-10-29 · **Tree:** `b822eaa` received (the Session-27 push `dbc8f9d` + the
+operator's session_50 raw-log commit — exactly one file, +60, matching the Session-27
+record). The workspace was RESET a THIRD time — the whole sandbox, not just the repo:
+fresh clone + full rebuild (`.env` with a fresh 64-hex AUTH_SECRET + COOKIE_SECURE=false,
+`bun install`, db:push/db:seed, chromium-1243). **The new sandbox kills background
+processes between tool calls** — the "boot once, probe across calls" dev-server posture
+of Sessions 1-27 is dead; every dev-server-dependent operation is now a self-contained
+boot→probe→shutdown bundle (`/home/z/my-project/scripts/with-dev-server.sh`, outside
+the repo). The standing audit scripts were rebuilt from the plan corpus (the census
+with `@/` alias resolution — 156 scanned, ZERO dead, the dep report exactly the
+documented trio; the scrypt credential checker). agent-browser's daemon state SURVIVES
+across calls — the reference sweeps keep their multi-call posture.
+
+**The received tree**: fast gate GREEN on arrival — lint 0 (1 documented warning) · tsc
+· unit **151/151** (15 files) · the received delta exactly `docs/session_50.md` · static
+sweeps clean (census, secrets, the credential VERIFIES). Reference sweep **#22** (the
+twenty-second consecutive): every standing pin HOLDS byte-exact (the login card, the
+F-76 alert, the `/` landing + 220px sidebar + 8 links, the Dashboard date line +
+both 16px/700 h3s, the Spanish families, the empty Reports, the D-1 mobile defect
+STABLE). **The clone's mobile drawer re-verified live** (REAL clicks, the V14 law):
+288px dialog · 8 links · `animation-name: enter` (read on the `[role=dialog]` element
+itself — the first probe read the header-row child and false-negatived) · focus-to-close
+· scroll-lock · Escape restore · route-close · zero overflow. NO Tailwind v4 regression.
+
+**The TWO-part cure.** **F-126-a** — the cycle's first `src/` change since Session-21:
+sweep #22's settled re-measurement found the reference's EMPTY "Turnos Recientes"
+ledger rendering the BARE table (six headers over ZERO tbody rows, NO "Sin turnos
+registrados" anywhere in its body; its Sales/Inventory empty ledgers DO carry
+in-table empty rows — the convention is PER-SURFACE). The clone's row was an
+unmeasured Session-2-era convention the record had conflated with a reference
+measurement. Cure: the empty branch removed from `cashiers-view.tsx`, TDD-first (the
+bare-table pin RED on the standing tree → GREEN after the fix). The pin lives in
+navigation.spec BY THE ORDERING LAW'S INVERSE (the full-run catch: registers-shifts'
+CLOSED shift renders a ledger row forever after — n < r reads the zero-shift state
+first); the lost settled-observable is recorded in AGENTS, the s16 harness's wait now
+rides "Cerrado" only. **F-126-b** — the Sales receipt-viewer with-data walk (the
+session_49 pointer): the viewer's content, the ledger row's derived cells, the
+search's three arms, and the refund round-trip had ZERO with-data protection. The
+ANALYZE measured every leg CORRECT live; the cure
+`tests/e2e/with-data-sales-receipt-viewer-walk.spec.ts` (3 tests) landed after ONE
+authoring iteration (a text-filtered locator on an unqualified `div` matched the
+ANCESTOR container — scope to the LEAF row class; the lesson is in AGENTS).
+
+**E2E 119 → 123 · desktop 105 → 109 · specs 13 → 14 · unit 151/15 (UNMOVED)** — the
+count lockstep in the SAME commit (docs-counts re-anchored + every live-tense site:
+README badge/scripts/testing + the walk paragraph, CLAUDE baseline + the six-walk
+ordering c < d < f < i < r < s, AGENTS the Session-28 Sales contracts + the six-specs
+ordering law, PAD **v1.26** + the spec map + the revision block, SKILL **v2.24.0** +
+the Session-28 addendum).
+
+**Gate on the final tree**: lint 0 (1 documented warning) · tsc · unit **151/151** ·
+build · smoke **13/13** · e2e **123/123 × 2 consecutive full runs** (109 desktop + 13
+mobile + 1 setup; the post-run db verified as state: the settings at seed defaults,
+ZERO open shifts globally, 11 fixture sales, the walk's sale left refunded — the
+scratch db is per-run) · the three with-data harnesses **s16 13/13 · s17 19/19 · s18
+20/20** (the money-unit cure holding on the afternoon seed; the older harness captures
+restored content-identical). Evidence: screenshots **120–122** (the ledger row + the
+viewer open; the Reembolsada flip; the mobile drawer at 390) via the committed
+self-provisioning `scripts/capture-s28-evidence.mjs` — the captures verified DISTINCT
+(4 unique md5s with the ref capture), the script's self-clean verified live, and it
+measured the byTicket/byCashier search arms live (the ANALYZE's lost probes).
+Docs lockstep: this worklog entry, remediation-plan-session-28 (the full ledger +
+record), session_51.md (the narration). `.env.example` verified key-for-key against
+the working `.env` (COOKIE_SECURE the documented optional escape hatch).

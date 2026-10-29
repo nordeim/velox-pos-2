@@ -116,9 +116,21 @@ const UNIT_FILES = 15;
 // join pinned with data: the closed row's cashier·register·times·total/count
 // derivation + the headers, and the active polarity (Fin —, zero sales, the
 // Abierto chip) flipping to closed; the file sorts FIRST among the walks,
-// c < d < f < i < r).
-const E2E = 119;
-const E2E_SPECS = 13;
+// c < d < f < i < r)
+// + the Session-28 F-126-b Sales receipt-viewer walk (the 3 tests of
+// with-data-sales-receipt-viewer-walk.spec.ts — the ledger row's derived
+// cells + the viewer's content exact (the item-line math, the saleTimestamp
+// description, the Método row), the search's three arms (ticket || customer
+// || cashier + the no-match "Sin ventas" row), and the refund round-trip
+// (the one-way guard 400, the idempotent same-status re-PATCH, the
+// Reembolsada chip flip, the viewer opening on the refunded sale); the file
+// sorts LAST among the walks, c < d < f < i < r < s)
+// + the Session-28 F-126-a zero-shift bare-Turnos-ledger pin (1 test in
+// navigation.spec.ts — the empty-ledger shape; the pin lives in navigation
+// BY THE ORDERING LAW'S INVERSE: n < r, so it reads the zero-shift state
+// before registers-shifts.spec's shift lands and renders a row forever).
+const E2E = 123;
+const E2E_SPECS = 14;
 const ROUTE_FILES = 26;
 const PRISMA_MODELS = 9;
 const VIEWS = 8;
@@ -197,8 +209,8 @@ describe("session-8 (F-52): the count-lockstep gate — every live-tense count s
   });
 
   it("the SKILL carries the live counts (header baselines, commands, data model, tiers)", () => {
-    expect(skillFlat).toContain(`Baselines at Session-27 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
-    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (105 desktop + 13 mobile + 1 setup)`);
+    expect(skillFlat).toContain(`Baselines at Session-28 lock: unit **${UNIT}/${UNIT}** (${UNIT_FILES} files)`);
+    expect(skillFlat).toContain(`e2e **${E2E}/${E2E}** (109 desktop + 13 mobile + 1 setup)`);
     expect(skillFlat).toContain(`tests/unit/** (${UNIT})`);
     expect(skillFlat).toContain(`playwright (${E2E})`);
     expect(skillFlat).toContain(`${PRISMA_MODELS} models, user-scoped, cascade deletes`);

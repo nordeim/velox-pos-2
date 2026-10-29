@@ -8,7 +8,7 @@ description: >
   architecture, the money/checkout invariants, the mobile drawer contract,
   the Tailwind v4 trap catalog, auth, the testing strategy, and the debugging
   playbook. Use it to extend, debug, onboard, or replicate this architecture.
-version: 2.23.0
+version: 2.24.0
 last_updated: 2026-10-29
 ---
 
@@ -28,8 +28,8 @@ no hamburger, sidebar at z-50 over the content).
 routes, ONE Zustand store, a factory-based ownership-scoped API layer, and a local
 gate (`lint → typecheck → unit → build → e2e`) that is the ONLY gate (no hosted CI).
 
-Baselines at Session-27 lock: unit **151/151** (15 files) · e2e **119/119**
-(105 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
+Baselines at Session-28 lock: unit **151/151** (15 files) · e2e **123/123**
+(109 desktop + 13 mobile + 1 setup) · lint 0 errors (1 documented
 warning) · standalone build green.
 
 ## 2. Tech stack (version-pinned)
@@ -68,7 +68,7 @@ bun run lint                   # eslint flat config — 0 errors, 1 documented w
 bun run typecheck              # tsc --noEmit — strict
 bun run test                   # vitest — tests/unit/** (151)
 bun run build                  # standalone build + static/public copy
-bun run test:e2e               playwright (119) — NEEDS the build first (:3100)
+bun run test:e2e               playwright (123) — NEEDS the build first (:3100)
 bun run db:push && bun run db:seed    # provision db/custom.db (owner + settings)
 bun run db:seed -- --demo      # + showcase dataset
 bun run smoke                  # the 13-step API smoke ladder (needs the build; db/smoke.db)
@@ -433,7 +433,7 @@ SUPERSET instead:
    lockstep gate; store.test.ts pins the F-118 shifts-race at the store seam). New
    `src/lib` seam ⇒ new `tests/unit` file (red → green). UI
    components get no unit tests.
-2. **E2E (Playwright, 119/119)** — against the PRODUCTION standalone build on :3100
+2. **E2E (Playwright, 123/123)** — against the PRODUCTION standalone build on :3100
    with its own scratch db (`db/e2e.db`, ABSOLUTE path — see db-path ADR), booted
    by the webServer command (kill-port → provision → boot; the db is NEVER
    replaced while the server lives). Projects: `chromium` (1440×900, channel
@@ -492,8 +492,18 @@ SUPERSET instead:
    mirrored shiftTime·shiftDuration math, the FIN close time, the
    join-derived `$total (n)` cell, the Cerrado chip) + the six Spanish
    headers, and the active polarity (Fin —, `$0.00 (0)`, the Abierto chip)
-   flipping to closed on the exact-variance close. FIVE specs now persist
-   data — the ledger walk sorts FIRST among the walks (c < d < f < i < r).
+   flipping to closed on the exact-variance close. The Session-28 Sales
+   receipt-viewer walk (`with-data-sales-receipt-viewer-walk.spec.ts`): the
+   clone's own working Sales surface pinned end-to-end — the ledger row's
+   derived cells (the es-MX Fecha, the Cajero cell from the sale's own
+   /api/sales payload, the chip families, the money cell), the viewer's
+   content exact (the item-line math, the saleTimestamp description, the
+   Método row, the footer outside .receipt-print), the search's three arms
+   (ticket || customer || cashier + the no-match "Sin ventas" row), and the
+   refund round-trip (the one-way 400 guard, the idempotent same-status
+   re-PATCH, the Reembolsada chip flip, the viewer opening on the refunded
+   sale). SIX specs now persist data — the ledger walk sorts FIRST, the sales
+   walk LAST (c < d < f < i < r < s).
 3. **Live re-measurement (agent-browser)** — computed styles beat screenshots;
    re-measure the reference before any design-system change and record the
    measurement in the plan doc.
@@ -502,7 +512,11 @@ Field-tested doctrine: the login form is inert until hydration (`toBeEnabled`
 first); visibility assertions for `hidden md:*`; specs self-clean with
 `${Date.now()}` names; the terminal spec closes its shift so the mobile
 gate-parity pin sees "No active shift"; `bunx playwright install chromium` in
-sandboxes.
+sandboxes; the post-reset sandbox KILLS background processes between tool
+calls — dev-server-dependent probes must be SELF-CONTAINED per call
+(boot → wait-for-ready → probe → shutdown, the `with-dev-server.sh` bundle);
+agent-browser's daemon state SURVIVES across calls (a named session per task
+avoids hijacking other agents' pages).
 
 ## 13. Responsive & z-index maps
 
@@ -1808,3 +1822,65 @@ becomes the **Session-27 lock**), PAD v1.25, AGENTS (the Session-27
 ledger-derivation contracts + the five-specs ordering law), CLAUDE, README,
 the worklog entry, `docs/remediation-plan-session-27.md`,
 `docs/session_49.md`. Skill v2.23.0.
+\n
+### Session-28 addendum (v2.24.0) — the Sales receipt-viewer walk + the empty-Turnos parity cure
+
+The session_49 "Next" pointer's candidates landed as a TWO-part cure. **F-126-b,
+the Sales receipt-viewer with-data walk**: the reference's write-gating means its
+own Sales ledger renders "Sin ventas" forever — the viewer, the search, and the
+refund are the clone's documented superset surfaces, and NOTHING pinned their
+derivation with data (F-110's saleTimestamp was pinned on the CHECKOUT receipt
+only; terminal.spec pinned the checkout-derived ROW visibility + the F-115
+print wrapper; the s16 harness the demo-seeded family). The ANALYZE measured
+every leg CORRECT live on the dev server: the ledger row
+`["T-000001", "29 oct 2026", "Store Owner", "cash", "$9.00", "Completada"]`
+(the es-MX Fecha, the Cajero cell from the sale's own cashier include, the
+capitalize "cash" chip on emerald, the money cell), the viewer's content (the
+ticket title, the DD/MM/YYYY HH:MM description, "2 × Viewer Walk Coffee" +
+"$9.00", the dashed Total row, the "Método"/"cash" row, the footer outside
+.receipt-print), the search's arms, and the refund round-trip (the one-way
+guard: the same-status re-PATCH idempotent 200, the un-refund 400 "A refunded
+sale cannot be un-refunded.", the Reembolsada flip on the re-mounted ledger).
+
+The cure — `with-data-sales-receipt-viewer-walk.spec.ts` (3 tests): the row +
+viewer content exact (all API-derived — the identity cells from the sale's own
+/api/sales payload, the S27 mirror law extended), the search journeys (byTicket,
+byCustomer, byCashier with the count derived at runtime + the no-match "Sin
+ventas" row), and the refund round-trip (the guard trio + the orange chip flip +
+the viewer opening on the refunded sale). ONE authoring iteration: a
+text-filtered locator on an unqualified `div` matched the ANCESTOR container —
+scope to the LEAF row class (`div.flex.justify-between`); the lesson is in
+AGENTS. SIX specs now persist data — c < d < f < i < r < s, the sales walk
+LAST; its shift self-closes at exact variance.
+
+**F-126-a, the empty-Turnos parity cure** (the cycle's first `src/` change
+since Session-21): sweep #22 re-measured the reference's EMPTY Cashiers ledger
+— the BARE table (six headers over ZERO tbody rows, NO "Sin turnos
+registrados" row; its Sales/Inventory ledgers DO carry in-table empty rows —
+the convention is PER-SURFACE). The clone's row was an unmeasured Session-2-era
+convention the record had conflated with a reference measurement — removed
+from `cashiers-view.tsx` for parity, surfaces.spec pinning the bare shape
+first (RED on the standing tree → GREEN after the fix). The trade-off is
+recorded in AGENTS: the empty ledger loses its only post-bootstrap DOM
+observable; the s16 harness's wait arm now rides the demo db's "Cerrado" chip.
+
+E2E 119 → 123 (desktop 105 → 109) · specs 13 → 14 · unit stays 151/15. The
+bare-ledger pin lives in navigation.spec (n < r by the ordering law's
+inverse — registers-shifts' closed shift would render a row forever after). The
+cycle rebuilt the workspace from a THIRD full sandbox reset (the audit scripts
+reconstructed from the plan corpus; a NEW sandbox kills background processes
+between tool calls — the dev-server posture moved to per-call
+`with-dev-server.sh` bundles). The reference sweep #22 (the twenty-second
+consecutive): every standing pin held byte-exact, the mobile D-1 stable; the
+clone's mobile drawer re-verified live (REAL clicks, the V14 law — the
+animation-name `enter` pin reads on the `[role=dialog]` element itself): NO
+Tailwind v4 regression.
+
+**Gate:** lint 0 errors (1 documented warning) · tsc clean · unit **151/151**
+(15 files — UNMOVED) · build green · smoke **13/13** · e2e **123/123** (109
+desktop + 13 mobile + 1 setup). Screenshots 120–122 + the D-1-shape reference
+capture (`ref-mobile-pos-390-s28.png`). Docs lockstep: the count constants +
+every live-tense site (the "Session-27 lock" literal becomes the **Session-28
+lock**), PAD v1.26, AGENTS (the Session-28 Sales contracts + the six-specs
+ordering law), CLAUDE, README, the worklog entry,
+`docs/remediation-plan-session-28.md`, `docs/session_51.md`. Skill v2.24.0.

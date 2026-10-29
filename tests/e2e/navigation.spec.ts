@@ -194,3 +194,26 @@ test("buttons compute cursor:pointer (the v3-era preflight contract v4 dropped)"
   await expect(collapse).toBeVisible();
   await expect(collapse).toHaveCSS("cursor", "pointer");
 });
+
+test("Cashiers at zero shifts renders the reference's BARE ledger (no empty-state row)", async ({
+  page,
+}) => {
+  // Session-28 (F-126-a, sweep #22 measured live on the reference): the
+  // reference's EMPTY "Turnos Recientes" table is the BARE table — six
+  // headers over an empty tbody, NO in-table empty-state row ("Sin turnos"
+  // appears nowhere in its body; its Sales/Inventory ledgers DO carry
+  // in-table empty rows — the convention is PER-SURFACE). The clone's former
+  // "Sin turnos registrados" row was an unmeasured Session-2-era convention,
+  // removed for parity.
+  //
+  // FILE-POSITION NOTE (the ordering law's inverse): this pin MUST run
+  // BEFORE any spec that creates a shift — a closed shift renders a ledger
+  // row forever after (no shift DELETE endpoints exist). This file sorts
+  // n < r: registers-shifts.spec's shift lands after this pin reads the
+  // zero-shift state. Never move this pin into a file sorting after "r".
+  await page.goto("/Cashiers");
+  await expect(page.getByRole("heading", { name: "Turnos Recientes" })).toBeVisible();
+  const turnos = page.getByRole("table");
+  await expect(turnos.getByRole("columnheader")).toHaveCount(6);
+  await expect(turnos.locator("tbody tr")).toHaveCount(0);
+});

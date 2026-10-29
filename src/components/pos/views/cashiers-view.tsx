@@ -228,47 +228,49 @@ export function CashiersView() {
               </tr>
             </thead>
             <tbody>
-              {recentShifts.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-white/40">
-                    Sin turnos registrados
-                  </td>
-                </tr>
-              ) : (
-                recentShifts.map((s) => {
-                  const shiftSales = sales.filter((sale) => sale.shiftId === s.id);
-                  const total = shiftSales.reduce((sum, sale) => sum + sale.total, 0);
-                  return (
-                    <tr key={s.id} className="border-b border-edge/60 last:border-0">
-                      <td className="px-4 py-3 text-white/80">
-                        {s.cashier?.fullName || s.cashier?.email || "—"}
-                      </td>
-                      <td className="px-4 py-3 text-white/70">{s.register?.name ?? "—"}</td>
-                      <td className="px-4 py-3 text-white/60">
-                        {shiftTime(s.openedAt)} · {shiftDuration(s.openedAt, s.closedAt)}
-                      </td>
-                      <td className="px-4 py-3 text-white/60">
-                        {s.closedAt ? shiftTime(s.closedAt) : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-white/80">
-                        {formatMoney(total, currency)}{" "}
-                        <span className="text-white/40">({shiftSales.length})</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                            s.status === "active"
-                              ? "bg-emerald-500/15 text-emerald-400"
-                              : "bg-white/5 text-white/50"
-                          }`}
-                        >
-                          {s.status === "active" ? "Abierto" : "Cerrado"}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
+              {/* Session-28 (F-126-a, sweep #22 measured live): the reference's
+                  EMPTY Turnos ledger renders the BARE table — the six headers
+                  over an empty tbody, NO in-table empty-state row (its
+                  Sales/Inventory ledgers do carry in-table empty rows; the
+                  convention is per-surface, and this one is the bare table).
+                  The old "Sin turnos registrados" row was an unmeasured
+                  Session-2-era convention — removed for parity. Trade-off
+                  recorded in AGENTS: the empty ledger loses its only
+                  post-bootstrap DOM observable; wait on the roster copy or a
+                  with-data row instead. */}
+              {recentShifts.map((s) => {
+                const shiftSales = sales.filter((sale) => sale.shiftId === s.id);
+                const total = shiftSales.reduce((sum, sale) => sum + sale.total, 0);
+                return (
+                  <tr key={s.id} className="border-b border-edge/60 last:border-0">
+                    <td className="px-4 py-3 text-white/80">
+                      {s.cashier?.fullName || s.cashier?.email || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-white/70">{s.register?.name ?? "—"}</td>
+                    <td className="px-4 py-3 text-white/60">
+                      {shiftTime(s.openedAt)} · {shiftDuration(s.openedAt, s.closedAt)}
+                    </td>
+                    <td className="px-4 py-3 text-white/60">
+                      {s.closedAt ? shiftTime(s.closedAt) : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-white/80">
+                      {formatMoney(total, currency)}{" "}
+                      <span className="text-white/40">({shiftSales.length})</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                          s.status === "active"
+                            ? "bg-emerald-500/15 text-emerald-400"
+                            : "bg-white/5 text-white/50"
+                        }`}
+                      >
+                        {s.status === "active" ? "Abierto" : "Cerrado"}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
